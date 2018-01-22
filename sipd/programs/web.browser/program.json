@@ -1,0 +1,707 @@
+{
+  "format": "web-program-pre1",
+  "manifest": [
+    {
+      "path": "fcf0280d1504145123e1f05bb471f404d8f80d6c.js",
+      "where": "client",
+      "type": "js",
+      "cacheable": true,
+      "url": "/fcf0280d1504145123e1f05bb471f404d8f80d6c.js?meteor_js_resource=true",
+      "size": 1750075,
+      "hash": "fcf0280d1504145123e1f05bb471f404d8f80d6c"
+    },
+    {
+      "path": "fcf0280d1504145123e1f05bb471f404d8f80d6c.stats.json",
+      "where": "client",
+      "type": "json",
+      "cacheable": true,
+      "url": "/fcf0280d1504145123e1f05bb471f404d8f80d6c.stats.json?meteor_js_resource=true",
+      "size": 25487,
+      "hash": "3a163d05782b2bba603adac0556665da07203216"
+    },
+    {
+      "path": "d5f12c96cb18d3fd958820d0ae27fc33a19a5aa3.css",
+      "where": "client",
+      "type": "css",
+      "cacheable": true,
+      "url": "/d5f12c96cb18d3fd958820d0ae27fc33a19a5aa3.css?meteor_css_resource=true",
+      "size": 185302,
+      "hash": "d5f12c96cb18d3fd958820d0ae27fc33a19a5aa3"
+    },
+    {
+      "path": "packages/bevanhunt_leaflet/images/layers-2x.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/bevanhunt_leaflet/images/layers-2x.png",
+      "size": 1259,
+      "hash": "556e01bf7902efd4d8675f4956fb1b8295bfa720"
+    },
+    {
+      "path": "packages/bevanhunt_leaflet/images/layers.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/bevanhunt_leaflet/images/layers.png",
+      "size": 696,
+      "hash": "b3e46b55f559b2ed95126e1c70234b911f663eee"
+    },
+    {
+      "path": "packages/bevanhunt_leaflet/images/marker-icon-2x.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/bevanhunt_leaflet/images/marker-icon-2x.png",
+      "size": 2586,
+      "hash": "3cf410720bc264ea3d977cd6352425c71ede346d"
+    },
+    {
+      "path": "packages/bevanhunt_leaflet/images/marker-icon.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/bevanhunt_leaflet/images/marker-icon.png",
+      "size": 1466,
+      "hash": "89c470aeeac5e980be2a67bd37459907475d97c2"
+    },
+    {
+      "path": "packages/bevanhunt_leaflet/images/marker-shadow.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/bevanhunt_leaflet/images/marker-shadow.png",
+      "size": 618,
+      "hash": "f533258e0790913f64b9583b0d17190424d5c734"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-matte.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-matte.png",
+      "size": 14323,
+      "hash": "08e3ad9194a7532a7dc2c08fb98123d6d2485965"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-matte@2x.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-matte@2x.png",
+      "size": 31113,
+      "hash": "52093a731039ace1d19aa264dd91225b9194c077"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-plain.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-plain.png",
+      "size": 7946,
+      "hash": "3d3650c0f72d8d0fe1991a46c26b06650aec2046"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-shadow.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-shadow.png",
+      "size": 535,
+      "hash": "7525cadfc5e4e37a63cd9aebee70b2dc725e0b76"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-shadow@2x.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-shadow@2x.png",
+      "size": 1469,
+      "hash": "c7a2f49c4ef50fa4ed98dfed6632e76646dd4ec9"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-soft.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-soft.png",
+      "size": 41226,
+      "hash": "91b04e4098915215d898d761f394b833259cc25f"
+    },
+    {
+      "path": "packages/appshore_leaflet-awesome-markers/dist/images/markers-soft@2x.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/appshore_leaflet-awesome-markers/dist/images/markers-soft@2x.png",
+      "size": 66408,
+      "hash": "747fedb3363af7b366bc133ecd96bcc02e9cce53"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",
+      "size": 165742,
+      "hash": "5e3a1a9b72af1d842682f7e0a5c305922c583e3f"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.svg",
+      "size": 444379,
+      "hash": "2958ef6f1890fda3f47468dedc70c2e1b2dd9511"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.ttf",
+      "size": 165548,
+      "hash": "dbaed61bd8235d7e12522b21ce66fb90a4f9740d"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff",
+      "size": 98024,
+      "hash": "951644ff8c02065fd58f609d142e45daaaa5370f"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff2",
+      "size": 77160,
+      "hash": "a34ffd10b2a49d55d6247e351520ffdf556e0bb1"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome/upstream/fonts/FontAwesome.otf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/fortawesome_fontawesome/upstream/fonts/FontAwesome.otf",
+      "size": 134808,
+      "hash": "cd12480a6626f5faf89ddd7ebb00edf64059498d"
+    },
+    {
+      "path": "packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.eot",
+      "size": 143258,
+      "hash": "7f5d9a1386b879a1c81ffaa565ec13e5e5bc8ed7"
+    },
+    {
+      "path": "packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.ttf",
+      "size": 128180,
+      "hash": "5283eee35ea0ac29aff9e5b268c3cb9705cc1c1d"
+    },
+    {
+      "path": "packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.woff",
+      "size": 57620,
+      "hash": "abd4ec4cd5a485fe764161ce149b8de6a4161548"
+    },
+    {
+      "path": "packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/planettraining_material-design-icons-font/bower_components/material-design-icons/iconfont/MaterialIcons-Regular.woff2",
+      "size": 44300,
+      "hash": "95602e7b7323dae5b5b2a481ebfd29cc988442ec"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.ttf",
+      "size": 127744,
+      "hash": "5a287d717fa8438596ad29027a6b70e2f397f0d7"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff",
+      "size": 62876,
+      "hash": "7c08d3bccfccff607b3a553163cd0b8ca5db3bcb"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff2",
+      "size": 49976,
+      "hash": "14143ee07b9ff49120217a06a6a6008ba6244046"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.ttf",
+      "size": 126792,
+      "hash": "cadccd5bde0871b52a43fbf92503412c4a4e9535"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff",
+      "size": 62316,
+      "hash": "65cf37eb45ba487be303bcbb78f876486578f596"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff2",
+      "size": 49380,
+      "hash": "ee30392fd5dc21d9e7ff942945734409008c92a3"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.ttf",
+      "size": 127488,
+      "hash": "d8c857e043d92de5568f873389dd9e6a16f0c0f8"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff",
+      "size": 62980,
+      "hash": "6ddc0ef559a5320a33342caa3a46059f5418d1a3"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff2",
+      "size": 50224,
+      "hash": "78c92a0936998d2ed20be84d83e3eb2017f439e6"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.ttf",
+      "size": 126072,
+      "hash": "4ec395e894b0700eac6f8a45f3e9964122aca270"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff",
+      "size": 61736,
+      "hash": "3f5071d216184b6db9f90f12904e5993f1a32a37"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff2",
+      "size": 49236,
+      "hash": "a3ada7f42129255017b0aea8aa6f5ecd737d53a1"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.ttf",
+      "size": 127584,
+      "hash": "633f36a2b256121745545ee736b3898c40884f3c"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff",
+      "size": 61628,
+      "hash": "abb091867efeef151c5d745fd7c9608527fe4541"
+    },
+    {
+      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff2",
+      "size": 48524,
+      "hash": "9c0aa8729c7f4937feb8071a3320e0e1276d6189"
+    },
+    {
+      "path": "app/csv/andukcapil.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/andukcapil.csv",
+      "size": 5633,
+      "hash": "b45b21091b068dcb62bbb77ff3333de254678b73"
+    },
+    {
+      "path": "app/csv/esdm.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/esdm.csv",
+      "size": 6142,
+      "hash": "4eea678f2370cacec4f886324503d8e0874db4d8"
+    },
+    {
+      "path": "app/csv/informatika.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/informatika.csv",
+      "size": 2971,
+      "hash": "12a4f8a222292a2b89265e2775713dd774e6b367"
+    },
+    {
+      "path": "app/csv/kb.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kb.csv",
+      "size": 2321,
+      "hash": "13e1291adad87a25e9dc1ad66172d6868c8b017f"
+    },
+    {
+      "path": "app/csv/kearsipan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kearsipan.csv",
+      "size": 6650,
+      "hash": "f2ef4d0c7c867f6baae3c2039d78774af3308c5f"
+    },
+    {
+      "path": "app/csv/kebudayaan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kebudayaan.csv",
+      "size": 1816,
+      "hash": "5ce036ac7b139fb773aa52902b3401f19ad2e037"
+    },
+    {
+      "path": "app/csv/kehutanan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kehutanan.csv",
+      "size": 3605,
+      "hash": "5bf1f2b920a20ddcf8dd4f2bbbf8e46cab0bbd16"
+    },
+    {
+      "path": "app/csv/kelautan_perikanan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kelautan_perikanan.csv",
+      "size": 10568,
+      "hash": "1884e2a6e2a5f3b68fb86c0317c4eae7e40bb1b4"
+    },
+    {
+      "path": "app/csv/kesehatan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kesehatan.csv",
+      "size": 27592,
+      "hash": "5619d705b91697ca0eab72b4bdd2de720e3a260f"
+    },
+    {
+      "path": "app/csv/kkuspm.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kkuspm.csv",
+      "size": 5794,
+      "hash": "65cae92ee01072963ab2f55e9f08f903e4e23e07"
+    },
+    {
+      "path": "app/csv/kukm.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/kukm.csv",
+      "size": 3583,
+      "hash": "00da01d224ef80a6661ada00ad7200af62bc6376"
+    },
+    {
+      "path": "app/csv/lingkungan_hidup.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/lingkungan_hidup.csv",
+      "size": 5913,
+      "hash": "ba730bd94ed297ab1098a20b2e9c1522e3127cdb"
+    },
+    {
+      "path": "app/csv/masyarakat_desa.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/masyarakat_desa.csv",
+      "size": 4558,
+      "hash": "35fcd87c4a7709090cd982d51f32516d3ef44b34"
+    },
+    {
+      "path": "app/csv/pangan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pangan.csv",
+      "size": 3299,
+      "hash": "0168cf79cb26de82b1749e80de4463dfeea592cd"
+    },
+    {
+      "path": "app/csv/pariwisata.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pariwisata.csv",
+      "size": 3684,
+      "hash": "f77c52ba2c3088c19ca05c0eb7cacf78d5033ccf"
+    },
+    {
+      "path": "app/csv/pemuda_olah_raga.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pemuda_olah_raga.csv",
+      "size": 6036,
+      "hash": "530ef50bfe08cf7721c478d040fcbe42640a78e8"
+    },
+    {
+      "path": "app/csv/penanaman_modal.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/penanaman_modal.csv",
+      "size": 8051,
+      "hash": "6b65f2c2305c2ce76479babb423d22f841a4743c"
+    },
+    {
+      "path": "app/csv/pendidikan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pendidikan.csv",
+      "size": 18590,
+      "hash": "6a6c990ba8b40000acb1068d315832cd450f936c"
+    },
+    {
+      "path": "app/csv/perdagangan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/perdagangan.csv",
+      "size": 3133,
+      "hash": "41935f1d73bd8e91b280b1bfffa5746e6dec156d"
+    },
+    {
+      "path": "app/csv/perempuan_anak.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/perempuan_anak.csv",
+      "size": 6127,
+      "hash": "866d05881bfc0834d23dc2020628b462b6fcdc02"
+    },
+    {
+      "path": "app/csv/perhubungan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/perhubungan.csv",
+      "size": 7624,
+      "hash": "b1d7fbd2a5128e6f15fd5e10e002b37481f6259e"
+    },
+    {
+      "path": "app/csv/perindustrian.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/perindustrian.csv",
+      "size": 14868,
+      "hash": "9111a60e506cbba5c72f794e2150e18767771710"
+    },
+    {
+      "path": "app/csv/permukiman.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/permukiman.csv",
+      "size": 9610,
+      "hash": "8e28f7e01f63b89fa2cb6c49a2f75a20baa4d14a"
+    },
+    {
+      "path": "app/csv/perpustakaan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/perpustakaan.csv",
+      "size": 17001,
+      "hash": "1be5df52d7c3579ff3e817e0e6428b28fc87cb07"
+    },
+    {
+      "path": "app/csv/persandian.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/persandian.csv",
+      "size": 4817,
+      "hash": "e5c0fa34ec7cb6827f5f8b840b0887fe1cd5e608"
+    },
+    {
+      "path": "app/csv/pertanahan.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pertanahan.csv",
+      "size": 2433,
+      "hash": "9ca3ce6a7e41d8acca68113caef9fb9f4d5302cc"
+    },
+    {
+      "path": "app/csv/pertanian.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pertanian.csv",
+      "size": 15278,
+      "hash": "951c534c36790fd14c660b7af9c0c054f1d0173f"
+    },
+    {
+      "path": "app/csv/pu_tata_ruang.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/pu_tata_ruang.csv",
+      "size": 13628,
+      "hash": "167cf3cc8467b9d7c2db92dffaa457c661a6ccea"
+    },
+    {
+      "path": "app/csv/sosial.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/sosial.csv",
+      "size": 12770,
+      "hash": "de8832df11f039b0a4c5a747da46c5b329505f83"
+    },
+    {
+      "path": "app/csv/statistika.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/statistika.csv",
+      "size": 11139,
+      "hash": "91a4b045f9d8dd6ee8b334fa7421ce16381f90a7"
+    },
+    {
+      "path": "app/csv/tenaga_kerja.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/tenaga_kerja.csv",
+      "size": 4431,
+      "hash": "d0b5572dc67a657d9e7d3bf8ee44c82498a30fb9"
+    },
+    {
+      "path": "app/csv/transmigrasi.csv",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/csv/transmigrasi.csv",
+      "size": 4556,
+      "hash": "42b0e66e110759864248e15b4858845ce46fb61d"
+    },
+    {
+      "path": "app/imgs/front.jpg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/imgs/front.jpg",
+      "size": 178676,
+      "hash": "0d7b7c977b5cfa39d42f023c221e30bf3f1dd095"
+    },
+    {
+      "path": "app/imgs/login.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/imgs/login.png",
+      "size": 1025440,
+      "hash": "221445e1163bf29fb166eb7703569ea53e401d9e"
+    },
+    {
+      "path": "app/maps/jalan_nas.geojson",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/maps/jalan_nas.geojson",
+      "size": 1839208,
+      "hash": "7743b3b3dfddfcf962e46d8cb0fe60470f8a05d7"
+    },
+    {
+      "path": "app/maps/jalan_prov.geojson",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/maps/jalan_prov.geojson",
+      "size": 3035762,
+      "hash": "d6ea95cc77987e8c9a3339efbef138f12b7baecc"
+    },
+    {
+      "path": "app/maps/petas.geojson",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/maps/petas.geojson",
+      "size": 4357480,
+      "hash": "9e96d9a6dc30d48d1edde80ce120d3a8b4ea04c7"
+    },
+    {
+      "path": "app/maps/riau.geojson",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/maps/riau.geojson",
+      "size": 704622,
+      "hash": "d30b672e3241aad24451a58163d6d2dc401fe666"
+    }
+  ]
+}
