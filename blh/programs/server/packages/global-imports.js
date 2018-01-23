@@ -1,0 +1,44 @@
+/* Imports for global scope */
+
+MongoInternals = Package.mongo.MongoInternals;
+Mongo = Package.mongo.Mongo;
+ReactiveVar = Package['reactive-var'].ReactiveVar;
+Tracker = Package.tracker.Tracker;
+Deps = Package.tracker.Deps;
+ECMAScript = Package.ecmascript.ECMAScript;
+Router = Package['iron:router'].Router;
+RouteController = Package['iron:router'].RouteController;
+moment = Package['momentjs:moment'].moment;
+s = Package['underscorestring:underscore.string'].s;
+AccountsEntry = Package['selaias:accounts-entry'].AccountsEntry;
+SimpleForm = Package['selaias:accounts-entry'].SimpleForm;
+Meteor = Package.meteor.Meteor;
+global = Package.meteor.global;
+meteorEnv = Package.meteor.meteorEnv;
+WebApp = Package.webapp.WebApp;
+main = Package.webapp.main;
+WebAppInternals = Package.webapp.WebAppInternals;
+_ = Package.underscore._;
+DDP = Package['ddp-client'].DDP;
+DDPServer = Package['ddp-server'].DDPServer;
+LaunchScreen = Package['launch-screen'].LaunchScreen;
+Blaze = Package.ui.Blaze;
+UI = Package.ui.UI;
+Handlebars = Package.ui.Handlebars;
+Spacebars = Package.spacebars.Spacebars;
+meteorInstall = Package.modules.meteorInstall;
+process = Package.modules.process;
+meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
+Promise = Package.promise.Promise;
+Iron = Package['iron:core'].Iron;
+Collection2 = Package['aldeed:collection2-core'].Collection2;
+SimpleSchema = Package['aldeed:simple-schema'].SimpleSchema;
+MongoObject = Package['aldeed:simple-schema'].MongoObject;
+FS = Package['cfs:base-package'].FS;
+Accounts = Package['accounts-base'].Accounts;
+Autoupdate = Package.autoupdate.Autoupdate;
+HTML = Package.htmljs.HTML;
+Symbol = Package['ecmascript-runtime-server'].Symbol;
+Map = Package['ecmascript-runtime-server'].Map;
+Set = Package['ecmascript-runtime-server'].Set;
+
