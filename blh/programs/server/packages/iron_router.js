@@ -3,8 +3,8 @@
 /* Imports */
 var _ = Package.underscore._;
 var WebApp = Package.webapp.WebApp;
-var main = Package.webapp.main;
 var WebAppInternals = Package.webapp.WebAppInternals;
+var main = Package.webapp.main;
 var Blaze = Package.blaze.Blaze;
 var UI = Package.blaze.UI;
 var Handlebars = Package.blaze.Handlebars;

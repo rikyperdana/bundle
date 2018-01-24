@@ -5,12 +5,11 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var GeoJSON;
 
-var require = meteorInstall({"node_modules":{"meteor":{"geojson-utils":{"main.js":["./geojson-utils.js",function(require,exports){
+var require = meteorInstall({"node_modules":{"meteor":{"geojson-utils":{"main.js":function(require,exports){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
@@ -22,7 +21,7 @@ exports.GeoJSON = require("./geojson-utils.js");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"geojson-utils.js":function(require,exports,module){
+},"geojson-utils.js":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
@@ -413,7 +412,12 @@ exports.GeoJSON = require("./geojson-utils.js");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/geojson-utils/main.js");
 
 /* Exports */

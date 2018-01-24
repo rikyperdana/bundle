@@ -6,10 +6,7 @@ var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package['modules-runtime'].meteorInstall;
 
-/* Package-scope variables */
-var process;
-
-var require = meteorInstall({"node_modules":{"meteor":{"modules":{"server.js":["./install-packages.js","./process.js","./reify.js",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"modules":{"server.js":function(require){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -23,7 +20,7 @@ require("./reify.js");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"install-packages.js":function(require,exports,module){
+},"install-packages.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -62,7 +59,6 @@ function install(name, mainModule) {
 // This file will be modified during computeJsOutputFilesMap to include
 // install(<name>) calls for every Meteor package.
 
-install("underscore");
 install("meteor");
 install("meteor-base");
 install("mobile-experience");
@@ -70,56 +66,54 @@ install("npm-mongo");
 install("ecmascript-runtime");
 install("modules-runtime");
 install("modules", "meteor/modules/server.js");
-install("es5-shim", "meteor/es5-shim/server.js");
-install("promise", "meteor/promise/server.js");
 install("ecmascript-runtime-server", "meteor/ecmascript-runtime-server/runtime.js");
 install("babel-compiler");
 install("ecmascript");
+install("underscore");
 install("base64");
-install("ejson");
-install("id-map");
-install("ordered-dict");
-install("tracker");
+install("es5-shim", "meteor/es5-shim/server.js");
+install("promise", "meteor/promise/server.js");
 install("babel-runtime", "meteor/babel-runtime/babel-runtime.js");
-install("random");
-install("mongo-id");
+install("ejson", "meteor/ejson/ejson.js");
 install("diff-sequence");
 install("geojson-utils", "meteor/geojson-utils/main.js");
-install("minimongo");
+install("id-map");
+install("random");
+install("mongo-id");
+install("ordered-dict");
+install("tracker");
+install("minimongo", "meteor/minimongo/minimongo_server.js");
 install("check", "meteor/check/match.js");
 install("retry");
+install("callback-hook");
 install("ddp-common");
 install("ddp-client", "meteor/ddp-client/namespace.js");
 install("rate-limit");
 install("ddp-rate-limiter");
 install("logging");
 install("routepolicy");
-install("deps");
-install("htmljs");
-install("html-tools");
-install("blaze-tools");
-install("spacebars-compiler");
-install("observe-sequence");
-install("jquery");
-install("reactive-var");
-install("blaze");
-install("spacebars");
-install("ui");
-install("boilerplate-generator");
+install("boilerplate-generator", "meteor/boilerplate-generator/generator.js");
 install("webapp-hashing");
-install("webapp");
-install("callback-hook");
+install("webapp", "meteor/webapp/webapp_server.js");
 install("ddp-server");
 install("ddp");
 install("allow-deny");
 install("binary-heap");
 install("mongo");
 install("blaze-html-templates");
+install("reactive-var");
 install("standard-minifier-css");
 install("standard-minifier-js");
 install("shell-server", "meteor/shell-server/main.js");
 install("coffeescript");
+install("jquery");
+install("observe-sequence");
+install("deps");
+install("htmljs");
+install("blaze");
 install("mquandalle:jade");
+install("ui");
+install("spacebars");
 install("templating-compiler");
 install("templating-runtime");
 install("templating");
@@ -129,7 +123,7 @@ install("iron:layout");
 install("iron:url");
 install("iron:middleware-stack");
 install("iron:location");
-install("reactive-dict");
+install("reactive-dict", "meteor/reactive-dict/migration.js");
 install("iron:controller");
 install("iron:router");
 install("stylus");
@@ -173,6 +167,7 @@ install("anti:i18n");
 install("service-configuration");
 install("selaias:accounts-entry");
 install("matdutour:popup-confirm");
+install("dynamic-import", "meteor/dynamic-import/server.js");
 install("hot-code-push");
 install("launch-screen");
 install("cfs:tempstore");
@@ -192,7 +187,7 @@ install("mdg:validation-error");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"process.js":["process",function(require,exports,module){
+},"process.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -200,42 +195,46 @@ install("mdg:validation-error");
 //                                                                                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                   //
-try {
-  // The application can run `npm install process` to provide its own
-  // process stub; otherwise this module will provide a partial stub.
-  process = global.process || require("process");
-} catch (noProcess) {
-  process = {};
+if (! global.process) {
+  try {
+    // The application can run `npm install process` to provide its own
+    // process stub; otherwise this module will provide a partial stub.
+    global.process = require("process");
+  } catch (missing) {
+    global.process = {};
+  }
 }
+
+var proc = global.process;
 
 if (Meteor.isServer) {
   // Make require("process") work on the server in all versions of Node.
   meteorInstall({
     node_modules: {
       "process.js": function (r, e, module) {
-        module.exports = process;
+        module.exports = proc;
       }
     }
   });
 } else {
-  process.platform = "browser";
-  process.nextTick = process.nextTick || Meteor._setImmediate;
+  proc.platform = "browser";
+  proc.nextTick = proc.nextTick || Meteor._setImmediate;
 }
 
-if (typeof process.env !== "object") {
-  process.env = {};
+if (typeof proc.env !== "object") {
+  proc.env = {};
 }
 
 var hasOwn = Object.prototype.hasOwnProperty;
 for (var key in meteorEnv) {
   if (hasOwn.call(meteorEnv, key)) {
-    process.env[key] = meteorEnv[key];
+    proc.env[key] = meteorEnv[key];
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"reify.js":["reify/lib/runtime",function(require,exports,module){
+},"reify.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -251,7 +250,7 @@ Mp.import = Mp.import || Mp.importSync;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"node_modules":{"reify":{"lib":{"runtime":{"index.js":function(require,exports,module){
+},"node_modules":{"reify":{"lib":{"runtime":{"index.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -373,18 +372,135 @@ function runSetters(valueToPassThrough) {
 }
 
 // Returns a function that takes a namespace object and copies the
-// properties of the namespace to module.exports, which is useful for
-// implementing `export * from "module"` syntax.
-function moduleMakeNsSetter() {
+// properties of the namespace to module.exports, excluding any "default"
+// property (by default, unless includeDefault is truthy), which is useful
+// for implementing `export * from "module"`.
+function moduleMakeNsSetter(includeDefault) {
   var module = this;
+  // Discussion of why the "default" property is skipped:
+  // https://github.com/tc39/ecma262/issues/948
   return function (namespace) {
-    utils.assign(module.exports, namespace);
+    Object.keys(namespace).forEach(function (key) {
+      if (includeDefault || key !== "default") {
+        utils.copyKey(key, module.exports, namespace);
+      }
+    });
   };
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}},"babel-runtime":{"regenerator":{"index.js":function(require,exports,module){
+}}}}}}},"babel-runtime":{"package.json":function(require,exports,module){
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                //
+// node_modules/babel-runtime/package.json                                                                        //
+//                                                                                                                //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                  //
+module.exports = {
+  "_args": [
+    [
+      {
+        "raw": "babel-runtime@^6.20.0",
+        "scope": null,
+        "escapedName": "babel-runtime",
+        "name": "babel-runtime",
+        "rawSpec": "^6.20.0",
+        "spec": ">=6.20.0 <7.0.0",
+        "type": "range"
+      },
+      "/home/riky/Meteor/blh"
+    ]
+  ],
+  "_from": "babel-runtime@>=6.20.0 <7.0.0",
+  "_id": "babel-runtime@6.23.0",
+  "_inCache": true,
+  "_location": "/babel-runtime",
+  "_nodeVersion": "6.9.1",
+  "_npmOperationalInternal": {
+    "host": "packages-18-east.internal.npmjs.com",
+    "tmp": "tmp/babel-runtime-6.23.0.tgz_1487100427089_0.11220609024167061"
+  },
+  "_npmUser": {
+    "name": "loganfsmyth",
+    "email": "loganfsmyth@gmail.com"
+  },
+  "_npmVersion": "3.10.8",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "babel-runtime@^6.20.0",
+    "scope": null,
+    "escapedName": "babel-runtime",
+    "name": "babel-runtime",
+    "rawSpec": "^6.20.0",
+    "spec": ">=6.20.0 <7.0.0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.23.0.tgz",
+  "_shasum": "0a9489f144de70efb3ce4300accdb329e2fc543b",
+  "_shrinkwrap": null,
+  "_spec": "babel-runtime@^6.20.0",
+  "_where": "/home/riky/Meteor/blh",
+  "author": {
+    "name": "Sebastian McKenzie",
+    "email": "sebmck@gmail.com"
+  },
+  "dependencies": {
+    "core-js": "^2.4.0",
+    "regenerator-runtime": "^0.10.0"
+  },
+  "description": "babel selfContained runtime",
+  "devDependencies": {
+    "babel-helpers": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "0a9489f144de70efb3ce4300accdb329e2fc543b",
+    "tarball": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.23.0.tgz"
+  },
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "amasad",
+      "email": "amjad.masad@gmail.com"
+    },
+    {
+      "name": "hzoo",
+      "email": "hi@henryzoo.com"
+    },
+    {
+      "name": "jmm",
+      "email": "npm-public@jessemccarthy.net"
+    },
+    {
+      "name": "loganfsmyth",
+      "email": "loganfsmyth@gmail.com"
+    },
+    {
+      "name": "sebmck",
+      "email": "sebmck@gmail.com"
+    }
+  ],
+  "name": "babel-runtime",
+  "optionalDependencies": {},
+  "readme": "# babel-runtime\n\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/babel/babel/tree/master/packages/babel-runtime"
+  },
+  "scripts": {},
+  "version": "6.23.0"
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"regenerator":{"index.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -396,219 +512,7 @@ module.exports = require("regenerator-runtime");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}},"helpers":{"typeof.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/typeof.js                                                                   //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-var _iterator = require("../core-js/symbol/iterator");
-
-var _iterator2 = _interopRequireDefault(_iterator);
-
-var _symbol = require("../core-js/symbol");
-
-var _symbol2 = _interopRequireDefault(_symbol);
-
-var _typeof = typeof _symbol2.default === "function" && typeof _iterator2.default === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof _symbol2.default === "function" && obj.constructor === _symbol2.default && obj !== _symbol2.default.prototype ? "symbol" : typeof obj; };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = typeof _symbol2.default === "function" && _typeof(_iterator2.default) === "symbol" ? function (obj) {
-  return typeof obj === "undefined" ? "undefined" : _typeof(obj);
-} : function (obj) {
-  return obj && typeof _symbol2.default === "function" && obj.constructor === _symbol2.default && obj !== _symbol2.default.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof(obj);
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"toConsumableArray.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/toConsumableArray.js                                                        //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-var _from = require("../core-js/array/from");
-
-var _from2 = _interopRequireDefault(_from);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function (arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-      arr2[i] = arr[i];
-    }
-
-    return arr2;
-  } else {
-    return (0, _from2.default)(arr);
-  }
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"classCallCheck.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/classCallCheck.js                                                           //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-exports.default = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"possibleConstructorReturn.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/possibleConstructorReturn.js                                                //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-var _typeof2 = require("../helpers/typeof");
-
-var _typeof3 = _interopRequireDefault(_typeof2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function (self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && ((typeof call === "undefined" ? "undefined" : (0, _typeof3.default)(call)) === "object" || typeof call === "function") ? call : self;
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"inherits.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/inherits.js                                                                 //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-var _setPrototypeOf = require("../core-js/object/set-prototype-of");
-
-var _setPrototypeOf2 = _interopRequireDefault(_setPrototypeOf);
-
-var _create = require("../core-js/object/create");
-
-var _create2 = _interopRequireDefault(_create);
-
-var _typeof2 = require("../helpers/typeof");
-
-var _typeof3 = _interopRequireDefault(_typeof2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function (subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + (typeof superClass === "undefined" ? "undefined" : (0, _typeof3.default)(superClass)));
-  }
-
-  subClass.prototype = (0, _create2.default)(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) _setPrototypeOf2.default ? (0, _setPrototypeOf2.default)(subClass, superClass) : subClass.__proto__ = superClass;
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"slicedToArray.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// node_modules/babel-runtime/helpers/slicedToArray.js                                                            //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-"use strict";
-
-exports.__esModule = true;
-
-var _isIterable2 = require("../core-js/is-iterable");
-
-var _isIterable3 = _interopRequireDefault(_isIterable2);
-
-var _getIterator2 = require("../core-js/get-iterator");
-
-var _getIterator3 = _interopRequireDefault(_getIterator2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];
-    var _n = true;
-    var _d = false;
-    var _e = undefined;
-
-    try {
-      for (var _i = (0, _getIterator3.default)(arr), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);
-
-        if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;
-      _e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }
-
-    return _arr;
-  }
-
-  return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if ((0, _isIterable3.default)(Object(arr))) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  };
-}();
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"extends.js":function(require,exports){
+}},"helpers":{"extends.js":function(require,exports){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                //
@@ -650,7 +554,7 @@ exports.default = _assign2.default || function (target) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                   //
 exports.name = "bcrypt";
-exports.version = "1.0.2";
+exports.version = "1.0.3";
 exports.main = "./bcrypt";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -870,7 +774,12 @@ module.exports.getRounds = function getRounds(hash) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}},{"extensions":[".js",".json"]});
+}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/modules/server.js");
 
 /* Exports */
@@ -879,8 +788,7 @@ if (typeof Package === 'undefined') Package = {};
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
 })(Package.modules = exports, {
-  meteorInstall: meteorInstall,
-  process: process
+  meteorInstall: meteorInstall
 });
 
 })();

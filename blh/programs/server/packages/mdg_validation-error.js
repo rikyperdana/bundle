@@ -8,86 +8,63 @@ var ECMAScript = Package.ecmascript.ECMAScript;
 var SimpleSchema = Package['aldeed:simple-schema'].SimpleSchema;
 var MongoObject = Package['aldeed:simple-schema'].MongoObject;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
-var Symbol = Package['ecmascript-runtime-server'].Symbol;
-var Map = Package['ecmascript-runtime-server'].Map;
-var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var ValidationError;
 
-var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"validation-error.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"validation-error.js":function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                         //
-// packages/mdg_validation-error/validation-error.js                                                       //
-//                                                                                                         //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                           //
-var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");                                    //
-                                                                                                           //
-var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);                                           //
-                                                                                                           //
-var _possibleConstructorReturn2 = require("babel-runtime/helpers/possibleConstructorReturn");              //
-                                                                                                           //
-var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);                     //
-                                                                                                           //
-var _inherits2 = require("babel-runtime/helpers/inherits");                                                //
-                                                                                                           //
-var _inherits3 = _interopRequireDefault(_inherits2);                                                       //
-                                                                                                           //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }          //
-                                                                                                           //
-/* global ValidationError:true */ /* global SimpleSchema */ // This is exactly what comes out of SS.       // 1
-var errorSchema = new SimpleSchema({                                                                       // 5
-  name: {                                                                                                  // 6
-    type: String                                                                                           // 6
-  },                                                                                                       // 6
-  type: {                                                                                                  // 7
-    type: String                                                                                           // 7
-  },                                                                                                       // 7
-  details: {                                                                                               // 8
-    type: Object,                                                                                          // 8
-    blackbox: true,                                                                                        // 8
-    optional: true                                                                                         // 8
-  }                                                                                                        // 8
-});                                                                                                        // 5
-var errorsSchema = new SimpleSchema({                                                                      // 11
-  errors: {                                                                                                // 12
-    type: Array                                                                                            // 12
-  },                                                                                                       // 12
-  'errors.$': {                                                                                            // 13
-    type: errorSchema                                                                                      // 13
-  }                                                                                                        // 13
-});                                                                                                        // 11
-                                                                                                           //
-ValidationError = function (_Meteor$Error) {                                                               // 16
-  (0, _inherits3.default)(_class, _Meteor$Error);                                                          // 16
-                                                                                                           //
-  function _class(errors) {                                                                                // 17
-    var message = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'Validation Failed';
-    (0, _classCallCheck3.default)(this, _class);                                                           // 17
-    errorsSchema.validate({                                                                                // 18
-      errors: errors                                                                                       // 18
-    });                                                                                                    // 18
-                                                                                                           //
-    var _this = (0, _possibleConstructorReturn3.default)(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors));
-                                                                                                           //
-    _this.errors = errors;                                                                                 // 22
-    return _this;                                                                                          // 17
-  }                                                                                                        // 23
-                                                                                                           //
-  return _class;                                                                                           // 16
-}(Meteor.Error); // If people use this to check for the error code, we can change it                       // 16
-// in future versions                                                                                      // 27
-                                                                                                           //
-                                                                                                           //
-ValidationError.ERROR_CODE = 'validation-error';                                                           // 28
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                   //
+// packages/mdg_validation-error/validation-error.js                                                 //
+//                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                     //
+/* global ValidationError:true */ /* global SimpleSchema */ // This is exactly what comes out of SS.
+const errorSchema = new SimpleSchema({
+  name: {
+    type: String
+  },
+  type: {
+    type: String
+  },
+  details: {
+    type: Object,
+    blackbox: true,
+    optional: true
+  }
+});
+const errorsSchema = new SimpleSchema({
+  errors: {
+    type: Array
+  },
+  'errors.$': {
+    type: errorSchema
+  }
+});
+ValidationError = class extends Meteor.Error {
+  constructor(errors, message = 'Validation Failed') {
+    errorsSchema.validate({
+      errors
+    });
+    super(ValidationError.ERROR_CODE, message, errors);
+    this.errors = errors;
+  }
 
-}]}}}},{"extensions":[".js",".json"]});
+}; // If people use this to check for the error code, we can change it
+// in future versions
+
+ValidationError.ERROR_CODE = 'validation-error';
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/mdg:validation-error/validation-error.js");
 
 /* Exports */
@@ -101,4 +78,5 @@ if (typeof Package === 'undefined') Package = {};
 
 })();
 
-//# sourceMappingURL=mdg_validation-error.js.map
+//# sourceURL=meteor://💻app/packages/mdg_validation-error.js
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1ldGVvcjovL/CfkrthcHAvcGFja2FnZXMvbWRnOnZhbGlkYXRpb24tZXJyb3IvdmFsaWRhdGlvbi1lcnJvci5qcyJdLCJuYW1lcyI6WyJlcnJvclNjaGVtYSIsIlNpbXBsZVNjaGVtYSIsIm5hbWUiLCJ0eXBlIiwiU3RyaW5nIiwiZGV0YWlscyIsIk9iamVjdCIsImJsYWNrYm94Iiwib3B0aW9uYWwiLCJlcnJvcnNTY2hlbWEiLCJlcnJvcnMiLCJBcnJheSIsIlZhbGlkYXRpb25FcnJvciIsIk1ldGVvciIsIkVycm9yIiwiY29uc3RydWN0b3IiLCJtZXNzYWdlIiwidmFsaWRhdGUiLCJFUlJPUl9DT0RFIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxpQyxDQUNBLHlCLENBRUE7QUFDQSxNQUFNQSxjQUFjLElBQUlDLFlBQUosQ0FBaUI7QUFDbkNDLFFBQU07QUFBQ0MsVUFBTUM7QUFBUCxHQUQ2QjtBQUVuQ0QsUUFBTTtBQUFDQSxVQUFNQztBQUFQLEdBRjZCO0FBR25DQyxXQUFTO0FBQUNGLFVBQU1HLE1BQVA7QUFBZUMsY0FBVSxJQUF6QjtBQUErQkMsY0FBVTtBQUF6QztBQUgwQixDQUFqQixDQUFwQjtBQU1BLE1BQU1DLGVBQWUsSUFBSVIsWUFBSixDQUFpQjtBQUNwQ1MsVUFBUTtBQUFDUCxVQUFNUTtBQUFQLEdBRDRCO0FBRXBDLGNBQVk7QUFBQ1IsVUFBTUg7QUFBUDtBQUZ3QixDQUFqQixDQUFyQjtBQUtBWSxrQkFBa0IsY0FBY0MsT0FBT0MsS0FBckIsQ0FBMkI7QUFDM0NDLGNBQVlMLE1BQVosRUFBb0JNLFVBQVUsbUJBQTlCLEVBQW1EO0FBQ2pEUCxpQkFBYVEsUUFBYixDQUFzQjtBQUFDUDtBQUFELEtBQXRCO0FBRUEsVUFBTUUsZ0JBQWdCTSxVQUF0QixFQUFrQ0YsT0FBbEMsRUFBMkNOLE1BQTNDO0FBRUEsU0FBS0EsTUFBTCxHQUFjQSxNQUFkO0FBQ0Q7O0FBUDBDLENBQTdDLEMsQ0FVQTtBQUNBOztBQUNBRSxnQkFBZ0JNLFVBQWhCLEdBQTZCLGtCQUE3QixDIiwiZmlsZSI6Ii9wYWNrYWdlcy9tZGdfdmFsaWRhdGlvbi1lcnJvci5qcyIsInNvdXJjZXNDb250ZW50IjpbIi8qIGdsb2JhbCBWYWxpZGF0aW9uRXJyb3I6dHJ1ZSAqL1xuLyogZ2xvYmFsIFNpbXBsZVNjaGVtYSAqL1xuXG4vLyBUaGlzIGlzIGV4YWN0bHkgd2hhdCBjb21lcyBvdXQgb2YgU1MuXG5jb25zdCBlcnJvclNjaGVtYSA9IG5ldyBTaW1wbGVTY2hlbWEoe1xuICBuYW1lOiB7dHlwZTogU3RyaW5nfSxcbiAgdHlwZToge3R5cGU6IFN0cmluZ30sXG4gIGRldGFpbHM6IHt0eXBlOiBPYmplY3QsIGJsYWNrYm94OiB0cnVlLCBvcHRpb25hbDogdHJ1ZX1cbn0pO1xuXG5jb25zdCBlcnJvcnNTY2hlbWEgPSBuZXcgU2ltcGxlU2NoZW1hKHtcbiAgZXJyb3JzOiB7dHlwZTogQXJyYXl9LFxuICAnZXJyb3JzLiQnOiB7dHlwZTogZXJyb3JTY2hlbWF9XG59KTtcblxuVmFsaWRhdGlvbkVycm9yID0gY2xhc3MgZXh0ZW5kcyBNZXRlb3IuRXJyb3Ige1xuICBjb25zdHJ1Y3RvcihlcnJvcnMsIG1lc3NhZ2UgPSAnVmFsaWRhdGlvbiBGYWlsZWQnKSB7XG4gICAgZXJyb3JzU2NoZW1hLnZhbGlkYXRlKHtlcnJvcnN9KTtcblxuICAgIHN1cGVyKFZhbGlkYXRpb25FcnJvci5FUlJPUl9DT0RFLCBtZXNzYWdlLCBlcnJvcnMpO1xuXG4gICAgdGhpcy5lcnJvcnMgPSBlcnJvcnM7XG4gIH1cbn07XG5cbi8vIElmIHBlb3BsZSB1c2UgdGhpcyB0byBjaGVjayBmb3IgdGhlIGVycm9yIGNvZGUsIHdlIGNhbiBjaGFuZ2UgaXRcbi8vIGluIGZ1dHVyZSB2ZXJzaW9uc1xuVmFsaWRhdGlvbkVycm9yLkVSUk9SX0NPREUgPSAndmFsaWRhdGlvbi1lcnJvcic7XG4iXX0=

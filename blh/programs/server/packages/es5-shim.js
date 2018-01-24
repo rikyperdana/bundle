@@ -5,12 +5,11 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var Date, parseInt, parseFloat, originalStringReplace;
 
-var require = meteorInstall({"node_modules":{"meteor":{"es5-shim":{"server.js":["./import_globals.js","es5-shim/es5-shim.js","./export_globals.js",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"es5-shim":{"server.js":function(require){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
@@ -24,7 +23,7 @@ require("./export_globals.js");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"export_globals.js":function(){
+},"export_globals.js":function(){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
@@ -2154,7 +2153,12 @@ originalStringReplace = String.prototype.replace;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/es5-shim/server.js");
 
 /* Exports */

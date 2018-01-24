@@ -7,12 +7,11 @@ var meteorEnv = Package.meteor.meteorEnv;
 var _ = Package.underscore._;
 var EJSON = Package.ejson.EJSON;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var Log;
 
-var require = meteorInstall({"node_modules":{"meteor":{"logging":{"logging.js":["cli-color",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"logging":{"logging.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
@@ -70,6 +69,18 @@ var LEVEL_COLORS = {
 };
 
 var META_COLOR = 'blue';
+
+// Default colors cause readability problems on Windows Powershell,
+// switch to bright variants. While still capable of millions of
+// operations per second, the benchmark showed a 25%+ increase in
+// ops per second (on Node 8) by caching "process.platform".
+var isWin32 = typeof process === 'object' && process.platform === 'win32';
+var platformColor = function (color) {
+  if (isWin32 && typeof color === 'string' && color.slice(-6) !== 'Bright') {
+    return color + 'Bright';
+  }
+  return color;
+};
 
 // XXX package
 var RESTRICTED_KEYS = ['time', 'timeInexact', 'level', 'file', 'line',
@@ -285,8 +296,8 @@ Log.format = function (obj, options) {
       require('cli-color')[color](line) : line;
   };
 
-  return prettify(metaPrefix, options.metaColor || META_COLOR) +
-    prettify(message, LEVEL_COLORS[level]);
+  return prettify(metaPrefix, platformColor(options.metaColor || META_COLOR)) +
+    prettify(message, platformColor(LEVEL_COLORS[level]));
 };
 
 // Turn a line of text into a loggable object.
@@ -299,11 +310,11 @@ Log.objFromText = function (line, override) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-}],"node_modules":{"cli-color":{"package.json":function(require,exports){
+},"node_modules":{"cli-color":{"package.json":function(require,exports){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
-// ../../.1.1.17.m77d77++os+web.browser+web.cordova/npm/node_modules/cli-color/package //
+// ../../.1.1.19.o0jizg++os+web.browser+web.cordova/npm/node_modules/cli-color/package //
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
                                                                                        //
@@ -459,7 +470,12 @@ module.exports = defineProperties(getFn(), {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/logging/logging.js");
 
 /* Exports */

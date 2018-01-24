@@ -2,166 +2,130 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "3049604fcd00d70285400daed98045f065e530ad.js",
+      "path": "f7d93bde05c83a5887281fe28ad178ac6dadcd27.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/3049604fcd00d70285400daed98045f065e530ad.js?meteor_js_resource=true",
-      "size": 1293006,
-      "hash": "3049604fcd00d70285400daed98045f065e530ad"
+      "url": "/f7d93bde05c83a5887281fe28ad178ac6dadcd27.js?meteor_js_resource=true",
+      "size": 1345884,
+      "hash": "f7d93bde05c83a5887281fe28ad178ac6dadcd27"
     },
     {
-      "path": "a8197c61e9babb86ef94e4d2ff8c0a2565283c9e.css",
+      "path": "f7d93bde05c83a5887281fe28ad178ac6dadcd27.stats.json",
+      "where": "client",
+      "type": "json",
+      "cacheable": true,
+      "url": "/f7d93bde05c83a5887281fe28ad178ac6dadcd27.stats.json?meteor_js_resource=true",
+      "size": 25976,
+      "hash": "6b1ed1e34902afe8b7a69c3ff1d9f760a4eb440c"
+    },
+    {
+      "path": "ea275874c2cce61392425d9730abb085d242e752.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/a8197c61e9babb86ef94e4d2ff8c0a2565283c9e.css?meteor_css_resource=true",
-      "size": 251205,
-      "hash": "a8197c61e9babb86ef94e4d2ff8c0a2565283c9e"
+      "url": "/ea275874c2cce61392425d9730abb085d242e752.css?meteor_css_resource=true",
+      "size": 226484,
+      "hash": "ea275874c2cce61392425d9730abb085d242e752"
     },
     {
-      "path": "4d8743d29de2604f0b19332b1bf29a7ecd4a5769.css",
+      "path": "5fb74e1f8db17f73e5b5f4b1fcbe090b1f3e1020.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/4d8743d29de2604f0b19332b1bf29a7ecd4a5769.css?meteor_css_resource=true",
-      "size": 49444,
-      "hash": "4d8743d29de2604f0b19332b1bf29a7ecd4a5769"
+      "url": "/5fb74e1f8db17f73e5b5f4b1fcbe090b1f3e1020.css?meteor_css_resource=true",
+      "size": 92520,
+      "hash": "5fb74e1f8db17f73e5b5f4b1fcbe090b1f3e1020"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.ttf",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Bold.woff",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.ttf",
-      "size": 127744,
-      "hash": "5a287d717fa8438596ad29027a6b70e2f397f0d7"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Bold.woff",
+      "size": 90308,
+      "hash": "eed94b8d8884307fe3087eff7b665c576f18e90c"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Bold.woff2",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff",
-      "size": 62876,
-      "hash": "7c08d3bccfccff607b3a553163cd0b8ca5db3bcb"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Bold.woff2",
+      "size": 64800,
+      "hash": "059450b042a85ef0c68b9ffd98310900302fe3cc"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff2",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Light.woff",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Bold.woff2",
-      "size": 49976,
-      "hash": "14143ee07b9ff49120217a06a6a6008ba6244046"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Light.woff",
+      "size": 89672,
+      "hash": "a465123041d5f7933f9bcf04bd11ceca1972eb5b"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.ttf",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Light.woff2",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.ttf",
-      "size": 126792,
-      "hash": "cadccd5bde0871b52a43fbf92503412c4a4e9535"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Light.woff2",
+      "size": 64268,
+      "hash": "3fb746246073376d1722db4799a162fe09d1e8dd"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Medium.woff",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff",
-      "size": 62316,
-      "hash": "65cf37eb45ba487be303bcbb78f876486578f596"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Medium.woff",
+      "size": 90560,
+      "hash": "53bc5a6172c003df2d1c4e05807ef2f8277b6d8e"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff2",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Medium.woff2",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Light.woff2",
-      "size": 49380,
-      "hash": "ee30392fd5dc21d9e7ff942945734409008c92a3"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Medium.woff2",
+      "size": 65412,
+      "hash": "b61387c470b0154bc20412051fbbc321893fee58"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.ttf",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Regular.woff",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.ttf",
-      "size": 127488,
-      "hash": "d8c857e043d92de5568f873389dd9e6a16f0c0f8"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Regular.woff",
+      "size": 89828,
+      "hash": "ba1ab888c63873e894a5915edf03d39266f03ecb"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Regular.woff2",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff",
-      "size": 62980,
-      "hash": "6ddc0ef559a5320a33342caa3a46059f5418d1a3"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Regular.woff2",
+      "size": 64832,
+      "hash": "ddffb8b8f764bcfaf0396f794dc2ebd1fc36b766"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff2",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Thin.woff",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Medium.woff2",
-      "size": 50224,
-      "hash": "78c92a0936998d2ed20be84d83e3eb2017f439e6"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Thin.woff",
+      "size": 88132,
+      "hash": "541e3cc5f153fad035af3ed70c0f37b88310d344"
     },
     {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.ttf",
+      "path": "packages/materialize_materialize/fonts/roboto/Roboto-Thin.woff2",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.ttf",
-      "size": 126072,
-      "hash": "4ec395e894b0700eac6f8a45f3e9964122aca270"
-    },
-    {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff",
-      "size": 61736,
-      "hash": "3f5071d216184b6db9f90f12904e5993f1a32a37"
-    },
-    {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff2",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Regular.woff2",
-      "size": 49236,
-      "hash": "a3ada7f42129255017b0aea8aa6f5ecd737d53a1"
-    },
-    {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.ttf",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.ttf",
-      "size": 127584,
-      "hash": "633f36a2b256121745545ee736b3898c40884f3c"
-    },
-    {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff",
-      "size": 61628,
-      "hash": "abb091867efeef151c5d745fd7c9608527fe4541"
-    },
-    {
-      "path": "packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff2",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/materialize_materialize/dist/fonts/roboto/Roboto-Thin.woff2",
-      "size": 48524,
-      "hash": "9c0aa8729c7f4937feb8071a3320e0e1276d6189"
+      "url": "/packages/materialize_materialize/fonts/roboto/Roboto-Thin.woff2",
+      "size": 63056,
+      "hash": "e744747fce24d0dd3e20365d2505f7b6703c504b"
     },
     {
       "path": "packages/dapearce_material-icons/MaterialDesign-Webfont/fonts/materialdesignicons-webfont.eot",

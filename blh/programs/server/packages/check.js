@@ -5,14 +5,13 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var _ = Package.underscore._;
 var EJSON = Package.ejson.EJSON;
 
 /* Package-scope variables */
 var check, Match;
 
-var require = meteorInstall({"node_modules":{"meteor":{"check":{"match.js":["./isPlainObject.js",function(require,exports){
+var require = meteorInstall({"node_modules":{"meteor":{"check":{"match.js":function(require,exports){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                   //
@@ -510,7 +509,7 @@ var _prependPath = function (key, base) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"isPlainObject.js":function(require,exports){
+},"isPlainObject.js":function(require,exports){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                   //
@@ -556,7 +555,12 @@ exports.isPlainObject = function( obj ) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/check/match.js");
 
 /* Exports */

@@ -5,12 +5,11 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var NpmModuleBcrypt;
 
-var require = meteorInstall({"node_modules":{"meteor":{"npm-bcrypt":{"wrapper.js":["assert","bcrypt","bcryptjs",function(require,exports){
+var require = meteorInstall({"node_modules":{"meteor":{"npm-bcrypt":{"wrapper.js":function(require,exports){
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
@@ -59,11 +58,11 @@ Object.keys(methods).forEach(function (key) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-}],"node_modules":{"bcryptjs":{"package.json":function(require,exports){
+},"node_modules":{"bcryptjs":{"package.json":function(require,exports){
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
-// ../../.0.9.3.koouna++os+web.browser+web.cordova/npm/node_modules/bcryptj //
+// ../../.0.9.3.13pv4bt++os+web.browser+web.cordova/npm/node_modules/bcrypt //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
                                                                             //
@@ -113,7 +112,12 @@ module.exports = require("./dist/bcrypt.js");
 
 //////////////////////////////////////////////////////////////////////////////
 
-}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/npm-bcrypt/wrapper.js");
 
 /* Exports */
