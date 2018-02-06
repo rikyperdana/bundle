@@ -1,4 +1,76 @@
-var require = meteorInstall({"folder":{"hooks.coffee.js":function(){
+var require = meteorInstall({"folder":{"parent":{"funcs.coffee.js":function(){
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// folder/parent/funcs.coffee.js                                                                                     //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                     //
+__coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
+this._ = lodash;                                                                                                     // 1
+this.coll = {};                                                                                                      // 2
+this.schema = {};                                                                                                    // 2
+                                                                                                                     //
+this.look = function (list, val) {                                                                                   // 3
+  return _.find(selects[list], function (i) {                                                                        // 8
+    return i.value === val;                                                                                          // 9
+  });                                                                                                                // 3
+};                                                                                                                   // 3
+                                                                                                                     //
+this.look2 = function (list, id) {                                                                                   // 4
+  return _.find(coll[list].find().fetch(), function (i) {                                                            // 14
+    return i._id === id;                                                                                             // 15
+  });                                                                                                                // 4
+};                                                                                                                   // 4
+                                                                                                                     //
+this.randomId = function () {                                                                                        // 5
+  return Math.random().toString(36).slice(2);                                                                        // 20
+};                                                                                                                   // 5
+                                                                                                                     //
+this.zeros = function (num) {                                                                                        // 6
+  var size;                                                                                                          // 7
+  size = _.size(_.toString(num));                                                                                    // 7
+                                                                                                                     //
+  if (size < 7) {                                                                                                    // 8
+    return '0'.repeat(6 - size) + _.toString(num);                                                                   // 27
+  }                                                                                                                  // 28
+};                                                                                                                   // 6
+                                                                                                                     //
+if (Meteor.isClient) {                                                                                               // 10
+  SimpleSchema.debug = true;                                                                                         // 12
+  AutoForm.setDefaultTemplate('materialize');                                                                        // 13
+                                                                                                                     //
+  this.currentRoute = function () {                                                                                  // 14
+    return Router.current().route.getName();                                                                         // 35
+  };                                                                                                                 // 14
+                                                                                                                     //
+  this.currentPar = function (param) {                                                                               // 15
+    return Router.current().params[param];                                                                           // 38
+  };                                                                                                                 // 15
+                                                                                                                     //
+  this.search = function () {                                                                                        // 16
+    return Session.get('search');                                                                                    // 41
+  };                                                                                                                 // 16
+                                                                                                                     //
+  this.formDoc = function () {                                                                                       // 17
+    return Session.get('formDoc');                                                                                   // 44
+  };                                                                                                                 // 17
+                                                                                                                     //
+  this.limit = function () {                                                                                         // 18
+    return Session.get('limit');                                                                                     // 47
+  };                                                                                                                 // 18
+                                                                                                                     //
+  this.page = function () {                                                                                          // 19
+    return Session.get('page');                                                                                      // 50
+  };                                                                                                                 // 19
+                                                                                                                     //
+  this.roles = function () {                                                                                         // 20
+    return Meteor.user().roles;                                                                                      // 53
+  };                                                                                                                 // 20
+}                                                                                                                    // 55
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}},"hooks.coffee.js":function(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                   //
@@ -7,144 +79,132 @@ var require = meteorInstall({"folder":{"hooks.coffee.js":function(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                      //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-var closeForm, currentPar, currentRoute;                                                                             // 1
+var closeForm;                                                                                                       // 1
                                                                                                                      //
 if (Meteor.isClient) {                                                                                               // 1
-  currentRoute = function () {                                                                                       // 4
-    return Router.current().route.getName();                                                                         // 5
-  };                                                                                                                 // 4
+  this.modForm = function (doc, idbayar) {                                                                           // 3
+    var begin, i, l, len, ref, stop, total;                                                                          // 3
                                                                                                                      //
-  currentPar = function (param) {                                                                                    // 5
-    return Router.current().params[param];                                                                           // 8
-  };                                                                                                                 // 5
+    if (currentRoute() === 'jalan') {                                                                                // 3
+      doc.tanggal = new Date();                                                                                      // 4
+      doc.idbayar = idbayar ? idbayar : randomId();                                                                  // 5
+      doc.jenis = currentRoute();                                                                                    // 6
+      total = {                                                                                                      // 7
+        tindakan: 0,                                                                                                 // 7
+        labor: 0,                                                                                                    // 7
+        radio: 0,                                                                                                    // 7
+        obat: 0                                                                                                      // 7
+      };                                                                                                             // 7
                                                                                                                      //
-  this.randomId = function () {                                                                                      // 6
-    return Math.random().toString(36).slice(2);                                                                      // 11
-  };                                                                                                                 // 6
+      _.map(['tindakan', 'labor', 'radio'], function (i) {                                                           // 8
+        var find, j, l, len, ref, results;                                                                           // 9
                                                                                                                      //
-  this.modForm = function (doc, idbayar) {                                                                           // 8
-    var begin, i, l, len, ref, stop, total;                                                                          // 8
+        if (doc[i]) {                                                                                                // 9
+          ref = doc[i];                                                                                              // 9
+          results = [];                                                                                              // 9
                                                                                                                      //
-    if (currentRoute() === 'jalan') {                                                                                // 8
-      doc.tanggal = new Date();                                                                                      // 9
-      doc.idbayar = idbayar ? idbayar : randomId();                                                                  // 10
-      doc.jenis = currentRoute();                                                                                    // 11
-      total = {                                                                                                      // 12
-        tindakan: 0,                                                                                                 // 12
-        labor: 0,                                                                                                    // 12
-        radio: 0,                                                                                                    // 12
-        obat: 0                                                                                                      // 12
-      };                                                                                                             // 12
+          for (l = 0, len = ref.length; l < len; l++) {                                                              // 21
+            j = ref[l];                                                                                              // 22
+            j['id' + i] = randomId();                                                                                // 10
+            find = _.find(coll.tarif.find().fetch(), function (k) {                                                  // 11
+              return k._id === j.nama;                                                                               // 25
+            });                                                                                                      // 11
+            j.harga = find.harga;                                                                                    // 12
+            results.push(total[i] += j.harga);                                                                       // 28
+          }                                                                                                          // 9
                                                                                                                      //
-      _.map(['tindakan', 'labor', 'radio'], function (i) {                                                           // 13
-        var find, j, l, len, ref, results;                                                                           // 14
+          return results;                                                                                            // 30
+        }                                                                                                            // 31
+      });                                                                                                            // 8
                                                                                                                      //
-        if (doc[i]) {                                                                                                // 14
-          ref = doc[i];                                                                                              // 14
-          results = [];                                                                                              // 14
+      if (doc.obat) {                                                                                                // 14
+        ref = doc.obat;                                                                                              // 14
                                                                                                                      //
-          for (l = 0, len = ref.length; l < len; l++) {                                                              // 30
-            j = ref[l];                                                                                              // 31
-            j['id' + i] = randomId();                                                                                // 15
-            find = _.find(coll.tarif.find().fetch(), function (k) {                                                  // 16
-              return k._id === j.nama;                                                                               // 34
-            });                                                                                                      // 16
-            j.harga = find.harga;                                                                                    // 17
-            results.push(total[i] += j.harga);                                                                       // 37
-          }                                                                                                          // 14
+        for (l = 0, len = ref.length; l < len; l++) {                                                                // 14
+          i = ref[l];                                                                                                // 36
+          i.idobat = randomId();                                                                                     // 14
+        }                                                                                                            // 14
+      }                                                                                                              // 39
                                                                                                                      //
-          return results;                                                                                            // 39
-        }                                                                                                            // 40
-      });                                                                                                            // 13
+      doc.total = {                                                                                                  // 15
+        tindakan: total.tindakan,                                                                                    // 16
+        labor: total.labor,                                                                                          // 17
+        radio: total.radio                                                                                           // 18
+      };                                                                                                             // 16
+      doc.total.semua = doc.total.tindakan + doc.total.labor + doc.total.radio;                                      // 19
                                                                                                                      //
-      if (doc.obat) {                                                                                                // 19
-        ref = doc.obat;                                                                                              // 19
-                                                                                                                     //
-        for (l = 0, len = ref.length; l < len; l++) {                                                                // 19
-          i = ref[l];                                                                                                // 45
-          i.idobat = randomId();                                                                                     // 19
-        }                                                                                                            // 19
+      if (doc.total.semua > 0 || doc.cara_bayar !== 1) {                                                             // 20
+        doc.billRegis = true;                                                                                        // 20
       }                                                                                                              // 48
                                                                                                                      //
-      doc.total = {                                                                                                  // 20
-        tindakan: total.tindakan,                                                                                    // 21
-        labor: total.labor,                                                                                          // 22
-        radio: total.radio                                                                                           // 23
-      };                                                                                                             // 21
-      doc.total.semua = doc.total.tindakan + doc.total.labor + doc.total.radio;                                      // 24
+      if (doc.total.semua > 0 && doc.cara_bayar !== 1) {                                                             // 21
+        doc.status_bayar = true;                                                                                     // 21
+      }                                                                                                              // 51
                                                                                                                      //
-      if (doc.total.semua > 0 || doc.cara_bayar !== 1) {                                                             // 25
-        doc.billRegis = true;                                                                                        // 25
-      }                                                                                                              // 57
+      if (doc.obat && 0 === doc.total.semua) {                                                                       // 22
+        doc.billRegis = true;                                                                                        // 23
+        doc.status_bayar = true;                                                                                     // 24
+      }                                                                                                              // 55
                                                                                                                      //
-      if (doc.total.semua > 0 && doc.cara_bayar !== 1) {                                                             // 26
-        doc.status_bayar = true;                                                                                     // 26
-      }                                                                                                              // 60
+      begin = Session.get('begin');                                                                                  // 25
+      stop = moment();                                                                                               // 25
+      doc.spm = stop.diff(begin, 'minutes');                                                                         // 26
+      doc.petugas = Meteor.userId();                                                                                 // 27
+      doc.nobill = parseInt(_.toString(Date.now()).substr(7, 13));                                                   // 28
+      return doc;                                                                                                    // 61
+    }                                                                                                                // 62
+  };                                                                                                                 // 3
                                                                                                                      //
-      if (doc.obat && 0 === doc.total.semua) {                                                                       // 27
-        doc.billRegis = true;                                                                                        // 28
-        doc.status_bayar = true;                                                                                     // 29
-      }                                                                                                              // 64
+  closeForm = function () {                                                                                          // 31
+    return _.map(['showForm', 'formDoc'], function (i) {                                                             // 65
+      return Session.set(i, null);                                                                                   // 66
+    });                                                                                                              // 32
+  };                                                                                                                 // 31
                                                                                                                      //
-      begin = Session.get('begin');                                                                                  // 30
-      stop = moment();                                                                                               // 30
-      doc.spm = stop.diff(begin, 'minutes');                                                                         // 31
-      doc.petugas = Meteor.userId();                                                                                 // 32
-      doc.nobill = parseInt(_.toString(Date.now()).substr(7, 13));                                                   // 33
-      return doc;                                                                                                    // 70
-    }                                                                                                                // 71
-  };                                                                                                                 // 8
+  AutoForm.addHooks('formPasien', {                                                                                  // 35
+    before: {                                                                                                        // 36
+      'update-pushArray': function (doc) {                                                                           // 37
+        var formDoc;                                                                                                 // 38
+        formDoc = Session.get('formDoc');                                                                            // 38
                                                                                                                      //
-  closeForm = function () {                                                                                          // 36
-    return _.map(['showForm', 'formDoc'], function (i) {                                                             // 74
-      return Session.get(i, null);                                                                                   // 75
-    });                                                                                                              // 37
-  };                                                                                                                 // 36
+        if (formDoc) {                                                                                               // 39
+          Meteor.call('rmRawat', currentPar('no_mr'), formDoc.idbayar);                                              // 39
+        }                                                                                                            // 76
                                                                                                                      //
-  AutoForm.addHooks('formPasien', {                                                                                  // 40
-    before: {                                                                                                        // 41
-      'update-pushArray': function (doc) {                                                                           // 42
-        var formDoc;                                                                                                 // 43
-        formDoc = Session.get('formDoc');                                                                            // 43
+        return this.result(modForm(doc));                                                                            // 77
+      }                                                                                                              // 37
+    },                                                                                                               // 37
+    after: {                                                                                                         // 41
+      insert: function () {                                                                                          // 42
+        return closeForm();                                                                                          // 82
+      },                                                                                                             // 42
+      'update-pushArray': function (err, res) {                                                                      // 43
+        closeForm();                                                                                                 // 44
                                                                                                                      //
-        if (formDoc) {                                                                                               // 44
-          Meteor.call('rmRawat', currentPar('no_mr'), formDoc.idbayar);                                              // 44
-        }                                                                                                            // 85
-                                                                                                                     //
-        return this.result(modForm(doc));                                                                            // 86
+        if (res) {                                                                                                   // 45
+          return Meteor.call('pindah', currentPar('no_mr'));                                                         // 87
+        }                                                                                                            // 88
       }                                                                                                              // 42
     },                                                                                                               // 42
-    after: {                                                                                                         // 46
-      insert: function () {                                                                                          // 47
-        return closeForm();                                                                                          // 91
-      },                                                                                                             // 47
-      'update-pushArray': function (err, res) {                                                                      // 48
-        closeForm();                                                                                                 // 49
-                                                                                                                     //
-        if (res) {                                                                                                   // 50
-          return Meteor.call('pindah', currentPar('no_mr'));                                                         // 96
-        }                                                                                                            // 97
-      }                                                                                                              // 47
-    },                                                                                                               // 47
-    formToDoc: function (doc) {                                                                                      // 51
-      Session.set('preview', modForm(doc));                                                                          // 52
-      return doc;                                                                                                    // 102
-    }                                                                                                                // 41
-  });                                                                                                                // 41
-  AutoForm.addHooks('formGudang', {                                                                                  // 55
-    before: {                                                                                                        // 56
-      insert: function (doc) {                                                                                       // 57
-        doc.idbarang = randomId();                                                                                   // 58
-        doc.batch[0].idbatch = randomId();                                                                           // 59
-        return this.result(doc);                                                                                     // 110
-      },                                                                                                             // 57
-      'update-pushArray': function (doc) {                                                                           // 61
-        doc.idbatch = randomId();                                                                                    // 62
-        return this.result(doc);                                                                                     // 114
-      }                                                                                                              // 57
-    }                                                                                                                // 57
-  });                                                                                                                // 56
-}                                                                                                                    // 118
+    formToDoc: function (doc) {                                                                                      // 46
+      Session.set('preview', modForm(doc));                                                                          // 47
+      return doc;                                                                                                    // 93
+    }                                                                                                                // 36
+  });                                                                                                                // 36
+  AutoForm.addHooks('formGudang', {                                                                                  // 50
+    before: {                                                                                                        // 51
+      insert: function (doc) {                                                                                       // 52
+        doc.idbarang = randomId();                                                                                   // 53
+        doc.batch[0].idbatch = randomId();                                                                           // 54
+        return this.result(doc);                                                                                     // 101
+      },                                                                                                             // 52
+      'update-pushArray': function (doc) {                                                                           // 56
+        doc.idbatch = randomId();                                                                                    // 57
+        return this.result(doc);                                                                                     // 105
+      }                                                                                                              // 52
+    }                                                                                                                // 52
+  });                                                                                                                // 51
+}                                                                                                                    // 109
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"menus.coffee.js":function(){
@@ -280,109 +340,101 @@ this.modules = [{                                                               
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                      //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-var look;                                                                                                            // 1
-                                                                                                                     //
 if (Meteor.isClient) {                                                                                               // 1
-  look = function (list, val) {                                                                                      // 3
-    return _.find(selects[list], function (i) {                                                                      // 5
-      return i.value === val;                                                                                        // 6
-    });                                                                                                              // 3
-  };                                                                                                                 // 3
-                                                                                                                     //
-  this.makePdf = {                                                                                                   // 4
-    card: function () {                                                                                              // 5
-      var doc, pdf;                                                                                                  // 6
-      doc = coll.pasien.findOne();                                                                                   // 6
-      pdf = pdfMake.createPdf({                                                                                      // 7
-        content: ['Nama: ' + doc.regis.nama_lengkap, 'No. MR: ' + doc.no_mr],                                        // 8
-        pageSize: 'B8',                                                                                              // 12
-        pageMargins: [110, 50, 0, 0],                                                                                // 13
-        pageOrientation: 'landscape'                                                                                 // 14
-      });                                                                                                            // 8
-      return pdf.download(doc.no_mr + '_card.pdf');                                                                  // 19
-    },                                                                                                               // 5
-    consent: function () {                                                                                           // 16
-      var doc, pdf;                                                                                                  // 17
-      doc = coll.pasien.findOne();                                                                                   // 17
-      pdf = pdfMake.createPdf({                                                                                      // 18
-        content: [{                                                                                                  // 19
+  this.makePdf = {                                                                                                   // 3
+    card: function () {                                                                                              // 4
+      var doc, pdf;                                                                                                  // 5
+      doc = coll.pasien.findOne();                                                                                   // 5
+      pdf = pdfMake.createPdf({                                                                                      // 6
+        content: ['Nama: ' + doc.regis.nama_lengkap, 'No. MR: ' + doc.no_mr],                                        // 7
+        pageSize: 'B8',                                                                                              // 11
+        pageMargins: [110, 50, 0, 0],                                                                                // 12
+        pageOrientation: 'landscape'                                                                                 // 13
+      });                                                                                                            // 7
+      return pdf.download(doc.no_mr + '_card.pdf');                                                                  // 12
+    },                                                                                                               // 4
+    consent: function () {                                                                                           // 15
+      var doc, pdf;                                                                                                  // 16
+      doc = coll.pasien.findOne();                                                                                   // 16
+      pdf = pdfMake.createPdf({                                                                                      // 17
+        content: [{                                                                                                  // 18
           text: 'PEMERINTAH PROVINSI RIAU\nRUMAH SAKIT UMUM DAERAH PETALA BUMI\nJL. Dr. Soetomo No. 65, Telp. (0761) 23024',
-          alignment: 'center'                                                                                        // 20
+          alignment: 'center'                                                                                        // 19
         }, '\nDATA UMUM PASIEN', '\nNAMA LENGKAP : ' + doc.regis.nama_lengkap, 'TEMPAT & TANGGAL LAHIR : ' + doc.regis.tmpt_lahir + ', tanggal ' + moment(doc.regis.tgl_lahir).format('D/MMMM/YYYY'), 'GOLONGAN DARAH : ' + look('darah', doc.regis.darah).label, 'JENIS KELAMIN : ' + look('kelamin', doc.regis.kelamin).label, 'AGAMA : ' + look('agama', doc.regis.agama).label, 'PENDIDIKAN : ' + look('pendidikan', doc.regis.pendidikan).label, 'PEKERJAAN : ' + look('pekerjaan', doc.regis.pekerjaan).label, 'NAMA AYAH : ' + doc.regis.ayah, 'NAMA IBU : ' + doc.regis.ibu, 'NAMA SUAMI/ISTRI : ' + doc.regis.pasangan, 'ALAMAT : ' + doc.regis.alamat, 'NO. TELP / HP : ' + doc.regis.kontak, '\nPERSETUJUAN UMUM (GENERAL CONSENT)', '\nSaya akan mentaati peraturan yang berlaku di RSUD Petala Bumi', 'Saya memberi kuasa kepada dokter dan semua tenaga kesehatan untuk melakukan pemeriksaan / pengobatan / tindakan yang diperlakukan upaya kesembuhan saya / pasien tersebut diatas', 'Saya memberi kuasa kepada dokter dan semua tenaga kesehatan yang ikut merawat saya untuk memberikan keterangan medis saya kepada yang bertanggung jawab atas biaya perawatan saya.', 'Saya memberi kuasa kepada RSUD Petala Bumi untuk menginformasikan identitas sosial saya kepada keluarga / rekan / masyarakat', 'Saya mengatakan bahwa informasi hasil pemeriksaan / rekam medis saya dapat digunakan untuk pendidikan / penelitian demi kemajuan ilmu kesehatan', '\nPetunjuk :', 'S: Setuju', 'TS: Tidak Setuju', {
-          text: 'Pekanbaru,                        .\n\n\n__________________',                                       // 43
-          alignment: 'right'                                                                                         // 43
-        }]                                                                                                           // 43
-      });                                                                                                            // 19
-      return pdf.download(doc.no_mr + '_consent.pdf');                                                               // 35
-    },                                                                                                               // 5
-    payRawat: function (doc) {                                                                                       // 46
-      var find, i, j, l, len, len1, m, pasien, pdf, ref, ref1, rows, table;                                          // 47
-      pasien = coll.pasien.findOne();                                                                                // 47
-      rows = [['Uraian', 'Harga']];                                                                                  // 48
-      ref = ['tindakan', 'labor', 'radio'];                                                                          // 49
+          text: 'Pekanbaru,                        .\n\n\n__________________',                                       // 42
+          alignment: 'right'                                                                                         // 42
+        }]                                                                                                           // 42
+      });                                                                                                            // 18
+      return pdf.download(doc.no_mr + '_consent.pdf');                                                               // 28
+    },                                                                                                               // 4
+    payRawat: function (doc) {                                                                                       // 45
+      var find, i, j, l, len, len1, m, pasien, pdf, ref, ref1, rows, table;                                          // 46
+      pasien = coll.pasien.findOne();                                                                                // 46
+      rows = [['Uraian', 'Harga']];                                                                                  // 47
+      ref = ['tindakan', 'labor', 'radio'];                                                                          // 48
                                                                                                                      //
-      for (l = 0, len = ref.length; l < len; l++) {                                                                  // 49
-        i = ref[l];                                                                                                  // 43
+      for (l = 0, len = ref.length; l < len; l++) {                                                                  // 48
+        i = ref[l];                                                                                                  // 36
                                                                                                                      //
-        if (doc[i]) {                                                                                                // 50
-          ref1 = doc[i];                                                                                             // 50
+        if (doc[i]) {                                                                                                // 49
+          ref1 = doc[i];                                                                                             // 49
                                                                                                                      //
-          for (m = 0, len1 = ref1.length; m < len1; m++) {                                                           // 50
-            j = ref1[m];                                                                                             // 47
-            find = _.find(coll.tarif.find().fetch(), function (k) {                                                  // 51
-              return k._id === j.nama;                                                                               // 49
-            });                                                                                                      // 51
-            rows.push([_.startCase(find.nama), _.toString(j.harga)]);                                                // 52
-          }                                                                                                          // 50
-        }                                                                                                            // 53
-      }                                                                                                              // 49
+          for (m = 0, len1 = ref1.length; m < len1; m++) {                                                           // 49
+            j = ref1[m];                                                                                             // 40
+            find = _.find(coll.tarif.find().fetch(), function (k) {                                                  // 50
+              return k._id === j.nama;                                                                               // 42
+            });                                                                                                      // 50
+            rows.push([_.startCase(find.nama), _.toString(j.harga)]);                                                // 51
+          }                                                                                                          // 49
+        }                                                                                                            // 46
+      }                                                                                                              // 48
                                                                                                                      //
-      table = {                                                                                                      // 53
-        table: {                                                                                                     // 53
-          widths: [400, 100],                                                                                        // 53
-          body: rows                                                                                                 // 53
-        }                                                                                                            // 53
-      };                                                                                                             // 53
-      pdf = pdfMake.createPdf({                                                                                      // 54
-        content: [{                                                                                                  // 55
+      table = {                                                                                                      // 52
+        table: {                                                                                                     // 52
+          widths: [400, 100],                                                                                        // 52
+          body: rows                                                                                                 // 52
+        }                                                                                                            // 52
+      };                                                                                                             // 52
+      pdf = pdfMake.createPdf({                                                                                      // 53
+        content: [{                                                                                                  // 54
           text: 'PEMERINTAH PROVINSI RIAU\nRUMAH SAKIT UMUM DAERAH PETALA BUMI\nJL. DR. SOETOMO NO. 65, TELP. (0761) 23024, PEKANBARU',
-          alignment: 'center'                                                                                        // 56
+          alignment: 'center'                                                                                        // 55
         }, '\nRINCIAN BIAYA RAWAT JALAN', 'IDENTITAS PASIEN', 'NO. MR' + pasien.no_mr, 'NAMA PASIEN' + pasien.regis.nama_lengkap, 'JENIS KELAMIN' + look('kelamin', pasien.regis.kelamin).label, 'TANGGAL LAHIR' + moment(pasien.regis.tgl_lahir).format('D MM YYYY'), 'UMUR' + _.toString(moment().diff(pasien.regis.tgl_lahir, 'years')), 'KLINIK', '\n\nRINCIAN PEMBAYARAN', table, 'TOTAL BIAYA' + 'Rp ' + _.toString(numeral(doc.total.semua).format('0,0')), '\nPEKANBARU, ' + moment().format('DD MM YYYY'), 'PETUGAS']
-      });                                                                                                            // 55
-      return pdf.download(pasien.no_mr + '_payRawat.pdf');                                                           // 69
-    },                                                                                                               // 5
-    payRegCard: function (amount, words) {                                                                           // 72
-      var doc, pdf;                                                                                                  // 73
-      doc = coll.pasien.findOne();                                                                                   // 73
-      pdf = pdfMake.createPdf({                                                                                      // 74
-        content: [{                                                                                                  // 75
+      });                                                                                                            // 54
+      return pdf.download(pasien.no_mr + '_payRawat.pdf');                                                           // 62
+    },                                                                                                               // 4
+    payRegCard: function (amount, words) {                                                                           // 71
+      var doc, pdf;                                                                                                  // 72
+      doc = coll.pasien.findOne();                                                                                   // 72
+      pdf = pdfMake.createPdf({                                                                                      // 73
+        content: [{                                                                                                  // 74
           text: 'PEMERINTAH PROVINSI RIAU\nRUMAH SAKIT UMUM DAERAH PETALA BUMI\nJL. DR. SOETOMO NO. 65, TELP. (0761) 23024, PEKANBARU',
-          alignment: 'center'                                                                                        // 76
+          alignment: 'center'                                                                                        // 75
         }, '\nKARCIS', 'TANGGAL : ' + moment().format('DD MM YYYY'), 'NO. MR : ' + _.toString(doc.no_mr), 'NAMA PASIEN : ' + doc.regis.nama_lengkap, '\nTARIF : Rp ' + _.toString(amount), {
-          text: '(' + words + ')',                                                                                   // 84
-          italics: true                                                                                              // 84
-        }]                                                                                                           // 84
-      });                                                                                                            // 75
-      return pdf.download(doc.no_mr + '_payRegCard.pdf');                                                            // 85
-    },                                                                                                               // 5
-    rekap: function (rows) {                                                                                         // 87
-      var pdf, strings;                                                                                              // 88
-      strings = _.map(rows, function (i) {                                                                           // 88
-        return _.map(i, function (j) {                                                                               // 90
-          return _.toString(j);                                                                                      // 91
-        });                                                                                                          // 88
+          text: '(' + words + ')',                                                                                   // 83
+          italics: true                                                                                              // 83
+        }]                                                                                                           // 83
+      });                                                                                                            // 74
+      return pdf.download(doc.no_mr + '_payRegCard.pdf');                                                            // 78
+    },                                                                                                               // 4
+    rekap: function (rows) {                                                                                         // 86
+      var pdf, strings;                                                                                              // 87
+      strings = _.map(rows, function (i) {                                                                           // 87
+        return _.map(i, function (j) {                                                                               // 83
+          return _.toString(j);                                                                                      // 84
+        });                                                                                                          // 87
+      });                                                                                                            // 87
+      pdf = pdfMake.createPdf({                                                                                      // 88
+        content: [{                                                                                                  // 88
+          table: {                                                                                                   // 88
+            body: strings                                                                                            // 88
+          }                                                                                                          // 88
+        }]                                                                                                           // 88
       });                                                                                                            // 88
-      pdf = pdfMake.createPdf({                                                                                      // 89
-        content: [{                                                                                                  // 89
-          table: {                                                                                                   // 89
-            body: strings                                                                                            // 89
-          }                                                                                                          // 89
-        }]                                                                                                           // 89
-      });                                                                                                            // 89
-      return pdf.download('rekap.pdf');                                                                              // 103
-    }                                                                                                                // 5
-  };                                                                                                                 // 5
-}                                                                                                                    // 106
+      return pdf.download('rekap.pdf');                                                                              // 96
+    }                                                                                                                // 4
+  };                                                                                                                 // 4
+}                                                                                                                    // 99
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"selects.coffee.js":function(){
@@ -520,675 +572,641 @@ _.map(['labor', 'radio'], function (i) {                                        
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                      //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-var i, j, k, l, len, len1, len2, makeGudang, makeOther, makePasien, randomId, ref, ref1, ref2;                       // 1
-this._ = lodash;                                                                                                     // 1
-Router.configure({                                                                                                   // 3
-  layoutTemplate: 'layout',                                                                                          // 4
-  loadingTemplate: 'loading'                                                                                         // 5
-});                                                                                                                  // 4
-Router.route('/', {                                                                                                  // 7
-  action: function () {                                                                                              // 8
-    return this.render('home');                                                                                      // 12
-  }                                                                                                                  // 8
-});                                                                                                                  // 8
-this.coll = {};                                                                                                      // 10
-this.schema = {};                                                                                                    // 11
-                                                                                                                     //
-randomId = function () {                                                                                             // 13
-  return Math.random().toString(36).slice(2);                                                                        // 21
-};                                                                                                                   // 13
-                                                                                                                     //
-schema.regis = {                                                                                                     // 15
-  no_mr: {                                                                                                           // 16
-    type: Number                                                                                                     // 16
+Router.configure({                                                                                                   // 1
+  layoutTemplate: 'layout',                                                                                          // 2
+  loadingTemplate: 'loading'                                                                                         // 3
+});                                                                                                                  // 2
+Router.route('/', {                                                                                                  // 5
+  action: function () {                                                                                              // 6
+    return this.render('home');                                                                                      // 8
+  }                                                                                                                  // 6
+});                                                                                                                  // 6
+schema.regis = {                                                                                                     // 8
+  no_mr: {                                                                                                           // 9
+    type: Number                                                                                                     // 9
+  },                                                                                                                 // 9
+  regis: {                                                                                                           // 10
+    type: Object                                                                                                     // 10
+  },                                                                                                                 // 10
+  'regis.nama_lengkap': {                                                                                            // 11
+    type: String                                                                                                     // 11
+  },                                                                                                                 // 11
+  'regis.tgl_lahir': {                                                                                               // 12
+    type: Date,                                                                                                      // 12
+    autoform: {                                                                                                      // 12
+      type: 'pickadate',                                                                                             // 12
+      pickadateOptions: {                                                                                            // 12
+        selectYears: 150,                                                                                            // 12
+        selectMonths: true                                                                                           // 12
+      }                                                                                                              // 12
+    }                                                                                                                // 12
+  },                                                                                                                 // 12
+  'regis.tmpt_lahir': {                                                                                              // 13
+    type: String,                                                                                                    // 13
+    optional: true                                                                                                   // 13
+  },                                                                                                                 // 13
+  'regis.cara_bayar': {                                                                                              // 14
+    type: Number,                                                                                                    // 14
+    autoform: {                                                                                                      // 14
+      options: selects.cara_bayar,                                                                                   // 14
+      type: 'select-radio-inline'                                                                                    // 14
+    }                                                                                                                // 14
+  },                                                                                                                 // 14
+  'regis.kelamin': {                                                                                                 // 15
+    type: Number,                                                                                                    // 15
+    autoform: {                                                                                                      // 15
+      options: selects.kelamin,                                                                                      // 15
+      type: 'select-radio-inline'                                                                                    // 15
+    }                                                                                                                // 15
+  },                                                                                                                 // 15
+  'regis.agama': {                                                                                                   // 16
+    type: Number,                                                                                                    // 16
+    autoform: {                                                                                                      // 16
+      options: selects.agama,                                                                                        // 16
+      type: 'select-radio-inline'                                                                                    // 16
+    }                                                                                                                // 16
   },                                                                                                                 // 16
-  regis: {                                                                                                           // 17
-    type: Object                                                                                                     // 17
+  'regis.nikah': {                                                                                                   // 17
+    type: Number,                                                                                                    // 17
+    autoform: {                                                                                                      // 17
+      options: selects.nikah,                                                                                        // 17
+      type: 'select-radio-inline'                                                                                    // 17
+    }                                                                                                                // 17
   },                                                                                                                 // 17
-  'regis.nama_lengkap': {                                                                                            // 18
-    type: String                                                                                                     // 18
+  'regis.pendidikan': {                                                                                              // 18
+    type: Number,                                                                                                    // 18
+    optional: true,                                                                                                  // 18
+    autoform: {                                                                                                      // 18
+      options: selects.pendidikan,                                                                                   // 18
+      type: 'select-radio-inline'                                                                                    // 18
+    }                                                                                                                // 18
   },                                                                                                                 // 18
-  'regis.tgl_lahir': {                                                                                               // 19
-    type: Date,                                                                                                      // 19
+  'regis.darah': {                                                                                                   // 19
+    type: Number,                                                                                                    // 19
+    optional: true,                                                                                                  // 19
     autoform: {                                                                                                      // 19
-      type: 'pickadate',                                                                                             // 19
-      pickadateOptions: {                                                                                            // 19
-        selectYears: 150,                                                                                            // 19
-        selectMonths: true                                                                                           // 19
-      }                                                                                                              // 19
+      options: selects.darah,                                                                                        // 19
+      type: 'select-radio-inline'                                                                                    // 19
     }                                                                                                                // 19
   },                                                                                                                 // 19
-  'regis.tmpt_lahir': {                                                                                              // 20
-    type: String,                                                                                                    // 20
-    optional: true                                                                                                   // 20
+  'regis.pekerjaan': {                                                                                               // 20
+    type: Number,                                                                                                    // 20
+    optional: true,                                                                                                  // 20
+    autoform: {                                                                                                      // 20
+      options: selects.pekerjaan,                                                                                    // 20
+      type: 'select-radio-inline'                                                                                    // 20
+    }                                                                                                                // 20
   },                                                                                                                 // 20
-  'regis.cara_bayar': {                                                                                              // 21
-    type: Number,                                                                                                    // 21
-    autoform: {                                                                                                      // 21
-      options: selects.cara_bayar,                                                                                   // 21
-      type: 'select-radio-inline'                                                                                    // 21
-    }                                                                                                                // 21
+  'regis.kabupaten': {                                                                                               // 21
+    type: String,                                                                                                    // 21
+    optional: true                                                                                                   // 21
   },                                                                                                                 // 21
-  'regis.kelamin': {                                                                                                 // 22
-    type: Number,                                                                                                    // 22
-    autoform: {                                                                                                      // 22
-      options: selects.kelamin,                                                                                      // 22
-      type: 'select-radio-inline'                                                                                    // 22
-    }                                                                                                                // 22
+  'regis.kecamatan': {                                                                                               // 22
+    type: String,                                                                                                    // 22
+    optional: true                                                                                                   // 22
   },                                                                                                                 // 22
-  'regis.agama': {                                                                                                   // 23
-    type: Number,                                                                                                    // 23
-    autoform: {                                                                                                      // 23
-      options: selects.agama,                                                                                        // 23
-      type: 'select-radio-inline'                                                                                    // 23
-    }                                                                                                                // 23
+  'regis.kelurahan': {                                                                                               // 23
+    type: String,                                                                                                    // 23
+    optional: true                                                                                                   // 23
   },                                                                                                                 // 23
-  'regis.nikah': {                                                                                                   // 24
-    type: Number,                                                                                                    // 24
-    autoform: {                                                                                                      // 24
-      options: selects.nikah,                                                                                        // 24
-      type: 'select-radio-inline'                                                                                    // 24
-    }                                                                                                                // 24
+  'regis.alamat': {                                                                                                  // 24
+    type: String                                                                                                     // 24
   },                                                                                                                 // 24
-  'regis.pendidikan': {                                                                                              // 25
-    type: Number,                                                                                                    // 25
-    optional: true,                                                                                                  // 25
-    autoform: {                                                                                                      // 25
-      options: selects.pendidikan,                                                                                   // 25
-      type: 'select-radio-inline'                                                                                    // 25
-    }                                                                                                                // 25
+  'regis.kontak': {                                                                                                  // 25
+    type: String,                                                                                                    // 25
+    optional: true                                                                                                   // 25
   },                                                                                                                 // 25
-  'regis.darah': {                                                                                                   // 26
-    type: Number,                                                                                                    // 26
-    optional: true,                                                                                                  // 26
-    autoform: {                                                                                                      // 26
-      options: selects.darah,                                                                                        // 26
-      type: 'select-radio-inline'                                                                                    // 26
-    }                                                                                                                // 26
+  'regis.ayah': {                                                                                                    // 26
+    type: String,                                                                                                    // 26
+    optional: true                                                                                                   // 26
   },                                                                                                                 // 26
-  'regis.pekerjaan': {                                                                                               // 27
-    type: Number,                                                                                                    // 27
-    optional: true,                                                                                                  // 27
-    autoform: {                                                                                                      // 27
-      options: selects.pekerjaan,                                                                                    // 27
-      type: 'select-radio-inline'                                                                                    // 27
-    }                                                                                                                // 27
+  'regis.ibu': {                                                                                                     // 27
+    type: String,                                                                                                    // 27
+    optional: true                                                                                                   // 27
   },                                                                                                                 // 27
-  'regis.kabupaten': {                                                                                               // 28
+  'regis.pasangan': {                                                                                                // 28
     type: String,                                                                                                    // 28
     optional: true                                                                                                   // 28
   },                                                                                                                 // 28
-  'regis.kecamatan': {                                                                                               // 29
-    type: String,                                                                                                    // 29
-    optional: true                                                                                                   // 29
-  },                                                                                                                 // 29
-  'regis.kelurahan': {                                                                                               // 30
+  'regis.petugas': {                                                                                                 // 29
     type: String,                                                                                                    // 30
-    optional: true                                                                                                   // 30
+    autoform: {                                                                                                      // 31
+      type: 'hidden'                                                                                                 // 31
+    },                                                                                                               // 31
+    autoValue: function () {                                                                                         // 32
+      if (Meteor.isClient) {                                                                                         // 32
+        return Meteor.userId();                                                                                      // 126
+      }                                                                                                              // 127
+    }                                                                                                                // 30
   },                                                                                                                 // 30
-  'regis.alamat': {                                                                                                  // 31
-    type: String                                                                                                     // 31
-  },                                                                                                                 // 31
-  'regis.kontak': {                                                                                                  // 32
-    type: String,                                                                                                    // 32
-    optional: true                                                                                                   // 32
-  },                                                                                                                 // 32
-  'regis.ayah': {                                                                                                    // 33
-    type: String,                                                                                                    // 33
-    optional: true                                                                                                   // 33
-  },                                                                                                                 // 33
-  'regis.ibu': {                                                                                                     // 34
-    type: String,                                                                                                    // 34
-    optional: true                                                                                                   // 34
+  'regis.date': {                                                                                                    // 33
+    type: Date,                                                                                                      // 34
+    autoform: {                                                                                                      // 35
+      type: 'hidden'                                                                                                 // 35
+    },                                                                                                               // 35
+    autoValue: function () {                                                                                         // 36
+      return new Date();                                                                                             // 136
+    }                                                                                                                // 34
   },                                                                                                                 // 34
-  'regis.pasangan': {                                                                                                // 35
-    type: String,                                                                                                    // 35
-    optional: true                                                                                                   // 35
-  },                                                                                                                 // 35
-  'regis.petugas': {                                                                                                 // 36
-    type: String,                                                                                                    // 37
-    autoform: {                                                                                                      // 38
-      type: 'hidden'                                                                                                 // 38
-    },                                                                                                               // 38
-    autoValue: function () {                                                                                         // 39
-      if (Meteor.isClient) {                                                                                         // 39
-        return Meteor.userId();                                                                                      // 138
-      }                                                                                                              // 139
+  'regis.billCard': {                                                                                                // 37
+    type: Boolean,                                                                                                   // 37
+    optional: true,                                                                                                  // 37
+    autoform: {                                                                                                      // 37
+      type: 'hidden'                                                                                                 // 37
     }                                                                                                                // 37
-  },                                                                                                                 // 37
-  'regis.date': {                                                                                                    // 40
-    type: Date,                                                                                                      // 41
-    autoform: {                                                                                                      // 42
-      type: 'hidden'                                                                                                 // 42
-    },                                                                                                               // 42
-    autoValue: function () {                                                                                         // 43
-      return new Date();                                                                                             // 148
+  }                                                                                                                  // 37
+};                                                                                                                   // 9
+schema.tindakan = {                                                                                                  // 39
+  idtindakan: {                                                                                                      // 40
+    type: String,                                                                                                    // 40
+    optional: true,                                                                                                  // 40
+    autoform: {                                                                                                      // 40
+      type: 'hidden'                                                                                                 // 40
+    }                                                                                                                // 40
+  },                                                                                                                 // 40
+  nama: {                                                                                                            // 41
+    type: String,                                                                                                    // 41
+    autoform: {                                                                                                      // 41
+      options: selects.tindakan                                                                                      // 41
     }                                                                                                                // 41
   },                                                                                                                 // 41
-  'regis.billCard': {                                                                                                // 44
-    type: Boolean,                                                                                                   // 44
-    optional: true,                                                                                                  // 44
-    autoform: {                                                                                                      // 44
-      type: 'hidden'                                                                                                 // 44
-    }                                                                                                                // 44
-  }                                                                                                                  // 44
-};                                                                                                                   // 16
-schema.tindakan = {                                                                                                  // 46
-  idtindakan: {                                                                                                      // 47
+  dokter: {                                                                                                          // 42
+    type: String,                                                                                                    // 42
+    autoform: {                                                                                                      // 42
+      options: selects.dokter                                                                                        // 42
+    }                                                                                                                // 42
+  },                                                                                                                 // 42
+  harga: {                                                                                                           // 43
+    type: Number,                                                                                                    // 43
+    optional: true,                                                                                                  // 43
+    autoform: {                                                                                                      // 43
+      type: 'hidden'                                                                                                 // 43
+    }                                                                                                                // 43
+  }                                                                                                                  // 43
+};                                                                                                                   // 40
+schema.labor = {                                                                                                     // 45
+  idlabor: {                                                                                                         // 46
+    type: String,                                                                                                    // 46
+    optional: true,                                                                                                  // 46
+    autoform: {                                                                                                      // 46
+      type: 'hidden'                                                                                                 // 46
+    }                                                                                                                // 46
+  },                                                                                                                 // 46
+  nama: {                                                                                                            // 47
     type: String,                                                                                                    // 47
-    optional: true,                                                                                                  // 47
     autoform: {                                                                                                      // 47
-      type: 'hidden'                                                                                                 // 47
+      options: selects.labor                                                                                         // 47
     }                                                                                                                // 47
   },                                                                                                                 // 47
-  nama: {                                                                                                            // 48
-    type: String,                                                                                                    // 48
+  harga: {                                                                                                           // 48
+    type: Number,                                                                                                    // 48
+    optional: true,                                                                                                  // 48
     autoform: {                                                                                                      // 48
-      options: selects.tindakan                                                                                      // 48
+      type: 'hidden'                                                                                                 // 48
     }                                                                                                                // 48
   },                                                                                                                 // 48
-  dokter: {                                                                                                          // 49
+  hasil: {                                                                                                           // 49
     type: String,                                                                                                    // 49
+    optional: true,                                                                                                  // 49
     autoform: {                                                                                                      // 49
-      options: selects.dokter                                                                                        // 49
+      type: 'hidden'                                                                                                 // 49
     }                                                                                                                // 49
-  },                                                                                                                 // 49
-  harga: {                                                                                                           // 50
-    type: Number,                                                                                                    // 50
-    optional: true,                                                                                                  // 50
-    autoform: {                                                                                                      // 50
-      type: 'hidden'                                                                                                 // 50
-    }                                                                                                                // 50
-  }                                                                                                                  // 50
-};                                                                                                                   // 47
-schema.labor = {                                                                                                     // 52
-  idlabor: {                                                                                                         // 53
+  }                                                                                                                  // 49
+};                                                                                                                   // 46
+schema.radio = {                                                                                                     // 51
+  idradio: {                                                                                                         // 52
+    type: String,                                                                                                    // 52
+    optional: true,                                                                                                  // 52
+    autoform: {                                                                                                      // 52
+      type: 'hidden'                                                                                                 // 52
+    }                                                                                                                // 52
+  },                                                                                                                 // 52
+  nama: {                                                                                                            // 53
     type: String,                                                                                                    // 53
-    optional: true,                                                                                                  // 53
     autoform: {                                                                                                      // 53
-      type: 'hidden'                                                                                                 // 53
+      options: selects.radio                                                                                         // 53
     }                                                                                                                // 53
   },                                                                                                                 // 53
-  nama: {                                                                                                            // 54
-    type: String,                                                                                                    // 54
+  harga: {                                                                                                           // 54
+    type: Number,                                                                                                    // 54
+    optional: true,                                                                                                  // 54
     autoform: {                                                                                                      // 54
-      options: selects.labor                                                                                         // 54
+      type: 'hidden'                                                                                                 // 54
     }                                                                                                                // 54
   },                                                                                                                 // 54
-  harga: {                                                                                                           // 55
-    type: Number,                                                                                                    // 55
+  hasil: {                                                                                                           // 55
+    type: String,                                                                                                    // 55
     optional: true,                                                                                                  // 55
     autoform: {                                                                                                      // 55
       type: 'hidden'                                                                                                 // 55
     }                                                                                                                // 55
-  },                                                                                                                 // 55
-  hasil: {                                                                                                           // 56
-    type: String,                                                                                                    // 56
-    optional: true,                                                                                                  // 56
-    autoform: {                                                                                                      // 56
-      type: 'hidden'                                                                                                 // 56
-    }                                                                                                                // 56
-  }                                                                                                                  // 56
-};                                                                                                                   // 53
-schema.radio = {                                                                                                     // 58
-  idradio: {                                                                                                         // 59
+  }                                                                                                                  // 55
+};                                                                                                                   // 52
+schema.obat = {                                                                                                      // 57
+  idobat: {                                                                                                          // 58
+    type: String,                                                                                                    // 58
+    optional: true,                                                                                                  // 58
+    autoform: {                                                                                                      // 58
+      type: 'hidden'                                                                                                 // 58
+    }                                                                                                                // 58
+  },                                                                                                                 // 58
+  nama: {                                                                                                            // 59
     type: String,                                                                                                    // 59
-    optional: true,                                                                                                  // 59
     autoform: {                                                                                                      // 59
-      type: 'hidden'                                                                                                 // 59
+      options: selects.obat                                                                                          // 59
     }                                                                                                                // 59
   },                                                                                                                 // 59
-  nama: {                                                                                                            // 60
+  puyer: {                                                                                                           // 60
     type: String,                                                                                                    // 60
-    autoform: {                                                                                                      // 60
-      options: selects.radio                                                                                         // 60
-    }                                                                                                                // 60
+    optional: true                                                                                                   // 60
   },                                                                                                                 // 60
-  harga: {                                                                                                           // 61
-    type: Number,                                                                                                    // 61
-    optional: true,                                                                                                  // 61
-    autoform: {                                                                                                      // 61
-      type: 'hidden'                                                                                                 // 61
-    }                                                                                                                // 61
+  aturan: {                                                                                                          // 61
+    type: Object                                                                                                     // 61
   },                                                                                                                 // 61
-  hasil: {                                                                                                           // 62
-    type: String,                                                                                                    // 62
-    optional: true,                                                                                                  // 62
-    autoform: {                                                                                                      // 62
-      type: 'hidden'                                                                                                 // 62
-    }                                                                                                                // 62
-  }                                                                                                                  // 62
-};                                                                                                                   // 59
-schema.obat = {                                                                                                      // 64
-  idobat: {                                                                                                          // 65
-    type: String,                                                                                                    // 65
-    optional: true,                                                                                                  // 65
-    autoform: {                                                                                                      // 65
-      type: 'hidden'                                                                                                 // 65
-    }                                                                                                                // 65
+  'aturan.kali': {                                                                                                   // 62
+    type: Number                                                                                                     // 62
+  },                                                                                                                 // 62
+  'aturan.dosis': {                                                                                                  // 63
+    type: Number                                                                                                     // 63
+  },                                                                                                                 // 63
+  'aturan.bentuk': {                                                                                                 // 64
+    type: Number,                                                                                                    // 64
+    autoform: {                                                                                                      // 64
+      options: selects.bentuk                                                                                        // 64
+    }                                                                                                                // 64
+  },                                                                                                                 // 64
+  jumlah: {                                                                                                          // 65
+    type: Number                                                                                                     // 65
   },                                                                                                                 // 65
-  nama: {                                                                                                            // 66
-    type: String,                                                                                                    // 66
+  harga: {                                                                                                           // 66
+    type: Number,                                                                                                    // 66
+    optional: true,                                                                                                  // 66
     autoform: {                                                                                                      // 66
-      options: selects.obat                                                                                          // 66
+      type: 'hidden'                                                                                                 // 66
     }                                                                                                                // 66
   },                                                                                                                 // 66
-  puyer: {                                                                                                           // 67
-    type: String,                                                                                                    // 67
-    optional: true                                                                                                   // 67
+  subtotal: {                                                                                                        // 67
+    type: Number,                                                                                                    // 67
+    optional: true,                                                                                                  // 67
+    autoform: {                                                                                                      // 67
+      type: 'hidden'                                                                                                 // 67
+    }                                                                                                                // 67
   },                                                                                                                 // 67
-  aturan: {                                                                                                          // 68
-    type: Object                                                                                                     // 68
-  },                                                                                                                 // 68
-  'aturan.kali': {                                                                                                   // 69
-    type: Number                                                                                                     // 69
-  },                                                                                                                 // 69
-  'aturan.dosis': {                                                                                                  // 70
-    type: Number                                                                                                     // 70
-  },                                                                                                                 // 70
-  'aturan.bentuk': {                                                                                                 // 71
-    type: Number,                                                                                                    // 71
-    autoform: {                                                                                                      // 71
-      options: selects.bentuk                                                                                        // 71
-    }                                                                                                                // 71
+  hasil: {                                                                                                           // 68
+    type: String,                                                                                                    // 68
+    optional: true,                                                                                                  // 68
+    autoform: {                                                                                                      // 68
+      type: 'hidden'                                                                                                 // 68
+    }                                                                                                                // 68
+  }                                                                                                                  // 68
+};                                                                                                                   // 58
+schema.rawat = {                                                                                                     // 70
+  no_mr: {                                                                                                           // 71
+    type: Number                                                                                                     // 71
   },                                                                                                                 // 71
-  jumlah: {                                                                                                          // 72
-    type: Number                                                                                                     // 72
+  rawat: {                                                                                                           // 72
+    type: Array                                                                                                      // 72
   },                                                                                                                 // 72
-  harga: {                                                                                                           // 73
-    type: Number,                                                                                                    // 73
-    optional: true,                                                                                                  // 73
-    autoform: {                                                                                                      // 73
-      type: 'hidden'                                                                                                 // 73
-    }                                                                                                                // 73
+  'rawat.$': {                                                                                                       // 73
+    type: Object                                                                                                     // 73
   },                                                                                                                 // 73
-  subtotal: {                                                                                                        // 74
-    type: Number,                                                                                                    // 74
-    optional: true,                                                                                                  // 74
+  'rawat.$.tanggal': {                                                                                               // 74
+    type: Date,                                                                                                      // 74
     autoform: {                                                                                                      // 74
       type: 'hidden'                                                                                                 // 74
     }                                                                                                                // 74
   },                                                                                                                 // 74
-  hasil: {                                                                                                           // 75
+  'rawat.$.idbayar': {                                                                                               // 75
     type: String,                                                                                                    // 75
     optional: true,                                                                                                  // 75
     autoform: {                                                                                                      // 75
       type: 'hidden'                                                                                                 // 75
     }                                                                                                                // 75
-  }                                                                                                                  // 75
-};                                                                                                                   // 65
-schema.rawat = {                                                                                                     // 77
-  no_mr: {                                                                                                           // 78
-    type: Number                                                                                                     // 78
+  },                                                                                                                 // 75
+  'rawat.$.jenis': {                                                                                                 // 76
+    type: String,                                                                                                    // 76
+    optional: true,                                                                                                  // 76
+    autoform: {                                                                                                      // 76
+      type: 'hidden'                                                                                                 // 76
+    }                                                                                                                // 76
+  },                                                                                                                 // 76
+  'rawat.$.cara_bayar': {                                                                                            // 77
+    type: Number,                                                                                                    // 77
+    autoform: {                                                                                                      // 77
+      options: selects.cara_bayar,                                                                                   // 77
+      type: 'select-radio-inline'                                                                                    // 77
+    }                                                                                                                // 77
+  },                                                                                                                 // 77
+  'rawat.$.klinik': {                                                                                                // 78
+    type: Number,                                                                                                    // 78
+    autoform: {                                                                                                      // 78
+      options: selects.klinik,                                                                                       // 78
+      type: 'select-radio-inline'                                                                                    // 78
+    }                                                                                                                // 78
   },                                                                                                                 // 78
-  rawat: {                                                                                                           // 79
-    type: Array                                                                                                      // 79
+  'rawat.$.billRegis': {                                                                                             // 79
+    type: Boolean,                                                                                                   // 79
+    optional: true,                                                                                                  // 79
+    autoform: {                                                                                                      // 79
+      type: 'hidden'                                                                                                 // 79
+    }                                                                                                                // 79
   },                                                                                                                 // 79
-  'rawat.$': {                                                                                                       // 80
-    type: Object                                                                                                     // 80
+  'rawat.$.nobill': {                                                                                                // 80
+    type: Number,                                                                                                    // 80
+    autoform: {                                                                                                      // 80
+      type: 'hidden'                                                                                                 // 80
+    }                                                                                                                // 80
   },                                                                                                                 // 80
-  'rawat.$.tanggal': {                                                                                               // 81
-    type: Date,                                                                                                      // 81
+  'rawat.$.status_bayar': {                                                                                          // 81
+    type: Boolean,                                                                                                   // 81
+    optional: true,                                                                                                  // 81
     autoform: {                                                                                                      // 81
       type: 'hidden'                                                                                                 // 81
     }                                                                                                                // 81
   },                                                                                                                 // 81
-  'rawat.$.idbayar': {                                                                                               // 82
-    type: String,                                                                                                    // 82
+  'rawat.$.rujukan': {                                                                                               // 82
+    type: Number,                                                                                                    // 82
     optional: true,                                                                                                  // 82
     autoform: {                                                                                                      // 82
-      type: 'hidden'                                                                                                 // 82
+      options: selects.rujukan,                                                                                      // 82
+      type: 'select-radio-inline'                                                                                    // 82
     }                                                                                                                // 82
   },                                                                                                                 // 82
-  'rawat.$.jenis': {                                                                                                 // 83
+  'rawat.$.anamesa': {                                                                                               // 83
     type: String,                                                                                                    // 83
-    optional: true,                                                                                                  // 83
-    autoform: {                                                                                                      // 83
-      type: 'hidden'                                                                                                 // 83
-    }                                                                                                                // 83
+    optional: true                                                                                                   // 83
   },                                                                                                                 // 83
-  'rawat.$.cara_bayar': {                                                                                            // 84
-    type: Number,                                                                                                    // 84
-    autoform: {                                                                                                      // 84
-      options: selects.cara_bayar,                                                                                   // 84
-      type: 'select-radio-inline'                                                                                    // 84
-    }                                                                                                                // 84
+  'rawat.$.diagnosa': {                                                                                              // 84
+    type: String,                                                                                                    // 84
+    optional: true                                                                                                   // 84
   },                                                                                                                 // 84
-  'rawat.$.klinik': {                                                                                                // 85
-    type: Number,                                                                                                    // 85
-    autoform: {                                                                                                      // 85
-      options: selects.klinik,                                                                                       // 85
-      type: 'select-radio-inline'                                                                                    // 85
-    }                                                                                                                // 85
+  'rawat.$.tindakan': {                                                                                              // 85
+    type: [new SimpleSchema(schema.tindakan)],                                                                       // 85
+    optional: true                                                                                                   // 85
   },                                                                                                                 // 85
-  'rawat.$.billRegis': {                                                                                             // 86
-    type: Boolean,                                                                                                   // 86
-    optional: true,                                                                                                  // 86
-    autoform: {                                                                                                      // 86
-      type: 'hidden'                                                                                                 // 86
-    }                                                                                                                // 86
+  'rawat.$.labor': {                                                                                                 // 86
+    type: [new SimpleSchema(schema.labor)],                                                                          // 86
+    optional: true                                                                                                   // 86
   },                                                                                                                 // 86
-  'rawat.$.nobill': {                                                                                                // 87
-    type: Number,                                                                                                    // 87
-    autoform: {                                                                                                      // 87
-      type: 'hidden'                                                                                                 // 87
-    }                                                                                                                // 87
+  'rawat.$.radio': {                                                                                                 // 87
+    type: [new SimpleSchema(schema.radio)],                                                                          // 87
+    optional: true                                                                                                   // 87
   },                                                                                                                 // 87
-  'rawat.$.status_bayar': {                                                                                          // 88
-    type: Boolean,                                                                                                   // 88
-    optional: true,                                                                                                  // 88
-    autoform: {                                                                                                      // 88
-      type: 'hidden'                                                                                                 // 88
-    }                                                                                                                // 88
+  'rawat.$.obat': {                                                                                                  // 88
+    type: [new SimpleSchema(schema.obat)],                                                                           // 88
+    optional: true                                                                                                   // 88
   },                                                                                                                 // 88
-  'rawat.$.rujukan': {                                                                                               // 89
-    type: Number,                                                                                                    // 89
+  'rawat.$.total': {                                                                                                 // 89
+    type: Object,                                                                                                    // 89
     optional: true,                                                                                                  // 89
     autoform: {                                                                                                      // 89
-      options: selects.rujukan,                                                                                      // 89
-      type: 'select-radio-inline'                                                                                    // 89
+      type: 'hidden'                                                                                                 // 89
     }                                                                                                                // 89
   },                                                                                                                 // 89
-  'rawat.$.anamesa': {                                                                                               // 90
-    type: String,                                                                                                    // 90
+  'rawat.$.total.tindakan': {                                                                                        // 90
+    type: Number,                                                                                                    // 90
     optional: true                                                                                                   // 90
   },                                                                                                                 // 90
-  'rawat.$.diagnosa': {                                                                                              // 91
-    type: String,                                                                                                    // 91
+  'rawat.$.total.labor': {                                                                                           // 91
+    type: Number,                                                                                                    // 91
     optional: true                                                                                                   // 91
   },                                                                                                                 // 91
-  'rawat.$.tindakan': {                                                                                              // 92
-    type: [new SimpleSchema(schema.tindakan)],                                                                       // 92
+  'rawat.$.total.radio': {                                                                                           // 92
+    type: Number,                                                                                                    // 92
     optional: true                                                                                                   // 92
   },                                                                                                                 // 92
-  'rawat.$.labor': {                                                                                                 // 93
-    type: [new SimpleSchema(schema.labor)],                                                                          // 93
+  'rawat.$.total.obat': {                                                                                            // 93
+    type: Number,                                                                                                    // 93
     optional: true                                                                                                   // 93
   },                                                                                                                 // 93
-  'rawat.$.radio': {                                                                                                 // 94
-    type: [new SimpleSchema(schema.radio)],                                                                          // 94
+  'rawat.$.total.semua': {                                                                                           // 94
+    type: Number,                                                                                                    // 94
     optional: true                                                                                                   // 94
   },                                                                                                                 // 94
-  'rawat.$.obat': {                                                                                                  // 95
-    type: [new SimpleSchema(schema.obat)],                                                                           // 95
-    optional: true                                                                                                   // 95
+  'rawat.$.spm': {                                                                                                   // 95
+    type: Number,                                                                                                    // 95
+    optional: true,                                                                                                  // 95
+    autoform: {                                                                                                      // 95
+      type: 'hidden'                                                                                                 // 95
+    }                                                                                                                // 95
   },                                                                                                                 // 95
-  'rawat.$.total': {                                                                                                 // 96
-    type: Object,                                                                                                    // 96
+  'rawat.$.pindah': {                                                                                                // 96
+    type: Number,                                                                                                    // 96
     optional: true,                                                                                                  // 96
     autoform: {                                                                                                      // 96
-      type: 'hidden'                                                                                                 // 96
+      options: selects.klinik                                                                                        // 96
     }                                                                                                                // 96
   },                                                                                                                 // 96
-  'rawat.$.total.tindakan': {                                                                                        // 97
+  'rawat.$.keluar': {                                                                                                // 97
     type: Number,                                                                                                    // 97
-    optional: true                                                                                                   // 97
+    optional: true,                                                                                                  // 97
+    autoform: {                                                                                                      // 97
+      options: selects.keluar                                                                                        // 97
+    }                                                                                                                // 97
   },                                                                                                                 // 97
-  'rawat.$.total.labor': {                                                                                           // 98
-    type: Number,                                                                                                    // 98
-    optional: true                                                                                                   // 98
-  },                                                                                                                 // 98
-  'rawat.$.total.radio': {                                                                                           // 99
-    type: Number,                                                                                                    // 99
-    optional: true                                                                                                   // 99
-  },                                                                                                                 // 99
-  'rawat.$.total.obat': {                                                                                            // 100
-    type: Number,                                                                                                    // 100
-    optional: true                                                                                                   // 100
-  },                                                                                                                 // 100
-  'rawat.$.total.semua': {                                                                                           // 101
-    type: Number,                                                                                                    // 101
-    optional: true                                                                                                   // 101
-  },                                                                                                                 // 101
-  'rawat.$.spm': {                                                                                                   // 102
-    type: Number,                                                                                                    // 102
-    optional: true,                                                                                                  // 102
-    autoform: {                                                                                                      // 102
-      type: 'hidden'                                                                                                 // 102
-    }                                                                                                                // 102
-  },                                                                                                                 // 102
-  'rawat.$.pindah': {                                                                                                // 103
-    type: Number,                                                                                                    // 103
-    optional: true,                                                                                                  // 103
-    autoform: {                                                                                                      // 103
-      options: selects.klinik                                                                                        // 103
-    }                                                                                                                // 103
-  },                                                                                                                 // 103
-  'rawat.$.keluar': {                                                                                                // 104
-    type: Number,                                                                                                    // 104
-    optional: true,                                                                                                  // 104
-    autoform: {                                                                                                      // 104
-      options: selects.keluar                                                                                        // 104
-    }                                                                                                                // 104
-  },                                                                                                                 // 104
-  'rawat.$.petugas': {                                                                                               // 105
-    type: String,                                                                                                    // 105
-    autoform: {                                                                                                      // 105
-      type: 'hidden'                                                                                                 // 105
-    }                                                                                                                // 105
-  }                                                                                                                  // 105
-};                                                                                                                   // 78
-schema.jalan = _.assign(schema.rawat, {});                                                                           // 107
-schema.inap = _.assign(schema.rawat, {});                                                                            // 108
-schema.igd = _.assign(schema.rawat, {});                                                                             // 109
-schema.gudang = {                                                                                                    // 111
-  idbarang: {                                                                                                        // 112
-    type: String,                                                                                                    // 113
-    autoform: {                                                                                                      // 114
-      type: 'hidden'                                                                                                 // 114
-    },                                                                                                               // 114
-    autoValue: function () {                                                                                         // 115
-      return randomId();                                                                                             // 473
-    }                                                                                                                // 113
-  },                                                                                                                 // 113
-  jenis: {                                                                                                           // 116
-    type: Number,                                                                                                    // 116
-    autoform: {                                                                                                      // 116
-      options: selects.barang                                                                                        // 116
-    }                                                                                                                // 116
-  },                                                                                                                 // 116
-  nama: {                                                                                                            // 117
+  'rawat.$.petugas': {                                                                                               // 98
+    type: String,                                                                                                    // 98
+    autoform: {                                                                                                      // 98
+      type: 'hidden'                                                                                                 // 98
+    }                                                                                                                // 98
+  }                                                                                                                  // 98
+};                                                                                                                   // 71
+schema.jalan = _.assign(schema.rawat, {});                                                                           // 100
+schema.inap = _.assign(schema.rawat, {});                                                                            // 101
+schema.igd = _.assign(schema.rawat, {});                                                                             // 102
+schema.gudang = {                                                                                                    // 104
+  idbarang: {                                                                                                        // 105
+    type: String,                                                                                                    // 106
+    autoform: {                                                                                                      // 107
+      type: 'hidden'                                                                                                 // 107
+    },                                                                                                               // 107
+    autoValue: function () {                                                                                         // 108
+      return randomId();                                                                                             // 461
+    }                                                                                                                // 106
+  },                                                                                                                 // 106
+  jenis: {                                                                                                           // 109
+    type: Number,                                                                                                    // 109
+    autoform: {                                                                                                      // 109
+      options: selects.barang                                                                                        // 109
+    }                                                                                                                // 109
+  },                                                                                                                 // 109
+  nama: {                                                                                                            // 110
+    type: String                                                                                                     // 110
+  },                                                                                                                 // 110
+  batch: {                                                                                                           // 111
+    type: Array                                                                                                      // 111
+  },                                                                                                                 // 111
+  'batch.$': {                                                                                                       // 112
+    type: Object                                                                                                     // 112
+  },                                                                                                                 // 112
+  'batch.$.idbatch': {                                                                                               // 113
+    type: String,                                                                                                    // 114
+    autoform: {                                                                                                      // 115
+      type: 'hidden'                                                                                                 // 115
+    },                                                                                                               // 115
+    autoValue: function () {                                                                                         // 116
+      return randomId();                                                                                             // 485
+    }                                                                                                                // 114
+  },                                                                                                                 // 114
+  'batch.$.nobatch': {                                                                                               // 117
     type: String                                                                                                     // 117
   },                                                                                                                 // 117
-  batch: {                                                                                                           // 118
-    type: Array                                                                                                      // 118
+  'batch.$.merek': {                                                                                                 // 118
+    type: String                                                                                                     // 118
   },                                                                                                                 // 118
-  'batch.$': {                                                                                                       // 119
-    type: Object                                                                                                     // 119
+  'batch.$.satuan': {                                                                                                // 119
+    type: Number,                                                                                                    // 119
+    autoform: {                                                                                                      // 119
+      options: selects.satuan                                                                                        // 119
+    }                                                                                                                // 119
   },                                                                                                                 // 119
-  'batch.$.idbatch': {                                                                                               // 120
-    type: String,                                                                                                    // 121
-    autoform: {                                                                                                      // 122
-      type: 'hidden'                                                                                                 // 122
-    },                                                                                                               // 122
-    autoValue: function () {                                                                                         // 123
-      return randomId();                                                                                             // 497
+  'batch.$.masuk': {                                                                                                 // 120
+    type: Date,                                                                                                      // 120
+    autoform: {                                                                                                      // 120
+      type: 'pickadate'                                                                                              // 120
+    }                                                                                                                // 120
+  },                                                                                                                 // 120
+  'batch.$.kadaluarsa': {                                                                                            // 121
+    type: Date,                                                                                                      // 121
+    autoform: {                                                                                                      // 121
+      type: 'pickadate'                                                                                              // 121
     }                                                                                                                // 121
   },                                                                                                                 // 121
-  'batch.$.nobatch': {                                                                                               // 124
-    type: String                                                                                                     // 124
+  'batch.$.digudang': {                                                                                              // 122
+    type: Number                                                                                                     // 122
+  },                                                                                                                 // 122
+  'batch.$.diapotik': {                                                                                              // 123
+    type: Number                                                                                                     // 123
+  },                                                                                                                 // 123
+  'batch.$.beli': {                                                                                                  // 124
+    type: Number,                                                                                                    // 124
+    decimal: true                                                                                                    // 124
   },                                                                                                                 // 124
-  'batch.$.merek': {                                                                                                 // 125
-    type: String                                                                                                     // 125
+  'batch.$.jual': {                                                                                                  // 125
+    type: Number,                                                                                                    // 125
+    decimal: true                                                                                                    // 125
   },                                                                                                                 // 125
-  'batch.$.satuan': {                                                                                                // 126
-    type: Number,                                                                                                    // 126
-    autoform: {                                                                                                      // 126
-      options: selects.satuan                                                                                        // 126
-    }                                                                                                                // 126
+  'batch.$.suplier': {                                                                                               // 126
+    type: String                                                                                                     // 126
   },                                                                                                                 // 126
-  'batch.$.masuk': {                                                                                                 // 127
-    type: Date,                                                                                                      // 127
+  'batch.$.anggaran': {                                                                                              // 127
+    type: Number,                                                                                                    // 127
     autoform: {                                                                                                      // 127
-      type: 'pickadate'                                                                                              // 127
+      options: selects.anggaran                                                                                      // 127
     }                                                                                                                // 127
   },                                                                                                                 // 127
-  'batch.$.kadaluarsa': {                                                                                            // 128
-    type: Date,                                                                                                      // 128
-    autoform: {                                                                                                      // 128
-      type: 'pickadate'                                                                                              // 128
-    }                                                                                                                // 128
-  },                                                                                                                 // 128
-  'batch.$.digudang': {                                                                                              // 129
-    type: Number                                                                                                     // 129
-  },                                                                                                                 // 129
-  'batch.$.diapotik': {                                                                                              // 130
-    type: Number                                                                                                     // 130
-  },                                                                                                                 // 130
-  'batch.$.beli': {                                                                                                  // 131
-    type: Number,                                                                                                    // 131
-    decimal: true                                                                                                    // 131
-  },                                                                                                                 // 131
-  'batch.$.jual': {                                                                                                  // 132
-    type: Number,                                                                                                    // 132
-    decimal: true                                                                                                    // 132
-  },                                                                                                                 // 132
-  'batch.$.suplier': {                                                                                               // 133
-    type: String                                                                                                     // 133
-  },                                                                                                                 // 133
-  'batch.$.anggaran': {                                                                                              // 134
-    type: Number,                                                                                                    // 134
-    autoform: {                                                                                                      // 134
-      options: selects.anggaran                                                                                      // 134
-    }                                                                                                                // 134
+  'batch.$.pengadaan': {                                                                                             // 128
+    type: Number                                                                                                     // 128
+  }                                                                                                                  // 128
+};                                                                                                                   // 105
+schema.farmasi = _.assign(schema.gudang, {});                                                                        // 130
+schema.logistik = _.assign(schema.gudang, {});                                                                       // 131
+schema.dokter = {                                                                                                    // 133
+  nama: {                                                                                                            // 134
+    type: String                                                                                                     // 134
   },                                                                                                                 // 134
-  'batch.$.pengadaan': {                                                                                             // 135
-    type: Number                                                                                                     // 135
-  }                                                                                                                  // 135
-};                                                                                                                   // 112
-schema.farmasi = _.assign(schema.gudang, {});                                                                        // 137
-schema.logistik = _.assign(schema.gudang, {});                                                                       // 138
-schema.dokter = {                                                                                                    // 140
-  nama: {                                                                                                            // 141
-    type: String                                                                                                     // 141
+  tipe: {                                                                                                            // 135
+    type: Number,                                                                                                    // 135
+    autoform: {                                                                                                      // 135
+      options: selects.tipe_dokter                                                                                   // 135
+    }                                                                                                                // 135
+  },                                                                                                                 // 135
+  poli: {                                                                                                            // 136
+    type: Number,                                                                                                    // 136
+    autoform: {                                                                                                      // 136
+      options: selects.klinik                                                                                        // 136
+    }                                                                                                                // 136
+  }                                                                                                                  // 136
+};                                                                                                                   // 134
+schema.tarif = {                                                                                                     // 138
+  jenis: {                                                                                                           // 139
+    type: String                                                                                                     // 139
+  },                                                                                                                 // 139
+  nama: {                                                                                                            // 140
+    type: String                                                                                                     // 140
+  },                                                                                                                 // 140
+  harga: {                                                                                                           // 141
+    type: Number                                                                                                     // 141
   },                                                                                                                 // 141
-  tipe: {                                                                                                            // 142
-    type: Number,                                                                                                    // 142
-    autoform: {                                                                                                      // 142
-      options: selects.tipe_dokter                                                                                   // 142
-    }                                                                                                                // 142
-  },                                                                                                                 // 142
-  poli: {                                                                                                            // 143
-    type: Number,                                                                                                    // 143
-    autoform: {                                                                                                      // 143
-      options: selects.klinik                                                                                        // 143
-    }                                                                                                                // 143
-  }                                                                                                                  // 143
-};                                                                                                                   // 141
-schema.tarif = {                                                                                                     // 145
-  jenis: {                                                                                                           // 146
-    type: String                                                                                                     // 146
-  },                                                                                                                 // 146
-  nama: {                                                                                                            // 147
-    type: String                                                                                                     // 147
-  },                                                                                                                 // 147
-  harga: {                                                                                                           // 148
-    type: Number                                                                                                     // 148
-  },                                                                                                                 // 148
-  grup: {                                                                                                            // 149
-    type: String,                                                                                                    // 149
-    optional: true                                                                                                   // 149
-  }                                                                                                                  // 149
-};                                                                                                                   // 146
+  grup: {                                                                                                            // 142
+    type: String,                                                                                                    // 142
+    optional: true                                                                                                   // 142
+  }                                                                                                                  // 142
+};                                                                                                                   // 139
                                                                                                                      //
-_.map(['dokter', 'tarif'], function (i) {                                                                            // 151
-  var obj;                                                                                                           // 152
-  obj = {                                                                                                            // 152
-    active: {                                                                                                        // 152
-      type: Boolean,                                                                                                 // 153
-      autoform: {                                                                                                    // 154
-        type: 'hidden'                                                                                               // 154
-      },                                                                                                             // 154
-      autoValue: function () {                                                                                       // 155
-        return true;                                                                                                 // 599
-      }                                                                                                              // 153
-    }                                                                                                                // 153
-  };                                                                                                                 // 152
-  return _.assign(schema[i], obj);                                                                                   // 603
+_.map(['dokter', 'tarif'], function (i) {                                                                            // 144
+  var obj;                                                                                                           // 145
+  obj = {                                                                                                            // 145
+    active: {                                                                                                        // 145
+      type: Boolean,                                                                                                 // 146
+      autoform: {                                                                                                    // 147
+        type: 'hidden'                                                                                               // 147
+      },                                                                                                             // 147
+      autoValue: function () {                                                                                       // 148
+        return true;                                                                                                 // 587
+      }                                                                                                              // 146
+    }                                                                                                                // 146
+  };                                                                                                                 // 145
+  return _.assign(schema[i], obj);                                                                                   // 591
+});                                                                                                                  // 144
+                                                                                                                     //
+_.map(['pasien', 'gudang', 'dokter', 'tarif'], function (i) {                                                        // 151
+  var arr;                                                                                                           // 152
+  coll[i] = new Meteor.Collection(i);                                                                                // 152
+  arr = ['insert', 'update', 'remove'];                                                                              // 153
+  return coll[i].allow(_.zipObject(arr, _.map(arr, function (i) {                                                    // 598
+    return function () {                                                                                             // 599
+      return true;                                                                                                   // 600
+    };                                                                                                               // 154
+  })));                                                                                                              // 154
 });                                                                                                                  // 151
                                                                                                                      //
-_.map(['pasien', 'gudang', 'dokter', 'tarif'], function (i) {                                                        // 158
-  coll[i] = new Meteor.Collection(i);                                                                                // 159
-  return coll[i].allow({                                                                                             // 608
-    insert: function () {                                                                                            // 161
-      return true;                                                                                                   // 610
-    },                                                                                                               // 161
-    update: function () {                                                                                            // 162
-      return true;                                                                                                   // 613
-    },                                                                                                               // 161
-    remove: function () {                                                                                            // 163
-      return true;                                                                                                   // 616
-    }                                                                                                                // 161
-  });                                                                                                                // 161
-});                                                                                                                  // 158
+_.map(modules.slice(0, 10), function (i) {                                                                           // 156
+  return Router.route('/' + i.name + '/:no_mr?', {                                                                   // 606
+    name: i.name,                                                                                                    // 158
+    action: function () {                                                                                            // 159
+      return this.render('pasien');                                                                                  // 609
+    },                                                                                                               // 158
+    waitOn: function () {                                                                                            // 160
+      return _.map(['dokter', 'tarif', 'gudang'], function (j) {                                                     // 612
+        return Meteor.subscribe('coll', j, {}, {});                                                                  // 613
+      });                                                                                                            // 161
+    }                                                                                                                // 158
+  });                                                                                                                // 158
+});                                                                                                                  // 156
                                                                                                                      //
-makePasien = function (modul) {                                                                                      // 165
-  return Router.route('/' + modul + '/:no_mr?', {                                                                    // 622
-    name: modul,                                                                                                     // 167
-    action: function () {                                                                                            // 168
-      return this.render('pasien');                                                                                  // 625
-    },                                                                                                               // 167
-    waitOn: function () {                                                                                            // 169
-      return _.map(['dokter', 'tarif', 'gudang'], function (i) {                                                     // 628
-        return Meteor.subscribe('coll', i, {}, {});                                                                  // 629
-      });                                                                                                            // 170
-    }                                                                                                                // 167
-  });                                                                                                                // 167
-};                                                                                                                   // 165
+_.map(modules.slice(10, 12), function (i) {                                                                          // 164
+  return Router.route('/' + i.name + '/:idbarang?', {                                                                // 620
+    name: i.name,                                                                                                    // 166
+    action: function () {                                                                                            // 167
+      return this.render('gudang');                                                                                  // 623
+    }                                                                                                                // 166
+  });                                                                                                                // 166
+});                                                                                                                  // 164
                                                                                                                      //
-ref = modules.slice(0, 10);                                                                                          // 173
+_.map(['panduan'], function (i) {                                                                                    // 169
+  return Router.route('/' + i, {                                                                                     // 629
+    action: function () {                                                                                            // 171
+      return this.render(i);                                                                                         // 631
+    }                                                                                                                // 171
+  });                                                                                                                // 171
+});                                                                                                                  // 169
                                                                                                                      //
-for (j = 0, len = ref.length; j < len; j++) {                                                                        // 173
-  i = ref[j];                                                                                                        // 637
-  makePasien(i.name);                                                                                                // 173
-}                                                                                                                    // 173
-                                                                                                                     //
-makeGudang = function (modul) {                                                                                      // 175
-  return Router.route('/' + modul + '/:idbarang?', {                                                                 // 642
-    name: modul,                                                                                                     // 177
-    action: function () {                                                                                            // 178
-      return this.render('gudang');                                                                                  // 645
-    }                                                                                                                // 177
-  });                                                                                                                // 177
-};                                                                                                                   // 175
-                                                                                                                     //
-ref1 = modules.slice(10, 12);                                                                                        // 180
-                                                                                                                     //
-for (k = 0, len1 = ref1.length; k < len1; k++) {                                                                     // 180
-  i = ref1[k];                                                                                                       // 652
-  makeGudang(i.name);                                                                                                // 180
-}                                                                                                                    // 180
-                                                                                                                     //
-makeOther = function (name) {                                                                                        // 182
-  return Router.route('/' + name, {                                                                                  // 657
-    action: function () {                                                                                            // 184
-      return this.render(name);                                                                                      // 659
-    }                                                                                                                // 184
-  });                                                                                                                // 184
-};                                                                                                                   // 182
-                                                                                                                     //
-ref2 = ['panduan'];                                                                                                  // 186
-                                                                                                                     //
-for (l = 0, len2 = ref2.length; l < len2; l++) {                                                                     // 186
-  i = ref2[l];                                                                                                       // 666
-  makeOther(i);                                                                                                      // 186
-}                                                                                                                    // 186
-                                                                                                                     //
-Router.route('/manajemen', {                                                                                         // 188
-  action: function () {                                                                                              // 189
-    return this.render('manajemen');                                                                                 // 672
-  },                                                                                                                 // 189
-  waitOn: function () {                                                                                              // 190
+Router.route('/manajemen', {                                                                                         // 173
+  action: function () {                                                                                              // 174
+    return this.render('manajemen');                                                                                 // 638
+  },                                                                                                                 // 174
+  waitOn: function () {                                                                                              // 175
     return [Meteor.subscribe('users'), Meteor.subscribe('coll', 'dokter', {}, {}), Meteor.subscribe('coll', 'tarif', {}, {})];
-  }                                                                                                                  // 189
-});                                                                                                                  // 189
-Router.route('/login', function () {                                                                                 // 196
-  return {                                                                                                           // 680
-    action: function () {                                                                                            // 197
-      return this.render('login');                                                                                   // 682
-    }                                                                                                                // 197
-  };                                                                                                                 // 197
-});                                                                                                                  // 196
+  }                                                                                                                  // 174
+});                                                                                                                  // 174
+Router.route('/login', function () {                                                                                 // 181
+  return {                                                                                                           // 646
+    action: function () {                                                                                            // 182
+      return this.render('login');                                                                                   // 648
+    }                                                                                                                // 182
+  };                                                                                                                 // 182
+});                                                                                                                  // 181
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"client.coffee.js":function(){
@@ -1200,11 +1218,7 @@ Router.route('/login', function () {                                            
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                      //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-var currentPar,                                                                                                      // 1
-    currentRoute,                                                                                                    // 1
-    formDoc,                                                                                                         // 1
-    roles,                                                                                                           // 1
-    search,                                                                                                          // 1
+var globalHelpers,                                                                                                   // 1
     indexOf = [].indexOf || function (item) {                                                                        // 1
   for (var i = 0, l = this.length; i < l; i++) {                                                                     // 1
     if (i in this && this[i] === item) return i;                                                                     // 1
@@ -1215,940 +1229,887 @@ var currentPar,                                                                 
     slice = [].slice;                                                                                                // 1
                                                                                                                      //
 if (Meteor.isClient) {                                                                                               // 1
-  AutoForm.setDefaultTemplate('materialize');                                                                        // 3
+  Router.onBeforeAction(function () {                                                                                // 3
+    if (!Meteor.userId()) {                                                                                          // 4
+      return this.render('login');                                                                                   // 8
+    } else {                                                                                                         // 4
+      return this.next();                                                                                            // 10
+    }                                                                                                                // 11
+  });                                                                                                                // 3
+  Router.onAfterAction(function () {                                                                                 // 5
+    var ref;                                                                                                         // 6
                                                                                                                      //
-  currentRoute = function () {                                                                                       // 4
-    return Router.current().route.getName();                                                                         // 8
-  };                                                                                                                 // 4
+    if (ref = currentRoute(), indexOf.call(_.uniq(_.flatMap(_.keys(roles()), function (i) {                          // 6
+      return _.find(rights, function (j) {                                                                           // 16
+        return j.group === i;                                                                                        // 17
+      }).list;                                                                                                       // 8
+    })), ref) < 0) {                                                                                                 // 7
+      return Router.go('/');                                                                                         // 20
+    }                                                                                                                // 21
+  });                                                                                                                // 5
+  globalHelpers = [['coll', function () {                                                                            // 10
+    return coll;                                                                                                     // 26
+  }], ['schema', function () {                                                                                       // 11
+    return new SimpleSchema(schema[currentRoute()]);                                                                 // 30
+  }], ['zeros', function (num) {                                                                                     // 12
+    return zeros(num);                                                                                               // 34
+  }], ['showForm', function () {                                                                                     // 13
+    return Session.get('showForm');                                                                                  // 38
+  }], ['hari', function (date) {                                                                                     // 14
+    return moment(date).format('D MMM YYYY');                                                                        // 42
+  }], ['rupiah', function (val) {                                                                                    // 15
+    return 'Rp ' + numeral(val).format('0,0');                                                                       // 46
+  }], ['currentPar', function (param) {                                                                              // 16
+    return currentPar(param);                                                                                        // 50
+  }], ['stringify', function (obj) {                                                                                 // 17
+    return JSON.stringify(obj);                                                                                      // 54
+  }], ['startCase', function (val) {                                                                                 // 18
+    return _.startCase(val);                                                                                         // 58
+  }], ['modules', function () {                                                                                      // 19
+    return modules;                                                                                                  // 62
+  }], ['reverse', function (arr) {                                                                                   // 20
+    return _.reverse(arr);                                                                                           // 66
+  }], ['sortBy', function (arr, sel, sort) {                                                                         // 21
+    return _.sortBy(arr, function (i) {                                                                              // 70
+      return -i.tanggal.getTime();                                                                                   // 71
+    });                                                                                                              // 22
+  }], ['isTrue', function (a, b) {                                                                                   // 22
+    return a === b;                                                                                                  // 76
+  }], ['isFalse', function (a, b) {                                                                                  // 23
+    return a !== b;                                                                                                  // 80
+  }], ['look', function (option, value, field) {                                                                     // 24
+    return look(option, value)[field];                                                                               // 84
+  }], ['look2', function (option, value, field) {                                                                    // 25
+    return look2(option, value)[field];                                                                              // 88
+  }], ['routeIs', function (name) {                                                                                  // 26
+    return currentRoute() === name;                                                                                  // 92
+  }], ['userGroup', function (name) {                                                                                // 27
+    return roles()[name];                                                                                            // 96
+  }], ['userRole', function (name) {                                                                                 // 28
+    return roles()[currentRoute()][0] === name;                                                                      // 100
+  }], ['pagins', function (name) {                                                                                   // 29
+    var end, l, length, limit, results;                                                                              // 31
+    limit = Session.get('limit');                                                                                    // 31
+    length = coll[name].find().fetch().length;                                                                       // 32
+    end = (length - length % limit) / limit;                                                                         // 33
+    return function () {                                                                                             // 108
+      results = [];                                                                                                  // 109
                                                                                                                      //
-  currentPar = function (param) {                                                                                    // 5
-    return Router.current().params[param];                                                                           // 11
-  };                                                                                                                 // 5
+      for (var l = 1; 1 <= end ? l <= end : l >= end; 1 <= end ? l++ : l--) {                                        // 110
+        results.push(l);                                                                                             // 110
+      }                                                                                                              // 110
                                                                                                                      //
-  search = function () {                                                                                             // 6
-    return Session.get('search');                                                                                    // 14
-  };                                                                                                                 // 6
+      return results;                                                                                                // 111
+    }.apply(this);                                                                                                   // 112
+  }]];                                                                                                               // 30
                                                                                                                      //
-  formDoc = function () {                                                                                            // 7
-    return Session.get('formDoc');                                                                                   // 17
-  };                                                                                                                 // 7
+  _.map(globalHelpers, function (i) {                                                                                // 37
+    return Template.registerHelper.apply(Template, i);                                                               // 117
+  });                                                                                                                // 37
                                                                                                                      //
-  this.limit = function () {                                                                                         // 8
-    return Session.get('limit');                                                                                     // 20
-  };                                                                                                                 // 8
+  Template.body.events({                                                                                             // 39
+    'keypress #search': function (event) {                                                                           // 40
+      var term;                                                                                                      // 41
                                                                                                                      //
-  this.page = function () {                                                                                          // 9
-    return Session.get('page');                                                                                      // 23
-  };                                                                                                                 // 9
+      if (event.key === 'Enter') {                                                                                   // 41
+        term = event.target.value;                                                                                   // 42
                                                                                                                      //
-  roles = function () {                                                                                              // 10
-    return Meteor.user().roles;                                                                                      // 26
-  };                                                                                                                 // 10
-                                                                                                                     //
-  Router.onBeforeAction(function () {                                                                                // 12
-    if (!Meteor.userId()) {                                                                                          // 13
-      return this.render('login');                                                                                   // 30
-    } else {                                                                                                         // 13
-      return this.next();                                                                                            // 32
-    }                                                                                                                // 33
-  });                                                                                                                // 12
-  Router.onAfterAction(function () {                                                                                 // 14
-    var ref;                                                                                                         // 15
-                                                                                                                     //
-    if (ref = currentRoute(), indexOf.call(_.uniq(_.flatMap(_.keys(roles()), function (i) {                          // 15
-      return _.find(rights, function (j) {                                                                           // 38
-        return j.group === i;                                                                                        // 39
-      }).list;                                                                                                       // 17
-    })), ref) < 0) {                                                                                                 // 16
-      return Router.go('/');                                                                                         // 42
-    }                                                                                                                // 43
-  });                                                                                                                // 14
-  Template.registerHelper('coll', function () {                                                                      // 19
-    return coll;                                                                                                     // 46
-  });                                                                                                                // 19
-  Template.registerHelper('schema', function () {                                                                    // 20
-    return new SimpleSchema(schema[currentRoute()]);                                                                 // 49
-  });                                                                                                                // 20
-  Template.registerHelper('zeros', function (num) {                                                                  // 21
-    var size;                                                                                                        // 22
-    size = _.size(_.toString(num));                                                                                  // 22
-                                                                                                                     //
-    if (size < 7) {                                                                                                  // 23
-      return '0'.repeat(6 - size) + _.toString(num);                                                                 // 55
-    }                                                                                                                // 56
-  });                                                                                                                // 21
-  Template.registerHelper('showForm', function () {                                                                  // 24
-    return Session.get('showForm');                                                                                  // 59
-  });                                                                                                                // 24
-  Template.registerHelper('hari', function (date) {                                                                  // 25
-    return moment(date).format('D MMM YYYY');                                                                        // 62
-  });                                                                                                                // 25
-  Template.registerHelper('rupiah', function (val) {                                                                 // 26
-    return 'Rp ' + numeral(val).format('0,0');                                                                       // 65
-  });                                                                                                                // 26
-  Template.registerHelper('currentPar', function (param) {                                                           // 27
-    return currentPar(param);                                                                                        // 68
-  });                                                                                                                // 27
-  Template.registerHelper('stringify', function (obj) {                                                              // 28
-    return JSON.stringify(obj);                                                                                      // 71
-  });                                                                                                                // 28
-  Template.registerHelper('startCase', function (val) {                                                              // 29
-    return _.startCase(val);                                                                                         // 74
-  });                                                                                                                // 29
-  Template.registerHelper('modules', function () {                                                                   // 30
-    return modules;                                                                                                  // 77
-  });                                                                                                                // 30
-  Template.registerHelper('reverse', function (arr) {                                                                // 31
-    return _.reverse(arr);                                                                                           // 80
-  });                                                                                                                // 31
-  Template.registerHelper('sortBy', function (arr, sel, sort) {                                                      // 32
-    return _.sortBy(arr, function (i) {                                                                              // 83
-      return -i.tanggal.getTime();                                                                                   // 84
-    });                                                                                                              // 32
-  });                                                                                                                // 32
-  Template.registerHelper('isTrue', function (a, b) {                                                                // 33
-    return a === b;                                                                                                  // 88
-  });                                                                                                                // 33
-  Template.registerHelper('isFalse', function (a, b) {                                                               // 34
-    return a !== b;                                                                                                  // 91
-  });                                                                                                                // 34
-  Template.registerHelper('look', function (option, value, field) {                                                  // 35
-    var find;                                                                                                        // 36
-    find = _.find(selects[option], function (i) {                                                                    // 36
-      return i.value === value;                                                                                      // 96
-    });                                                                                                              // 36
-    return find[field];                                                                                              // 98
-  });                                                                                                                // 35
-  Template.registerHelper('look2', function (option, value, field) {                                                 // 38
-    var find;                                                                                                        // 39
-    find = _.find(coll[option].find().fetch(), function (i) {                                                        // 39
-      return i._id === value;                                                                                        // 103
-    });                                                                                                              // 39
-    return _.startCase(find[field]);                                                                                 // 105
-  });                                                                                                                // 38
-  Template.registerHelper('routeIs', function (name) {                                                               // 41
-    return currentRoute() === name;                                                                                  // 108
-  });                                                                                                                // 41
-  Template.registerHelper('userGroup', function (name) {                                                             // 43
-    return roles()[name];                                                                                            // 111
-  });                                                                                                                // 43
-  Template.registerHelper('userRole', function (name) {                                                              // 45
-    return roles()[currentRoute()][0] === name;                                                                      // 114
-  });                                                                                                                // 45
-  Template.registerHelper('pagins', function (name) {                                                                // 47
-    var end, l, length, limit, results;                                                                              // 48
-    limit = Session.get('limit');                                                                                    // 48
-    length = coll[name].find().fetch().length;                                                                       // 49
-    end = (length - length % limit) / limit;                                                                         // 50
-    return function () {                                                                                             // 121
-      results = [];                                                                                                  // 122
-                                                                                                                     //
-      for (var l = 1; 1 <= end ? l <= end : l >= end; 1 <= end ? l++ : l--) {                                        // 123
-        results.push(l);                                                                                             // 123
-      }                                                                                                              // 123
-                                                                                                                     //
-      return results;                                                                                                // 124
-    }.apply(this);                                                                                                   // 125
-  });                                                                                                                // 47
-  Template.body.events({                                                                                             // 53
-    'keypress #search': function (event) {                                                                           // 54
-      var term;                                                                                                      // 55
-                                                                                                                     //
-      if (event.key === 'Enter') {                                                                                   // 55
-        term = event.target.value;                                                                                   // 56
-                                                                                                                     //
-        if (term.length > 2) {                                                                                       // 57
-          return Session.set('search', term);                                                                        // 133
-        }                                                                                                            // 55
-      }                                                                                                              // 135
-    }                                                                                                                // 54
-  });                                                                                                                // 54
-  Template.layout.onRendered(function () {                                                                           // 60
-    Session.set('limit', 10);                                                                                        // 61
-    return Session.set('page', 0);                                                                                   // 140
-  });                                                                                                                // 60
-  Template.menu.helpers({                                                                                            // 64
-    menus: function () {                                                                                             // 65
-      return _.flatMap(_.keys(roles()), function (i) {                                                               // 144
-        var find;                                                                                                    // 67
-        find = _.find(rights, function (j) {                                                                         // 67
-          return j.group === i;                                                                                      // 147
-        });                                                                                                          // 67
-        return _.map(find.list, function (j) {                                                                       // 149
-          return _.find(modules, function (k) {                                                                      // 150
-            return k.name === j;                                                                                     // 151
-          });                                                                                                        // 68
-        });                                                                                                          // 68
-      });                                                                                                            // 66
+        if (term.length > 2) {                                                                                       // 43
+          return Session.set('search', term);                                                                        // 125
+        }                                                                                                            // 41
+      }                                                                                                              // 127
+    }                                                                                                                // 40
+  });                                                                                                                // 40
+  Template.layout.onRendered(function () {                                                                           // 46
+    Session.set('limit', 10);                                                                                        // 47
+    return Session.set('page', 0);                                                                                   // 132
+  });                                                                                                                // 46
+  Template.menu.helpers({                                                                                            // 50
+    menus: function () {                                                                                             // 51
+      return _.flatMap(_.keys(roles()), function (i) {                                                               // 136
+        var find;                                                                                                    // 53
+        find = _.find(rights, function (j) {                                                                         // 53
+          return j.group === i;                                                                                      // 139
+        });                                                                                                          // 53
+        return _.map(find.list, function (j) {                                                                       // 141
+          return _.find(modules, function (k) {                                                                      // 142
+            return k.name === j;                                                                                     // 143
+          });                                                                                                        // 54
+        });                                                                                                          // 54
+      });                                                                                                            // 52
+    },                                                                                                               // 51
+    navTitle: function () {                                                                                          // 55
+      var find;                                                                                                      // 56
+      find = _.find(modules, function (i) {                                                                          // 56
+        return i.name === currentRoute();                                                                            // 151
+      });                                                                                                            // 56
+      return (find != null ? find.full : void 0) || _.startCase(currentRoute());                                     // 153
+    },                                                                                                               // 51
+    today: function () {                                                                                             // 58
+      return moment().format('LLL');                                                                                 // 156
+    }                                                                                                                // 51
+  });                                                                                                                // 51
+  Template.menu.events({                                                                                             // 60
+    'click #logout': function () {                                                                                   // 61
+      return Meteor.logout();                                                                                        // 161
+    },                                                                                                               // 61
+    'click #refresh': function () {                                                                                  // 62
+      return document.location.reload();                                                                             // 164
+    }                                                                                                                // 61
+  });                                                                                                                // 61
+  Template.pasien.helpers({                                                                                          // 64
+    route: function () {                                                                                             // 65
+      return currentRoute();                                                                                         // 169
     },                                                                                                               // 65
-    navTitle: function () {                                                                                          // 69
-      var find;                                                                                                      // 70
-      find = _.find(modules, function (i) {                                                                          // 70
-        return i.name === currentRoute();                                                                            // 159
-      });                                                                                                            // 70
-                                                                                                                     //
-      if (find) {                                                                                                    // 71
-        return find.full;                                                                                            // 162
-      } else {                                                                                                       // 71
-        return _.startCase(currentRoute());                                                                          // 164
-      }                                                                                                              // 165
+    formType: function () {                                                                                          // 66
+      if (currentRoute() === 'regis') {                                                                              // 67
+        if (currentPar('no_mr')) {                                                                                   // 68
+          return 'update';                                                                                           // 174
+        } else {                                                                                                     // 68
+          return 'insert';                                                                                           // 176
+        }                                                                                                            // 67
+      } else {                                                                                                       // 67
+        return 'update-pushArray';                                                                                   // 179
+      }                                                                                                              // 180
     },                                                                                                               // 65
-    today: function () {                                                                                             // 72
-      return moment().format('LLL');                                                                                 // 168
-    }                                                                                                                // 65
-  });                                                                                                                // 65
-  Template.menu.events({                                                                                             // 73
-    'click #logout': function () {                                                                                   // 74
-      return Meteor.logout();                                                                                        // 173
-    },                                                                                                               // 74
-    'click #refresh': function () {                                                                                  // 75
-      return document.location.reload();                                                                             // 176
-    }                                                                                                                // 74
-  });                                                                                                                // 74
-  Template.pasien.helpers({                                                                                          // 77
-    route: function () {                                                                                             // 78
-      return currentRoute();                                                                                         // 181
-    },                                                                                                               // 78
-    formType: function () {                                                                                          // 79
-      if (currentRoute() === 'regis') {                                                                              // 80
-        if (currentPar('no_mr')) {                                                                                   // 81
-          return 'update';                                                                                           // 186
-        } else {                                                                                                     // 81
-          return 'insert';                                                                                           // 188
-        }                                                                                                            // 80
-      } else {                                                                                                       // 80
-        return 'update-pushArray';                                                                                   // 191
-      }                                                                                                              // 192
-    },                                                                                                               // 78
-    umur: function (date) {                                                                                          // 84
-      return moment().diff(date, 'years') + ' tahun';                                                                // 195
-    },                                                                                                               // 78
-    showButton: function () {                                                                                        // 85
-      return Router.current().params.no_mr || currentRoute() === 'regis';                                            // 198
-    },                                                                                                               // 78
-    showButtonText: function () {                                                                                    // 86
-      switch (currentRoute()) {                                                                                      // 87
-        case 'regis':                                                                                                // 87
-          return '+ Pasien';                                                                                         // 203
+    umur: function (date) {                                                                                          // 71
+      return moment().diff(date, 'years') + ' tahun';                                                                // 183
+    },                                                                                                               // 65
+    showButton: function () {                                                                                        // 72
+      return Router.current().params.no_mr || currentRoute() === 'regis';                                            // 186
+    },                                                                                                               // 65
+    showButtonText: function () {                                                                                    // 73
+      switch (currentRoute()) {                                                                                      // 74
+        case 'regis':                                                                                                // 74
+          return '+ Pasien';                                                                                         // 191
                                                                                                                      //
-        case 'jalan':                                                                                                // 87
-          return '+ Rawat';                                                                                          // 205
-      }                                                                                                              // 87
-    },                                                                                                               // 78
-    formDoc: function () {                                                                                           // 90
-      return formDoc();                                                                                              // 209
-    },                                                                                                               // 78
-    preview: function () {                                                                                           // 91
-      return Session.get('preview');                                                                                 // 212
-    },                                                                                                               // 78
-    omitFields: function () {                                                                                        // 92
-      if (!(formDoc() && formDoc().billRegis)) {                                                                     // 93
-        return ['anamesa', 'diagnosa', 'tindakan', 'labor', 'radio', 'obat', 'spm', 'keluar', 'pindah'];             // 216
-      }                                                                                                              // 217
-    },                                                                                                               // 78
-    roleFilter: function (arr) {                                                                                     // 95
-      return _.reverse(_.filter(arr, function (i) {                                                                  // 220
-        var find;                                                                                                    // 96
-        find = _.find(selects.klinik, function (j) {                                                                 // 96
-          return j.label === _.startCase(roles().jalan[0]);                                                          // 223
-        });                                                                                                          // 96
-        return i.klinik === find.value;                                                                              // 225
-      }));                                                                                                           // 95
-    },                                                                                                               // 78
-    userPoli: function () {                                                                                          // 99
-      return roles().jalan;                                                                                          // 229
-    },                                                                                                               // 78
-    insurance: function (val) {                                                                                      // 100
-      return 'Rp ' + numeral(val + 30000).format('0,0');                                                             // 232
-    },                                                                                                               // 78
-    selPol: function () {                                                                                            // 101
-      return _.map(roles().jalan, function (i) {                                                                     // 235
-        return _.find(selects.klinik, function (j) {                                                                 // 236
-          return i === _.snakeCase(j.label);                                                                         // 237
-        });                                                                                                          // 102
-      });                                                                                                            // 101
-    },                                                                                                               // 78
-    pasiens: function () {                                                                                           // 103
-      var arr, byName, byNoMR, elem, filter, kliniks, now, options, past, ref, ref1, selSub, selector, sub;          // 104
+        case 'jalan':                                                                                                // 74
+          return '+ Rawat';                                                                                          // 193
+      }                                                                                                              // 74
+    },                                                                                                               // 65
+    formDoc: function () {                                                                                           // 77
+      return formDoc();                                                                                              // 197
+    },                                                                                                               // 65
+    preview: function () {                                                                                           // 78
+      return Session.get('preview');                                                                                 // 200
+    },                                                                                                               // 65
+    omitFields: function () {                                                                                        // 79
+      var arr;                                                                                                       // 80
+      arr = ['anamesa', 'diagnosa', 'tindakan', 'labor', 'radio', 'obat', 'spm', 'keluar', 'pindah'];                // 80
                                                                                                                      //
-      if (currentPar('no_mr')) {                                                                                     // 104
-        selector = {                                                                                                 // 105
-          no_mr: parseInt(currentPar('no_mr'))                                                                       // 105
+      if (!(formDoc() && formDoc().billRegis)) {                                                                     // 81
+        return arr;                                                                                                  // 206
+      } else if (_.split(Meteor.user().username, '.')[0] !== 'dr') {                                                 // 81
+        return arr.slice(2, +arr.length + 1 || 9e9);                                                                 // 208
+      }                                                                                                              // 209
+    },                                                                                                               // 65
+    roleFilter: function (arr) {                                                                                     // 85
+      return _.reverse(_.filter(arr, function (i) {                                                                  // 212
+        var find;                                                                                                    // 86
+        find = _.find(selects.klinik, function (j) {                                                                 // 86
+          return j.label === _.startCase(roles().jalan[0]);                                                          // 215
+        });                                                                                                          // 86
+        return i.klinik === find.value;                                                                              // 217
+      }));                                                                                                           // 85
+    },                                                                                                               // 65
+    userPoli: function () {                                                                                          // 89
+      return roles().jalan;                                                                                          // 221
+    },                                                                                                               // 65
+    insurance: function (val) {                                                                                      // 90
+      return 'Rp ' + numeral(val + 30000).format('0,0');                                                             // 224
+    },                                                                                                               // 65
+    selPol: function () {                                                                                            // 91
+      return _.map(roles().jalan, function (i) {                                                                     // 227
+        return _.find(selects.klinik, function (j) {                                                                 // 228
+          return i === _.snakeCase(j.label);                                                                         // 229
+        });                                                                                                          // 92
+      });                                                                                                            // 91
+    },                                                                                                               // 65
+    pasiens: function () {                                                                                           // 93
+      var arr, byName, byNoMR, elem, filter, kliniks, now, options, past, ref, ref1, selSub, selector, sub;          // 94
+                                                                                                                     //
+      if (currentPar('no_mr')) {                                                                                     // 94
+        selector = {                                                                                                 // 95
+          no_mr: parseInt(currentPar('no_mr'))                                                                       // 95
+        };                                                                                                           // 95
+        options = {                                                                                                  // 96
+          fields: {                                                                                                  // 96
+            no_mr: 1,                                                                                                // 96
+            regis: 1                                                                                                 // 96
+          }                                                                                                          // 96
+        };                                                                                                           // 96
+        arr = ['bayar', 'jalan', 'labor', 'radio', 'obat'];                                                          // 97
+                                                                                                                     //
+        if (ref = currentRoute(), indexOf.call(arr, ref) >= 0) {                                                     // 98
+          options.fields.rawat = 1;                                                                                  // 98
+        }                                                                                                            // 248
+                                                                                                                     //
+        sub = Meteor.subscribe('coll', 'pasien', selector, options);                                                 // 99
+                                                                                                                     //
+        if (sub.ready()) {                                                                                           // 100
+          return coll.pasien.findOne();                                                                              // 251
+        }                                                                                                            // 94
+      } else if (search()) {                                                                                         // 94
+        byName = {                                                                                                   // 102
+          'regis.nama_lengkap': {                                                                                    // 102
+            $options: '-i',                                                                                          // 102
+            $regex: '.*' + search() + '.*'                                                                           // 102
+          }                                                                                                          // 102
+        };                                                                                                           // 102
+        byNoMR = {                                                                                                   // 103
+          no_mr: parseInt(search())                                                                                  // 103
+        };                                                                                                           // 103
+        selector = {                                                                                                 // 104
+          $or: [byName, byNoMR]                                                                                      // 104
+        };                                                                                                           // 104
+        options = {                                                                                                  // 105
+          fields: {                                                                                                  // 105
+            no_mr: 1,                                                                                                // 105
+            regis: 1                                                                                                 // 105
+          }                                                                                                          // 105
         };                                                                                                           // 105
-        options = {                                                                                                  // 106
-          fields: {                                                                                                  // 106
-            no_mr: 1,                                                                                                // 106
-            regis: 1                                                                                                 // 106
-          }                                                                                                          // 106
-        };                                                                                                           // 106
-        arr = ['bayar', 'jalan', 'labor', 'radio', 'obat'];                                                          // 107
+        sub = Meteor.subscribe('coll', 'pasien', selector, options);                                                 // 106
                                                                                                                      //
-        if (ref = currentRoute(), indexOf.call(arr, ref) >= 0) {                                                     // 108
-          options.fields.rawat = 1;                                                                                  // 108
-        }                                                                                                            // 256
-                                                                                                                     //
-        sub = Meteor.subscribe('coll', 'pasien', selector, options);                                                 // 109
-                                                                                                                     //
-        if (sub.ready()) {                                                                                           // 110
-          return coll.pasien.findOne();                                                                              // 259
-        }                                                                                                            // 104
-      } else if (search()) {                                                                                         // 104
-        byName = {                                                                                                   // 112
-          'regis.nama_lengkap': {                                                                                    // 112
-            $options: '-i',                                                                                          // 112
-            $regex: '.*' + search() + '.*'                                                                           // 112
-          }                                                                                                          // 112
-        };                                                                                                           // 112
-        byNoMR = {                                                                                                   // 113
-          no_mr: parseInt(search())                                                                                  // 113
+        if (sub.ready()) {                                                                                           // 107
+          return coll.pasien.find().fetch();                                                                         // 274
+        }                                                                                                            // 101
+      } else if (roles().jalan) {                                                                                    // 101
+        now = new Date();                                                                                            // 109
+        past = new Date(now.getDate() - 2);                                                                          // 109
+        kliniks = _.map(roles().jalan, function (i) {                                                                // 110
+          var find;                                                                                                  // 111
+          find = _.find(selects.klinik, function (j) {                                                               // 111
+            return i === _.snakeCase(j.label);                                                                       // 282
+          });                                                                                                        // 111
+          return find.value;                                                                                         // 284
+        });                                                                                                          // 110
+        selector = {                                                                                                 // 113
+          rawat: {                                                                                                   // 113
+            $elemMatch: {                                                                                            // 113
+              klinik: {                                                                                              // 114
+                $in: kliniks                                                                                         // 114
+              },                                                                                                     // 114
+              tanggal: {                                                                                             // 115
+                $gt: past                                                                                            // 115
+              }                                                                                                      // 115
+            }                                                                                                        // 114
+          }                                                                                                          // 113
         };                                                                                                           // 113
-        selector = {                                                                                                 // 114
-          $or: [byName, byNoMR]                                                                                      // 114
-        };                                                                                                           // 114
-        options = {                                                                                                  // 115
-          fields: {                                                                                                  // 115
-            no_mr: 1,                                                                                                // 115
-            regis: 1                                                                                                 // 115
-          }                                                                                                          // 115
-        };                                                                                                           // 115
-        sub = Meteor.subscribe('coll', 'pasien', selector, options);                                                 // 116
+        sub = Meteor.subscribe('coll', 'pasien', selector, {});                                                      // 116
                                                                                                                      //
         if (sub.ready()) {                                                                                           // 117
-          return coll.pasien.find().fetch();                                                                         // 282
-        }                                                                                                            // 111
-      } else if (roles().jalan) {                                                                                    // 111
-        now = new Date();                                                                                            // 119
-        past = new Date(now.getDate() - 2);                                                                          // 119
-        kliniks = _.map(roles().jalan, function (i) {                                                                // 120
-          var find;                                                                                                  // 121
-          find = _.find(selects.klinik, function (j) {                                                               // 121
-            return i === _.snakeCase(j.label);                                                                       // 290
-          });                                                                                                        // 121
-          return find.value;                                                                                         // 292
-        });                                                                                                          // 120
-        selector = {                                                                                                 // 123
-          rawat: {                                                                                                   // 123
-            $elemMatch: {                                                                                            // 123
-              klinik: {                                                                                              // 124
-                $in: kliniks                                                                                         // 124
-              },                                                                                                     // 124
-              tanggal: {                                                                                             // 125
-                $gt: past                                                                                            // 125
-              }                                                                                                      // 125
-            }                                                                                                        // 124
-          }                                                                                                          // 123
-        };                                                                                                           // 123
-        sub = Meteor.subscribe('coll', 'pasien', selector, {});                                                      // 126
+          filter = _.filter(coll.pasien.find().fetch(), function (i) {                                               // 118
+            var a, b, c, selPol;                                                                                     // 119
                                                                                                                      //
-        if (sub.ready()) {                                                                                           // 127
-          filter = _.filter(coll.pasien.find().fetch(), function (i) {                                               // 128
-            var a, b, c, selPol;                                                                                     // 129
+            a = function () {                                                                                        // 119
+              var ref1;                                                                                              // 119
+              return ref1 = i.rawat[i.rawat.length - 1].klinik, indexOf.call(kliniks, ref1) >= 0;                    // 304
+            };                                                                                                       // 119
                                                                                                                      //
-            a = function () {                                                                                        // 129
-              var ref1;                                                                                              // 129
-              return ref1 = i.rawat[i.rawat.length - 1].klinik, indexOf.call(kliniks, ref1) >= 0;                    // 312
-            };                                                                                                       // 129
+            b = function () {                                                                                        // 120
+              return !i.rawat[i.rawat.length - 1].total.semua;                                                       // 307
+            };                                                                                                       // 120
                                                                                                                      //
-            b = function () {                                                                                        // 130
-              return !i.rawat[i.rawat.length - 1].total.semua;                                                       // 315
-            };                                                                                                       // 130
+            selPol = Session.get('selPol');                                                                          // 121
                                                                                                                      //
-            selPol = Session.get('selPol');                                                                          // 131
+            c = function () {                                                                                        // 122
+              return i.rawat[i.rawat.length - 1].klinik === selPol;                                                  // 311
+            };                                                                                                       // 122
                                                                                                                      //
-            c = function () {                                                                                        // 132
-              return i.rawat[i.rawat.length - 1].klinik === selPol;                                                  // 319
-            };                                                                                                       // 132
+            if (selPol) {                                                                                            // 123
+              return b() && c();                                                                                     // 314
+            } else {                                                                                                 // 123
+              return a() && b();                                                                                     // 316
+            }                                                                                                        // 317
+          });                                                                                                        // 118
+          return _.sortBy(filter, function (i) {                                                                     // 319
+            return i.rawat[i.rawat.length - 1].tanggal;                                                              // 320
+          });                                                                                                        // 124
+        }                                                                                                            // 108
+      } else if (currentRoute() === 'bayar') {                                                                       // 108
+        selector = {                                                                                                 // 126
+          rawat: {                                                                                                   // 126
+            $elemMatch: {                                                                                            // 126
+              $or: [{                                                                                                // 126
+                'total.semua': 0,                                                                                    // 126
+                'status_bayar': {                                                                                    // 126
+                  $ne: true                                                                                          // 126
+                }                                                                                                    // 126
+              }]                                                                                                     // 126
+            }                                                                                                        // 126
+          }                                                                                                          // 126
+        };                                                                                                           // 126
+        sub = Meteor.subscribe('coll', 'pasien', selector, {});                                                      // 127
                                                                                                                      //
-            if (selPol) {                                                                                            // 133
-              return b() && c();                                                                                     // 322
-            } else {                                                                                                 // 133
-              return a() && b();                                                                                     // 324
-            }                                                                                                        // 325
-          });                                                                                                        // 128
-          return _.sortBy(filter, function (i) {                                                                     // 327
-            return i.rawat[i.rawat.length - 1].tanggal;                                                              // 328
-          });                                                                                                        // 134
-        }                                                                                                            // 118
-      } else if (currentRoute() === 'bayar') {                                                                       // 118
-        selector = {                                                                                                 // 136
-          rawat: {                                                                                                   // 136
-            $elemMatch: {                                                                                            // 136
-              $or: [{                                                                                                // 136
-                'total.semua': 0,                                                                                    // 136
-                'status_bayar': {                                                                                    // 136
-                  $ne: true                                                                                          // 136
-                }                                                                                                    // 136
-              }]                                                                                                     // 136
-            }                                                                                                        // 136
-          }                                                                                                          // 136
-        };                                                                                                           // 136
-        sub = Meteor.subscribe('coll', 'pasien', selector, {});                                                      // 137
+        if (sub.ready()) {                                                                                           // 128
+          return coll.pasien.find().fetch();                                                                         // 340
+        }                                                                                                            // 125
+      } else if ((ref1 = currentRoute()) === 'labor' || ref1 === 'radio' || ref1 === 'obat') {                       // 125
+        elem = {                                                                                                     // 130
+          'status_bayar': true                                                                                       // 130
+        };                                                                                                           // 130
+        elem[currentRoute()] = {                                                                                     // 131
+          $exists: true,                                                                                             // 131
+          $elemMatch: {                                                                                              // 131
+            hasil: {                                                                                                 // 131
+              $exists: false                                                                                         // 131
+            }                                                                                                        // 131
+          }                                                                                                          // 131
+        };                                                                                                           // 131
+        selSub = {                                                                                                   // 132
+          rawat: {                                                                                                   // 132
+            $elemMatch: elem                                                                                         // 132
+          }                                                                                                          // 132
+        };                                                                                                           // 132
+        sub = Meteor.subscribe('coll', 'pasien', selSub, {});                                                        // 133
                                                                                                                      //
-        if (sub.ready()) {                                                                                           // 138
-          return coll.pasien.find().fetch();                                                                         // 348
-        }                                                                                                            // 135
-      } else if ((ref1 = currentRoute()) === 'labor' || ref1 === 'radio' || ref1 === 'obat') {                       // 135
-        elem = {                                                                                                     // 140
-          'status_bayar': true                                                                                       // 140
-        };                                                                                                           // 140
-        elem[currentRoute()] = {                                                                                     // 141
-          $exists: true,                                                                                             // 141
-          $elemMatch: {                                                                                              // 141
-            hasil: {                                                                                                 // 141
-              $exists: false                                                                                         // 141
-            }                                                                                                        // 141
-          }                                                                                                          // 141
-        };                                                                                                           // 141
-        selSub = {                                                                                                   // 142
-          rawat: {                                                                                                   // 142
-            $elemMatch: elem                                                                                         // 142
-          }                                                                                                          // 142
-        };                                                                                                           // 142
-        sub = Meteor.subscribe('coll', 'pasien', selSub, {});                                                        // 143
+        if (sub.ready()) {                                                                                           // 134
+          return coll.pasien.find().fetch();                                                                         // 361
+        }                                                                                                            // 129
+      }                                                                                                              // 363
+    }                                                                                                                // 65
+  });                                                                                                                // 65
+  Template.pasien.events({                                                                                           // 136
+    'click #showForm': function () {                                                                                 // 137
+      var later;                                                                                                     // 138
+      Session.set('showForm', !Session.get('showForm'));                                                             // 138
                                                                                                                      //
-        if (sub.ready()) {                                                                                           // 144
-          return coll.pasien.find().fetch();                                                                         // 369
-        }                                                                                                            // 139
-      }                                                                                                              // 371
-    }                                                                                                                // 78
-  });                                                                                                                // 78
-  Template.pasien.events({                                                                                           // 146
-    'click #showForm': function () {                                                                                 // 147
-      var later;                                                                                                     // 148
-      Session.set('showForm', !Session.get('showForm'));                                                             // 148
+      later = function () {                                                                                          // 139
+        var list;                                                                                                    // 140
+        $('.autoform-remove-item').trigger('click');                                                                 // 140
                                                                                                                      //
-      later = function () {                                                                                          // 149
-        var list;                                                                                                    // 150
-        $('.autoform-remove-item').trigger('click');                                                                 // 150
+        if (currentRoute() === 'jalan') {                                                                            // 141
+          _.map(['cara_bayar', 'klinik', 'rujukan'], function (i) {                                                  // 142
+            $('div[data-schema-key="' + i + '"]').prepend('<p>' + _.startCase(i) + '</p>');                          // 143
                                                                                                                      //
-        if (currentRoute() === 'jalan') {                                                                            // 151
-          _.map(['cara_bayar', 'klinik', 'rujukan'], function (i) {                                                  // 151
-            if (formDoc()) {                                                                                         // 152
-              $('input[name="' + i + '"][value="' + formDoc()[i] + '"]').prop('checked', true);                      // 152
-            }                                                                                                        // 385
+            if (formDoc()) {                                                                                         // 144
+              return $('input[name="' + i + '"][value="' + formDoc()[i] + '"]').prop('checked', true);               // 377
+            }                                                                                                        // 378
+          });                                                                                                        // 142
                                                                                                                      //
-            return $('div[data-schema-key="' + i + '"]').prepend('<p>' + _.startCase(i) + '</p>');                   // 386
-          });                                                                                                        // 151
-        }                                                                                                            // 388
+          _.map(['anamesa', 'diagnosa'], function (i) {                                                              // 145
+            return $('input[name="' + i + '"]').val(formDoc()[i]);                                                   // 381
+          });                                                                                                        // 145
+        }                                                                                                            // 383
                                                                                                                      //
-        list = ['cara_bayar', 'kelamin', 'agama', 'nikah', 'pendidikan', 'darah', 'pekerjaan'];                      // 154
+        list = ['cara_bayar', 'kelamin', 'agama', 'nikah', 'pendidikan', 'darah', 'pekerjaan'];                      // 147
                                                                                                                      //
-        if (currentRoute() === 'regis') {                                                                            // 155
-          return _.map(list, function (i) {                                                                          // 391
-            return $('div[data-schema-key="regis.' + i + '"]').prepend('<p>' + _.startCase(i) + '</p>');             // 392
-          });                                                                                                        // 155
-        }                                                                                                            // 394
-      };                                                                                                             // 149
+        if (currentRoute() === 'regis') {                                                                            // 148
+          return _.map(list, function (i) {                                                                          // 386
+            return $('div[data-schema-key="regis.' + i + '"]').prepend('<p>' + _.startCase(i) + '</p>');             // 387
+          });                                                                                                        // 148
+        }                                                                                                            // 389
+      };                                                                                                             // 139
                                                                                                                      //
-      setTimeout(later, 1000);                                                                                       // 157
-      Meteor.subscribe('coll', 'gudang', {}, {});                                                                    // 158
-      return Session.set('begin', moment());                                                                         // 398
-    },                                                                                                               // 147
-    'dblclick #row': function () {                                                                                   // 160
-      return Router.go('/' + currentRoute() + '/' + this.no_mr);                                                     // 401
-    },                                                                                                               // 147
-    'click #close': function () {                                                                                    // 162
-      _.map(['showForm', 'formDoc', 'preview', 'search'], function (i) {                                             // 163
-        return Session.set(i, null);                                                                                 // 405
+      setTimeout(later, 1000);                                                                                       // 150
+      Meteor.subscribe('coll', 'gudang', {}, {});                                                                    // 151
+      return Session.set('begin', moment());                                                                         // 393
+    },                                                                                                               // 137
+    'dblclick #row': function () {                                                                                   // 153
+      return Router.go('/' + currentRoute() + '/' + this.no_mr);                                                     // 396
+    },                                                                                                               // 137
+    'click #close': function () {                                                                                    // 155
+      _.map(['showForm', 'formDoc', 'preview', 'search'], function (i) {                                             // 156
+        return Session.set(i, null);                                                                                 // 400
+      });                                                                                                            // 156
+                                                                                                                     //
+      return Router.go(currentRoute());                                                                              // 402
+    },                                                                                                               // 137
+    'click #card': function () {                                                                                     // 159
+      var dialog;                                                                                                    // 160
+      dialog = {                                                                                                     // 160
+        title: 'Cetak Kartu',                                                                                        // 161
+        message: 'Yakin untuk cetak kartu ini?'                                                                      // 162
+      };                                                                                                             // 161
+      return new Confirmation(dialog, function (ok) {                                                                // 410
+        if (ok) {                                                                                                    // 163
+          Meteor.call('billCard', currentPar('no_mr'), true);                                                        // 164
+          return makePdf.card();                                                                                     // 413
+        }                                                                                                            // 414
       });                                                                                                            // 163
-                                                                                                                     //
-      return Router.go(currentRoute());                                                                              // 407
-    },                                                                                                               // 147
-    'click #card': function () {                                                                                     // 166
+    },                                                                                                               // 137
+    'click #consent': function () {                                                                                  // 166
       var dialog;                                                                                                    // 167
       dialog = {                                                                                                     // 167
-        title: 'Cetak Kartu',                                                                                        // 168
-        message: 'Yakin untuk cetak kartu ini?'                                                                      // 169
+        title: 'Cetak General Consent',                                                                              // 168
+        message: 'Yakin untuk cetak persetujuan pasien?'                                                             // 169
       };                                                                                                             // 168
-      return new Confirmation(dialog, function (ok) {                                                                // 415
+      return new Confirmation(dialog, function (ok) {                                                                // 423
         if (ok) {                                                                                                    // 170
-          Meteor.call('billCard', currentPar('no_mr'), true);                                                        // 171
-          return makePdf.card();                                                                                     // 418
-        }                                                                                                            // 419
+          return makePdf.consent();                                                                                  // 425
+        }                                                                                                            // 426
       });                                                                                                            // 170
-    },                                                                                                               // 147
-    'click #consent': function () {                                                                                  // 173
-      var dialog;                                                                                                    // 174
+    },                                                                                                               // 137
+    'dblclick #bill': function (event) {                                                                             // 171
+      var dialog, nodes;                                                                                             // 172
+      nodes = _.map(['pasien', 'idbayar'], function (i) {                                                            // 172
+        return event.target.attributes[i].nodeValue;                                                                 // 432
+      });                                                                                                            // 172
       dialog = {                                                                                                     // 174
-        title: 'Cetak General Consent',                                                                              // 175
-        message: 'Yakin untuk cetak persetujuan pasien?'                                                             // 176
+        title: 'Pembayaran Pendaftaran',                                                                             // 175
+        message: 'Apakah yakin pasien sudah membayar?'                                                               // 176
       };                                                                                                             // 175
-      return new Confirmation(dialog, function (ok) {                                                                // 428
+      return new Confirmation(dialog, function (ok) {                                                                // 438
         if (ok) {                                                                                                    // 177
-          return makePdf.consent();                                                                                  // 430
-        }                                                                                                            // 431
+          if (nodes[1]) {                                                                                            // 178
+            Meteor.call.apply(Meteor, ['billRegis'].concat(slice.call(nodes), [true]));                              // 179
+            return makePdf.payRegCard(30000, 'Tiga Puluh Ribu Rupiah');                                              // 442
+          } else {                                                                                                   // 178
+            Meteor.call('billCard', nodes[0], false);                                                                // 182
+            return makePdf.payRegCard(10000, 'Sepuluh Ribu Rupiah');                                                 // 445
+          }                                                                                                          // 177
+        }                                                                                                            // 447
       });                                                                                                            // 177
-    },                                                                                                               // 147
-    'dblclick #bill': function (event) {                                                                             // 178
-      var dialog, nodes;                                                                                             // 179
-      nodes = _.map(['pasien', 'idbayar'], function (i) {                                                            // 179
-        return event.target.attributes[i].nodeValue;                                                                 // 437
-      });                                                                                                            // 179
-      dialog = {                                                                                                     // 181
-        title: 'Pembayaran Pendaftaran',                                                                             // 182
-        message: 'Apakah yakin pasien sudah membayar?'                                                               // 183
-      };                                                                                                             // 182
-      return new Confirmation(dialog, function (ok) {                                                                // 443
-        if (ok) {                                                                                                    // 184
-          if (nodes[1]) {                                                                                            // 185
-            Meteor.call.apply(Meteor, ['billRegis'].concat(slice.call(nodes), [true]));                              // 186
-            return makePdf.payRegCard(30000, 'Tiga Puluh Ribu Rupiah');                                              // 447
-          } else {                                                                                                   // 185
-            Meteor.call('billCard', nodes[0], false);                                                                // 189
-            return makePdf.payRegCard(10000, 'Sepuluh Ribu Rupiah');                                                 // 450
-          }                                                                                                          // 184
-        }                                                                                                            // 452
-      });                                                                                                            // 184
-    },                                                                                                               // 147
-    'dblclick #bayar': function (event) {                                                                            // 191
-      var dialog, nodes;                                                                                             // 192
-      nodes = _.map(['pasien', 'idbayar'], function (i) {                                                            // 192
-        return event.target.attributes[i].nodeValue;                                                                 // 458
-      });                                                                                                            // 192
-      dialog = {                                                                                                     // 194
-        title: 'Konfirmasi Pembayaran',                                                                              // 195
-        message: 'Apakah yakin tagihan ini sudah dibayar?'                                                           // 196
-      };                                                                                                             // 195
-      return new Confirmation(dialog, function (ok) {                                                                // 464
-        var doc, pasien;                                                                                             // 197
+    },                                                                                                               // 137
+    'dblclick #bayar': function (event) {                                                                            // 184
+      var dialog, nodes;                                                                                             // 185
+      nodes = _.map(['pasien', 'idbayar'], function (i) {                                                            // 185
+        return event.target.attributes[i].nodeValue;                                                                 // 453
+      });                                                                                                            // 185
+      dialog = {                                                                                                     // 187
+        title: 'Konfirmasi Pembayaran',                                                                              // 188
+        message: 'Apakah yakin tagihan ini sudah dibayar?'                                                           // 189
+      };                                                                                                             // 188
+      return new Confirmation(dialog, function (ok) {                                                                // 459
+        var doc, pasien;                                                                                             // 190
                                                                                                                      //
-        if (ok) {                                                                                                    // 197
-          Meteor.call.apply(Meteor, ['bayar'].concat(slice.call(nodes)));                                            // 198
-          pasien = coll.pasien.findOne({                                                                             // 199
-            no_mr: parseInt(nodes[0])                                                                                // 199
-          });                                                                                                        // 199
-          doc = _.find(pasien.rawat, function (i) {                                                                  // 200
-            return i.idbayar === nodes[1];                                                                           // 472
-          });                                                                                                        // 200
-          return makePdf.payRawat(doc);                                                                              // 474
-        }                                                                                                            // 475
-      });                                                                                                            // 197
-    },                                                                                                               // 147
-    'dblclick #request': function (event) {                                                                          // 202
-      var nodes;                                                                                                     // 203
-      nodes = _.map(['pasien', 'idbayar', 'jenis', 'idjenis'], function (i) {                                        // 203
-        return event.target.attributes[i].nodeValue;                                                                 // 481
-      });                                                                                                            // 203
-      return MaterializeModal.prompt({                                                                               // 483
-        message: 'Isikan data requestnya',                                                                           // 206
-        callback: function (err, res) {                                                                              // 207
-          var params;                                                                                                // 207
+        if (ok) {                                                                                                    // 190
+          Meteor.call.apply(Meteor, ['bayar'].concat(slice.call(nodes)));                                            // 191
+          pasien = coll.pasien.findOne({                                                                             // 192
+            no_mr: parseInt(nodes[0])                                                                                // 192
+          });                                                                                                        // 192
+          doc = _.find(pasien.rawat, function (i) {                                                                  // 193
+            return i.idbayar === nodes[1];                                                                           // 467
+          });                                                                                                        // 193
+          return makePdf.payRawat(doc);                                                                              // 469
+        }                                                                                                            // 470
+      });                                                                                                            // 190
+    },                                                                                                               // 137
+    'dblclick #request': function (event) {                                                                          // 195
+      var nodes;                                                                                                     // 196
+      nodes = _.map(['pasien', 'idbayar', 'jenis', 'idjenis'], function (i) {                                        // 196
+        return event.target.attributes[i].nodeValue;                                                                 // 476
+      });                                                                                                            // 196
+      return MaterializeModal.prompt({                                                                               // 478
+        message: 'Isikan data requestnya',                                                                           // 199
+        callback: function (err, res) {                                                                              // 200
+          var params;                                                                                                // 200
                                                                                                                      //
-          if (res.submit) {                                                                                          // 207
-            params = ['request'].concat(slice.call(nodes), [res.value]);                                             // 208
-            return Meteor.call.apply(Meteor, slice.call(params).concat([function (err, res) {                        // 489
-              var flat, key, message, rekap, val;                                                                    // 209
+          if (res.submit) {                                                                                          // 200
+            params = ['request'].concat(slice.call(nodes), [res.value]);                                             // 201
+            return Meteor.call.apply(Meteor, slice.call(params).concat([function (err, res) {                        // 484
+              var flat, key, message, rekap, val;                                                                    // 202
                                                                                                                      //
-              if (res) {                                                                                             // 209
-                message = '';                                                                                        // 210
+              if (res) {                                                                                             // 202
+                message = '';                                                                                        // 203
                                                                                                                      //
-                for (key in meteorBabelHelpers.sanitizeForInObject(res)) {                                           // 211
-                  val = res[key];                                                                                    // 494
-                  message += '</p>' + key + ': ' + val + '</p>';                                                     // 212
-                }                                                                                                    // 211
+                for (key in meteorBabelHelpers.sanitizeForInObject(res)) {                                           // 204
+                  val = res[key];                                                                                    // 489
+                  message += '</p>' + key + ': ' + val + '</p>';                                                     // 205
+                }                                                                                                    // 204
                                                                                                                      //
-                MaterializeModal.message({                                                                           // 213
-                  title: 'Penyerahan Obat',                                                                          // 214
-                  message: message                                                                                   // 215
-                });                                                                                                  // 214
-                rekap = Session.get('rekap') || [];                                                                  // 216
-                flat = _.flatten(_.toPairs(res));                                                                    // 217
+                MaterializeModal.message({                                                                           // 206
+                  title: 'Penyerahan Obat',                                                                          // 207
+                  message: message                                                                                   // 208
+                });                                                                                                  // 207
+                rekap = Session.get('rekap') || [];                                                                  // 209
+                flat = _.flatten(_.toPairs(res));                                                                    // 210
                 return Session.set('rekap', slice.call(rekap).concat([slice.call(nodes).concat(slice.call(flat))]));
-              }                                                                                                      // 504
-            }]));                                                                                                    // 209
-          }                                                                                                          // 506
-        }                                                                                                            // 206
-      });                                                                                                            // 206
-    },                                                                                                               // 147
-    'dblclick #rekap': function () {                                                                                 // 219
-      var headers;                                                                                                   // 220
-      headers = ['Pasien', 'ID Bayar', 'Jenis', 'ID Request', 'No Batch', 'Jumlah'];                                 // 220
-      makePdf.rekap([headers].concat(slice.call(Session.get('rekap'))));                                             // 221
-      return Session.set('rekap', null);                                                                             // 514
-    },                                                                                                               // 147
-    'click .modal-trigger': function (event) {                                                                       // 223
-      if (this.idbayar) {                                                                                            // 224
-        Session.set('formDoc', this);                                                                                // 225
-        Session.set('preview', modForm(this, this.idbayar));                                                         // 226
-      }                                                                                                              // 520
+              }                                                                                                      // 499
+            }]));                                                                                                    // 202
+          }                                                                                                          // 501
+        }                                                                                                            // 199
+      });                                                                                                            // 199
+    },                                                                                                               // 137
+    'dblclick #rekap': function () {                                                                                 // 212
+      var headers;                                                                                                   // 213
+      headers = ['Pasien', 'ID Bayar', 'Jenis', 'ID Request', 'No Batch', 'Jumlah'];                                 // 213
+      makePdf.rekap([headers].concat(slice.call(Session.get('rekap'))));                                             // 214
+      return Session.set('rekap', null);                                                                             // 509
+    },                                                                                                               // 137
+    'click .modal-trigger': function (event) {                                                                       // 216
+      if (this.idbayar) {                                                                                            // 217
+        Session.set('formDoc', this);                                                                                // 218
+        Session.set('preview', modForm(this, this.idbayar));                                                         // 219
+      }                                                                                                              // 515
                                                                                                                      //
-      return $('#preview').modal('open');                                                                            // 521
-    },                                                                                                               // 147
-    'click #rmRawat': function () {                                                                                  // 228
-      var dialog, self;                                                                                              // 229
-      self = this;                                                                                                   // 229
-      dialog = {                                                                                                     // 230
-        title: 'Konfirmasi Hapus',                                                                                   // 231
-        message: 'Apakah yakin hapus data rawat pasien ini?'                                                         // 232
-      };                                                                                                             // 231
-      return new Confirmation(dialog, function (ok) {                                                                // 530
-        if (ok) {                                                                                                    // 233
-          return Meteor.call('rmRawat', currentPar('no_mr'), self.idbayar);                                          // 532
-        }                                                                                                            // 533
-      });                                                                                                            // 233
-    },                                                                                                               // 147
-    'change #selPol': function (event) {                                                                             // 235
-      return Session.set('selPol', parseInt(event.target.id));                                                       // 537
-    },                                                                                                               // 147
-    'click #rmPasien': function () {                                                                                 // 237
-      var dialog;                                                                                                    // 238
-      dialog = {                                                                                                     // 238
-        title: 'Hapus Pasien',                                                                                       // 239
-        message: 'Apakah yakin untuk menghapus pasien?'                                                              // 240
-      };                                                                                                             // 239
-      return new Confirmation(dialog, function (ok) {                                                                // 545
-        if (ok) {                                                                                                    // 241
-          Meteor.call('rmPasien', currentPar('no_mr'));                                                              // 242
-          return Router.go('/' + currentRoute());                                                                    // 548
-        }                                                                                                            // 549
-      });                                                                                                            // 241
-    }                                                                                                                // 147
-  });                                                                                                                // 147
-  Template["import"].events({                                                                                        // 245
-    'change :file': function (event, template) {                                                                     // 246
-      return Papa.parse(event.target.files[0], {                                                                     // 555
-        header: true,                                                                                                // 248
-        step: function (result) {                                                                                    // 249
-          var data, modifier, selector;                                                                              // 250
-          data = result.data[0];                                                                                     // 250
+      return $('#preview').modal('open');                                                                            // 516
+    },                                                                                                               // 137
+    'click #rmRawat': function () {                                                                                  // 221
+      var dialog, self;                                                                                              // 222
+      self = this;                                                                                                   // 222
+      dialog = {                                                                                                     // 223
+        title: 'Konfirmasi Hapus',                                                                                   // 224
+        message: 'Apakah yakin hapus data rawat pasien ini?'                                                         // 225
+      };                                                                                                             // 224
+      return new Confirmation(dialog, function (ok) {                                                                // 525
+        if (ok) {                                                                                                    // 226
+          return Meteor.call('rmRawat', currentPar('no_mr'), self.idbayar);                                          // 527
+        }                                                                                                            // 528
+      });                                                                                                            // 226
+    },                                                                                                               // 137
+    'change #selPol': function (event) {                                                                             // 228
+      return Session.set('selPol', parseInt(event.target.id));                                                       // 532
+    },                                                                                                               // 137
+    'click #rmPasien': function () {                                                                                 // 230
+      var dialog;                                                                                                    // 231
+      dialog = {                                                                                                     // 231
+        title: 'Hapus Pasien',                                                                                       // 232
+        message: 'Apakah yakin untuk menghapus pasien?'                                                              // 233
+      };                                                                                                             // 232
+      return new Confirmation(dialog, function (ok) {                                                                // 540
+        if (ok) {                                                                                                    // 234
+          Meteor.call('rmPasien', currentPar('no_mr'));                                                              // 235
+          return Router.go('/' + currentRoute());                                                                    // 543
+        }                                                                                                            // 544
+      });                                                                                                            // 234
+    }                                                                                                                // 137
+  });                                                                                                                // 137
+  Template["import"].events({                                                                                        // 238
+    'change :file': function (event, template) {                                                                     // 239
+      return Papa.parse(event.target.files[0], {                                                                     // 550
+        header: true,                                                                                                // 241
+        step: function (result) {                                                                                    // 242
+          var data, modifier, selector;                                                                              // 243
+          data = result.data[0];                                                                                     // 243
                                                                                                                      //
-          if (currentRoute() === 'regis') {                                                                          // 251
-            selector = {                                                                                             // 252
-              no_mr: parseInt(data.no_mr)                                                                            // 252
-            };                                                                                                       // 252
-            modifier = {                                                                                             // 253
-              regis: {                                                                                               // 253
-                nama_lengkap: _.startCase(data.nama_lengkap),                                                        // 254
-                alamat: _.startCase(data.alamat),                                                                    // 255
-                agama: parseInt(data.agama),                                                                         // 256
-                ayah: _.startCase(data.ayah),                                                                        // 257
-                nikah: parseInt(data.nikah),                                                                         // 258
-                pekerjaan: parseInt(data.pekerjaan),                                                                 // 259
-                pendidikan: parseInt(data.pendidikan),                                                               // 260
-                tgl_lahir: new Date(data.tgl_lahir),                                                                 // 261
-                tmpt_kelahiran: _.startCase(data.tmpt_kelahiran)                                                     // 262
-              }                                                                                                      // 254
-            };                                                                                                       // 253
-            return Meteor.call('import', 'pasien', selector, modifier);                                              // 577
-          } else if (currentRoute() === 'manajemen') {                                                               // 251
-            if (data.tipe) {                                                                                         // 265
+          if (currentRoute() === 'regis') {                                                                          // 244
+            selector = {                                                                                             // 245
+              no_mr: parseInt(data.no_mr)                                                                            // 245
+            };                                                                                                       // 245
+            modifier = {                                                                                             // 246
+              regis: {                                                                                               // 246
+                nama_lengkap: _.startCase(data.nama_lengkap),                                                        // 247
+                alamat: _.startCase(data.alamat),                                                                    // 248
+                agama: parseInt(data.agama),                                                                         // 249
+                ayah: _.startCase(data.ayah),                                                                        // 250
+                nikah: parseInt(data.nikah),                                                                         // 251
+                pekerjaan: parseInt(data.pekerjaan),                                                                 // 252
+                pendidikan: parseInt(data.pendidikan),                                                               // 253
+                tgl_lahir: new Date(data.tgl_lahir),                                                                 // 254
+                tmpt_kelahiran: _.startCase(data.tmpt_kelahiran)                                                     // 255
+              }                                                                                                      // 247
+            };                                                                                                       // 246
+            return Meteor.call('import', 'pasien', selector, modifier);                                              // 572
+          } else if (currentRoute() === 'manajemen') {                                                               // 244
+            if (data.tipe) {                                                                                         // 258
+              selector = {                                                                                           // 259
+                nama: data.nama                                                                                      // 259
+              };                                                                                                     // 259
+              modifier = {                                                                                           // 260
+                tipe: parseInt(data.tipe),                                                                           // 261
+                poli: parseInt(data.poli),                                                                           // 262
+                active: true                                                                                         // 263
+              };                                                                                                     // 261
+              return Meteor.call('import', 'dokter', selector, modifier);                                            // 583
+            } else if (data.harga) {                                                                                 // 258
               selector = {                                                                                           // 266
-                nama: data.nama                                                                                      // 266
+                nama: _.snakeCase(data.nama)                                                                         // 266
               };                                                                                                     // 266
               modifier = {                                                                                           // 267
-                tipe: parseInt(data.tipe),                                                                           // 268
-                poli: parseInt(data.poli),                                                                           // 269
+                harga: parseInt(data.harga),                                                                         // 268
+                jenis: _.snakeCase(data.jenis),                                                                      // 269
                 active: true                                                                                         // 270
               };                                                                                                     // 268
-              return Meteor.call('import', 'dokter', selector, modifier);                                            // 588
-            } else if (data.harga) {                                                                                 // 265
-              selector = {                                                                                           // 273
-                nama: _.snakeCase(data.nama)                                                                         // 273
-              };                                                                                                     // 273
-              modifier = {                                                                                           // 274
-                harga: parseInt(data.harga),                                                                         // 275
-                jenis: _.snakeCase(data.jenis),                                                                      // 276
-                active: true                                                                                         // 277
-              };                                                                                                     // 275
-              data.grup && (modifier.grup = _.startCase(data.grup));                                                 // 278
-              return Meteor.call('import', 'tarif', selector, modifier);                                             // 599
-            } else if (data.password) {                                                                              // 272
-              Meteor.call('newUser', data);                                                                          // 281
-              return Meteor.call('addRole', data.username, [data.role], data.group);                                 // 602
-            }                                                                                                        // 264
-          } else if (currentRoute() === 'farmasi') {                                                                 // 264
-            selector = {                                                                                             // 284
-              nama: data.nama                                                                                        // 284
-            };                                                                                                       // 284
-            modifier = {                                                                                             // 285
-              jenis: parseInt(data.jenis),                                                                           // 286
-              idbarang: randomId(),                                                                                  // 287
-              batch: [{                                                                                              // 288
-                idbatch: randomId(),                                                                                 // 289
-                anggaran: data.anggaran,                                                                             // 290
-                beli: parseInt(data.beli),                                                                           // 291
-                diapotik: parseInt(data.diapotik),                                                                   // 292
-                digudang: parseInt(data.digudang),                                                                   // 293
-                jenis: parseInt(data.jenis),                                                                         // 294
-                jual: parseInt(data.jual),                                                                           // 295
-                kadaluarsa: new Date(data.kadaluarsa),                                                               // 296
-                masuk: new Date(data.masuk),                                                                         // 297
-                merek: data.merek || '',                                                                             // 298
-                nobatch: data.nobatch,                                                                               // 299
-                pengadaan: parseInt(data.pengadaan),                                                                 // 300
-                satuan: parseInt(data.satuan),                                                                       // 301
-                suplier: data.suplier                                                                                // 302
-              }]                                                                                                     // 289
-            };                                                                                                       // 286
-            return data.nama && Meteor.call('import', 'gudang', selector, modifier, 'batch');                        // 630
-          }                                                                                                          // 631
-        }                                                                                                            // 248
-      });                                                                                                            // 248
-    }                                                                                                                // 246
-  });                                                                                                                // 246
-  Template.gudang.helpers({                                                                                          // 306
-    schemagudang: function () {                                                                                      // 307
-      return new SimpleSchema(schema.gudang);                                                                        // 638
-    },                                                                                                               // 307
-    formType: function () {                                                                                          // 308
-      if (currentPar('idbarang')) {                                                                                  // 308
-        return 'update-pushArray';                                                                                   // 642
-      } else {                                                                                                       // 308
-        return 'insert';                                                                                             // 644
-      }                                                                                                              // 645
-    },                                                                                                               // 307
-    gudangs: function () {                                                                                           // 309
-      var byBatch, byName, selector, sub;                                                                            // 310
+              data.grup && (modifier.grup = _.startCase(data.grup));                                                 // 271
+              return Meteor.call('import', 'tarif', selector, modifier);                                             // 594
+            } else if (data.password) {                                                                              // 265
+              Meteor.call('newUser', data);                                                                          // 274
+              return Meteor.call('addRole', data.username, [data.role], data.group);                                 // 597
+            }                                                                                                        // 257
+          } else if (currentRoute() === 'farmasi') {                                                                 // 257
+            selector = {                                                                                             // 277
+              nama: data.nama                                                                                        // 277
+            };                                                                                                       // 277
+            modifier = {                                                                                             // 278
+              jenis: parseInt(data.jenis),                                                                           // 279
+              idbarang: randomId(),                                                                                  // 280
+              batch: [{                                                                                              // 281
+                idbatch: randomId(),                                                                                 // 282
+                anggaran: data.anggaran,                                                                             // 283
+                beli: parseInt(data.beli),                                                                           // 284
+                diapotik: parseInt(data.diapotik),                                                                   // 285
+                digudang: parseInt(data.digudang),                                                                   // 286
+                jenis: parseInt(data.jenis),                                                                         // 287
+                jual: parseInt(data.jual),                                                                           // 288
+                kadaluarsa: new Date(data.kadaluarsa),                                                               // 289
+                masuk: new Date(data.masuk),                                                                         // 290
+                merek: data.merek || '',                                                                             // 291
+                nobatch: data.nobatch,                                                                               // 292
+                pengadaan: parseInt(data.pengadaan),                                                                 // 293
+                satuan: parseInt(data.satuan),                                                                       // 294
+                suplier: data.suplier                                                                                // 295
+              }]                                                                                                     // 282
+            };                                                                                                       // 279
+            return data.nama && Meteor.call('import', 'gudang', selector, modifier, 'batch');                        // 625
+          }                                                                                                          // 626
+        }                                                                                                            // 241
+      });                                                                                                            // 241
+    }                                                                                                                // 239
+  });                                                                                                                // 239
+  Template.gudang.helpers({                                                                                          // 299
+    schemagudang: function () {                                                                                      // 300
+      return new SimpleSchema(schema.gudang);                                                                        // 633
+    },                                                                                                               // 300
+    formType: function () {                                                                                          // 301
+      if (currentPar('idbarang')) {                                                                                  // 301
+        return 'update-pushArray';                                                                                   // 637
+      } else {                                                                                                       // 301
+        return 'insert';                                                                                             // 639
+      }                                                                                                              // 640
+    },                                                                                                               // 300
+    gudangs: function () {                                                                                           // 302
+      var byBatch, byName, selector, sub;                                                                            // 303
                                                                                                                      //
-      if (currentPar('idbarang')) {                                                                                  // 310
-        selector = {                                                                                                 // 311
-          idbarang: currentPar('idbarang')                                                                           // 311
-        };                                                                                                           // 311
-        sub = Meteor.subscribe('coll', 'gudang', selector, {});                                                      // 312
+      if (currentPar('idbarang')) {                                                                                  // 303
+        selector = {                                                                                                 // 304
+          idbarang: currentPar('idbarang')                                                                           // 304
+        };                                                                                                           // 304
+        sub = Meteor.subscribe('coll', 'gudang', selector, {});                                                      // 305
                                                                                                                      //
-        if (sub.ready()) {                                                                                           // 313
-          return coll.gudang.findOne();                                                                              // 655
-        }                                                                                                            // 310
-      } else if (search()) {                                                                                         // 310
-        byName = {                                                                                                   // 315
-          nama: {                                                                                                    // 315
-            $options: '-i',                                                                                          // 315
-            $regex: '.*' + search() + '.*'                                                                           // 315
-          }                                                                                                          // 315
-        };                                                                                                           // 315
-        byBatch = {                                                                                                  // 316
-          idbatch: search()                                                                                          // 316
-        };                                                                                                           // 316
-        selector = {                                                                                                 // 317
-          $or: [byName, byBatch]                                                                                     // 317
-        };                                                                                                           // 317
-        sub = Meteor.subscribe('coll', 'gudang', selector, {});                                                      // 318
-        return sub.ready() && coll.gudang.find().fetch();                                                            // 671
-      } else {                                                                                                       // 314
-        sub = Meteor.subscribe('coll', 'gudang', {}, {});                                                            // 321
-        return sub.ready() && coll.gudang.find().fetch();                                                            // 674
-      }                                                                                                              // 675
-    }                                                                                                                // 307
-  });                                                                                                                // 307
-  Template.gudang.events({                                                                                           // 324
-    'click #showForm': function () {                                                                                 // 325
-      return Session.set('showForm', !Session.get('showForm'));                                                      // 680
-    },                                                                                                               // 325
-    'dblclick #row': function () {                                                                                   // 327
-      return Router.go('/' + currentRoute() + '/' + this.idbarang);                                                  // 683
-    },                                                                                                               // 325
-    'dblclick #transfer': function () {                                                                              // 328
-      var data;                                                                                                      // 329
-      data = this;                                                                                                   // 329
+        if (sub.ready()) {                                                                                           // 306
+          return coll.gudang.findOne();                                                                              // 650
+        }                                                                                                            // 303
+      } else if (search()) {                                                                                         // 303
+        byName = {                                                                                                   // 308
+          nama: {                                                                                                    // 308
+            $options: '-i',                                                                                          // 308
+            $regex: '.*' + search() + '.*'                                                                           // 308
+          }                                                                                                          // 308
+        };                                                                                                           // 308
+        byBatch = {                                                                                                  // 309
+          idbatch: search()                                                                                          // 309
+        };                                                                                                           // 309
+        selector = {                                                                                                 // 310
+          $or: [byName, byBatch]                                                                                     // 310
+        };                                                                                                           // 310
+        sub = Meteor.subscribe('coll', 'gudang', selector, {});                                                      // 311
+        return sub.ready() && coll.gudang.find().fetch();                                                            // 666
+      } else {                                                                                                       // 307
+        sub = Meteor.subscribe('coll', 'gudang', {}, {});                                                            // 314
+        return sub.ready() && coll.gudang.find().fetch();                                                            // 669
+      }                                                                                                              // 670
+    }                                                                                                                // 300
+  });                                                                                                                // 300
+  Template.gudang.events({                                                                                           // 317
+    'click #showForm': function () {                                                                                 // 318
+      return Session.set('showForm', !Session.get('showForm'));                                                      // 675
+    },                                                                                                               // 318
+    'dblclick #row': function () {                                                                                   // 320
+      return Router.go('/' + currentRoute() + '/' + this.idbarang);                                                  // 678
+    },                                                                                                               // 318
+    'dblclick #transfer': function () {                                                                              // 321
+      var data;                                                                                                      // 322
+      data = this;                                                                                                   // 322
                                                                                                                      //
-      if (roles().farmasi) {                                                                                         // 330
-        return MaterializeModal.prompt({                                                                             // 689
-          message: 'Transfer Gudang > Apotek',                                                                       // 332
-          callback: function (err, res) {                                                                            // 333
-            if (res.submit) {                                                                                        // 333
-              return Meteor.call('transfer', currentPar('idbarang'), data.idbatch, parseInt(res.value));             // 693
-            }                                                                                                        // 694
-          }                                                                                                          // 332
-        });                                                                                                          // 332
-      }                                                                                                              // 697
-    },                                                                                                               // 325
-    'click #rmBarang': function () {                                                                                 // 335
-      var dialog, self;                                                                                              // 336
-      self = this;                                                                                                   // 336
-      dialog = {                                                                                                     // 337
-        title: 'Hapus Jenis Obat',                                                                                   // 338
-        message: 'Apakah yakin untuk hapus jenis obat ini dari sistem?'                                              // 339
-      };                                                                                                             // 338
-      return new Confirmation(dialog, function (ok) {                                                                // 706
-        if (ok) {                                                                                                    // 340
-          return Meteor.call('rmBarang', self.idbarang);                                                             // 708
-        }                                                                                                            // 709
-      });                                                                                                            // 340
-    }                                                                                                                // 325
-  });                                                                                                                // 325
-  Template.manajemen.onRendered(function () {                                                                        // 343
-    return $('select#export').material_select();                                                                     // 714
-  });                                                                                                                // 343
-  Template.manajemen.helpers({                                                                                       // 346
-    users: function () {                                                                                             // 347
-      return Meteor.users.find().fetch();                                                                            // 718
-    },                                                                                                               // 347
-    onUser: function () {                                                                                            // 348
-      return Session.get('onUser');                                                                                  // 721
-    },                                                                                                               // 347
-    selRoles: function () {                                                                                          // 349
-      return ['petugas', 'admin'];                                                                                   // 724
-    },                                                                                                               // 347
-    klinik: function () {                                                                                            // 350
-      return selects.klinik;                                                                                         // 727
-    },                                                                                                               // 347
-    schemadokter: function () {                                                                                      // 351
-      return new SimpleSchema(schema.dokter);                                                                        // 730
-    },                                                                                                               // 347
-    schematarif: function () {                                                                                       // 352
-      return new SimpleSchema(schema.tarif);                                                                         // 733
-    },                                                                                                               // 347
-    dokters: function () {                                                                                           // 353
-      var options, selector;                                                                                         // 354
-      selector = {                                                                                                   // 354
-        active: true                                                                                                 // 354
-      };                                                                                                             // 354
-      options = {                                                                                                    // 355
-        limit: limit(),                                                                                              // 355
-        skip: page() * limit()                                                                                       // 355
-      };                                                                                                             // 355
-      return coll.dokter.find(selector, options).fetch();                                                            // 744
-    },                                                                                                               // 347
-    tarifs: function () {                                                                                            // 357
-      var options, selector;                                                                                         // 358
-      selector = {                                                                                                   // 358
-        active: true                                                                                                 // 358
-      };                                                                                                             // 358
-      options = {                                                                                                    // 359
-        limit: limit(),                                                                                              // 359
-        skip: page() * limit()                                                                                       // 359
-      };                                                                                                             // 359
-      return coll.tarif.find(selector, options).fetch();                                                             // 755
-    }                                                                                                                // 347
-  });                                                                                                                // 347
-  Template.manajemen.events({                                                                                        // 362
-    'submit #userForm': function (event) {                                                                           // 363
-      var doc, group, onUser, poli, repeat, role, theRole;                                                           // 364
-      event.preventDefault();                                                                                        // 364
-      onUser = Session.get('onUser');                                                                                // 365
+      if (roles().farmasi) {                                                                                         // 323
+        return MaterializeModal.prompt({                                                                             // 684
+          message: 'Transfer Gudang > Apotek',                                                                       // 325
+          callback: function (err, res) {                                                                            // 326
+            if (res.submit) {                                                                                        // 326
+              return Meteor.call('transfer', currentPar('idbarang'), data.idbatch, parseInt(res.value));             // 688
+            }                                                                                                        // 689
+          }                                                                                                          // 325
+        });                                                                                                          // 325
+      }                                                                                                              // 692
+    },                                                                                                               // 318
+    'click #rmBarang': function () {                                                                                 // 328
+      var dialog, self;                                                                                              // 329
+      self = this;                                                                                                   // 329
+      dialog = {                                                                                                     // 330
+        title: 'Hapus Jenis Obat',                                                                                   // 331
+        message: 'Apakah yakin untuk hapus jenis obat ini dari sistem?'                                              // 332
+      };                                                                                                             // 331
+      return new Confirmation(dialog, function (ok) {                                                                // 701
+        if (ok) {                                                                                                    // 333
+          return Meteor.call('rmBarang', self.idbarang);                                                             // 703
+        }                                                                                                            // 704
+      });                                                                                                            // 333
+    }                                                                                                                // 318
+  });                                                                                                                // 318
+  Template.manajemen.onRendered(function () {                                                                        // 336
+    return $('select#export').material_select();                                                                     // 709
+  });                                                                                                                // 336
+  Template.manajemen.helpers({                                                                                       // 339
+    users: function () {                                                                                             // 340
+      return Meteor.users.find().fetch();                                                                            // 713
+    },                                                                                                               // 340
+    onUser: function () {                                                                                            // 341
+      return Session.get('onUser');                                                                                  // 716
+    },                                                                                                               // 340
+    selRoles: function () {                                                                                          // 342
+      return ['petugas', 'admin'];                                                                                   // 719
+    },                                                                                                               // 340
+    klinik: function () {                                                                                            // 343
+      return selects.klinik;                                                                                         // 722
+    },                                                                                                               // 340
+    schemadokter: function () {                                                                                      // 344
+      return new SimpleSchema(schema.dokter);                                                                        // 725
+    },                                                                                                               // 340
+    schematarif: function () {                                                                                       // 345
+      return new SimpleSchema(schema.tarif);                                                                         // 728
+    },                                                                                                               // 340
+    dokters: function () {                                                                                           // 346
+      var options, selector;                                                                                         // 347
+      selector = {                                                                                                   // 347
+        active: true                                                                                                 // 347
+      };                                                                                                             // 347
+      options = {                                                                                                    // 348
+        limit: limit(),                                                                                              // 348
+        skip: page() * limit()                                                                                       // 348
+      };                                                                                                             // 348
+      return coll.dokter.find(selector, options).fetch();                                                            // 739
+    },                                                                                                               // 340
+    tarifs: function () {                                                                                            // 350
+      var options, selector;                                                                                         // 351
+      selector = {                                                                                                   // 351
+        active: true                                                                                                 // 351
+      };                                                                                                             // 351
+      options = {                                                                                                    // 352
+        limit: limit(),                                                                                              // 352
+        skip: page() * limit()                                                                                       // 352
+      };                                                                                                             // 352
+      return coll.tarif.find(selector, options).fetch();                                                             // 750
+    }                                                                                                                // 340
+  });                                                                                                                // 340
+  Template.manajemen.events({                                                                                        // 355
+    'submit #userForm': function (event) {                                                                           // 356
+      var doc, group, onUser, poli, repeat, role, theRole;                                                           // 357
+      event.preventDefault();                                                                                        // 357
+      onUser = Session.get('onUser');                                                                                // 358
                                                                                                                      //
-      if (!onUser) {                                                                                                 // 366
-        doc = {                                                                                                      // 367
-          username: event.target.children.username.value,                                                            // 368
-          password: event.target.children.password.value                                                             // 369
-        };                                                                                                           // 368
-        repeat = event.target.children.repeat.value;                                                                 // 370
+      if (!onUser) {                                                                                                 // 359
+        doc = {                                                                                                      // 360
+          username: event.target.children.username.value,                                                            // 361
+          password: event.target.children.password.value                                                             // 362
+        };                                                                                                           // 361
+        repeat = event.target.children.repeat.value;                                                                 // 363
                                                                                                                      //
-        if (doc.password === repeat) {                                                                               // 371
-          Meteor.call('newUser', doc);                                                                               // 372
-          return $('input').val('');                                                                                 // 771
-        } else {                                                                                                     // 371
-          return Materialize.toast('Password tidak mirip', 3000);                                                    // 773
-        }                                                                                                            // 366
-      } else {                                                                                                       // 366
-        role = $('input[name="role"]:checked', event.target)[0].id;                                                  // 377
-        group = $('input[name="group"]:checked', event.target)[0].id;                                                // 378
-        poli = $('input[name="poli"]:checked', event.target)[0];                                                     // 379
-        theRole = !poli ? role : _.snakeCase(poli.id);                                                               // 380
-        return Meteor.call('addRole', onUser._id, [theRole], group);                                                 // 780
-      }                                                                                                              // 781
-    },                                                                                                               // 363
-    'dblclick #row': function () {                                                                                   // 382
-      return Session.set('onUser', this);                                                                            // 784
-    },                                                                                                               // 363
-    'dblclick #reset': function () {                                                                                 // 383
-      var dialog, self;                                                                                              // 384
-      self = this;                                                                                                   // 384
-      dialog = {                                                                                                     // 385
-        title: 'Reset Peranan',                                                                                      // 386
-        message: 'Anda yakin untuk menghapus semua perannya?'                                                        // 387
-      };                                                                                                             // 386
-      return new Confirmation(dialog, function (ok) {                                                                // 793
-        if (ok) {                                                                                                    // 388
-          return Meteor.call('rmRole', self._id);                                                                    // 795
-        }                                                                                                            // 796
-      });                                                                                                            // 388
-    },                                                                                                               // 363
-    'click #close': function () {                                                                                    // 390
-      return console.log('tutup');                                                                                   // 800
-    },                                                                                                               // 363
-    'click #export': function () {                                                                                   // 391
-      var select;                                                                                                    // 392
-      select = $('select#export').val();                                                                             // 392
-      return Meteor.call('export', select, function (err, content) {                                                 // 805
-        var blob;                                                                                                    // 393
+        if (doc.password === repeat) {                                                                               // 364
+          Meteor.call('newUser', doc);                                                                               // 365
+          return $('input').val('');                                                                                 // 766
+        } else {                                                                                                     // 364
+          return Materialize.toast('Password tidak mirip', 3000);                                                    // 768
+        }                                                                                                            // 359
+      } else {                                                                                                       // 359
+        role = $('input[name="role"]:checked', event.target)[0].id;                                                  // 370
+        group = $('input[name="group"]:checked', event.target)[0].id;                                                // 371
+        poli = $('input[name="poli"]:checked', event.target)[0];                                                     // 372
+        theRole = !poli ? role : _.snakeCase(poli.id);                                                               // 373
+        return Meteor.call('addRole', onUser._id, [theRole], group);                                                 // 775
+      }                                                                                                              // 776
+    },                                                                                                               // 356
+    'dblclick #row': function () {                                                                                   // 375
+      return Session.set('onUser', this);                                                                            // 779
+    },                                                                                                               // 356
+    'dblclick #reset': function () {                                                                                 // 376
+      var dialog, self;                                                                                              // 377
+      self = this;                                                                                                   // 377
+      dialog = {                                                                                                     // 378
+        title: 'Reset Peranan',                                                                                      // 379
+        message: 'Anda yakin untuk menghapus semua perannya?'                                                        // 380
+      };                                                                                                             // 379
+      return new Confirmation(dialog, function (ok) {                                                                // 788
+        if (ok) {                                                                                                    // 381
+          return Meteor.call('rmRole', self._id);                                                                    // 790
+        }                                                                                                            // 791
+      });                                                                                                            // 381
+    },                                                                                                               // 356
+    'click #close': function () {                                                                                    // 383
+      return console.log('tutup');                                                                                   // 795
+    },                                                                                                               // 356
+    'click #export': function () {                                                                                   // 384
+      var select;                                                                                                    // 385
+      select = $('select#export').val();                                                                             // 385
+      return Meteor.call('export', select, function (err, content) {                                                 // 800
+        var blob;                                                                                                    // 386
                                                                                                                      //
-        if (content) {                                                                                               // 393
-          blob = new Blob([content], {                                                                               // 394
-            type: 'text/plain;charset=utf-8'                                                                         // 394
-          });                                                                                                        // 394
-          return saveAs(blob, select + '.csv');                                                                      // 811
-        }                                                                                                            // 812
-      });                                                                                                            // 393
-    },                                                                                                               // 363
-    'dblclick #baris': function (event) {                                                                            // 396
-      var dialog, jenis, self;                                                                                       // 397
-      jenis = event.currentTarget.className;                                                                         // 397
-      dialog = {                                                                                                     // 398
-        title: 'Hapus ' + _.startCase(jenis),                                                                        // 399
-        message: 'Yakin untuk menghapus ' + jenis + ' dari daftar?'                                                  // 400
-      };                                                                                                             // 399
-      self = this;                                                                                                   // 401
-      return new Confirmation(dialog, function (ok) {                                                                // 823
-        if (ok) {                                                                                                    // 402
-          return Meteor.call('inactive', jenis, self._id);                                                           // 825
-        }                                                                                                            // 826
-      });                                                                                                            // 402
-    }                                                                                                                // 363
-  });                                                                                                                // 363
-  Template.login.onRendered(function () {                                                                            // 405
-    return $('.slider').slider();                                                                                    // 831
-  });                                                                                                                // 405
-  Template.login.events({                                                                                            // 408
-    'submit form': function (event) {                                                                                // 409
-      var password, username;                                                                                        // 410
-      event.preventDefault();                                                                                        // 410
-      username = event.target.children.username.value;                                                               // 411
-      password = event.target.children.password.value;                                                               // 412
-      return Meteor.loginWithPassword(username, password, function (err) {                                           // 839
-        if (err) {                                                                                                   // 414
-          return Materialize.toast('Salah username / password', 3000);                                               // 841
-        } else {                                                                                                     // 414
-          return Router.go('/' + _.keys(roles())[0]);                                                                // 843
-        }                                                                                                            // 844
-      });                                                                                                            // 413
-    }                                                                                                                // 409
-  });                                                                                                                // 409
-  Template.pagination.events({                                                                                       // 419
-    'click #next': function () {                                                                                     // 420
-      return Session.set('page', 1 + page());                                                                        // 850
-    },                                                                                                               // 420
-    'click #prev': function () {                                                                                     // 421
-      return Session.set('page', -1 + page());                                                                       // 853
-    },                                                                                                               // 420
-    'click #num': function (event) {                                                                                 // 422
-      return Session.set('page', parseInt(event.target.innerText));                                                  // 856
-    }                                                                                                                // 420
-  });                                                                                                                // 420
-  Template.report.helpers({                                                                                          // 425
-    datas: function () {                                                                                             // 426
-      return Session.get('laporan');                                                                                 // 861
-    }                                                                                                                // 426
-  });                                                                                                                // 426
-  Template.report.events({                                                                                           // 428
-    'click .datepicker': function (event, template) {                                                                // 429
-      var type;                                                                                                      // 430
-      type = event.target.attributes.date.nodeValue;                                                                 // 430
-      return $('#' + type).pickadate({                                                                               // 868
-        onSet: function (data) {                                                                                     // 431
-          var end, start;                                                                                            // 432
-          Session.set(type + 'Date', data.select);                                                                   // 432
-          start = Session.get('startDate');                                                                          // 433
-          end = Session.get('endDate');                                                                              // 434
+        if (content) {                                                                                               // 386
+          blob = new Blob([content], {                                                                               // 387
+            type: 'text/plain;charset=utf-8'                                                                         // 387
+          });                                                                                                        // 387
+          return saveAs(blob, select + '.csv');                                                                      // 806
+        }                                                                                                            // 807
+      });                                                                                                            // 386
+    },                                                                                                               // 356
+    'dblclick #baris': function (event) {                                                                            // 389
+      var dialog, jenis, self;                                                                                       // 390
+      jenis = event.currentTarget.className;                                                                         // 390
+      dialog = {                                                                                                     // 391
+        title: 'Hapus ' + _.startCase(jenis),                                                                        // 392
+        message: 'Yakin untuk menghapus ' + jenis + ' dari daftar?'                                                  // 393
+      };                                                                                                             // 392
+      self = this;                                                                                                   // 394
+      return new Confirmation(dialog, function (ok) {                                                                // 818
+        if (ok) {                                                                                                    // 395
+          return Meteor.call('inactive', jenis, self._id);                                                           // 820
+        }                                                                                                            // 821
+      });                                                                                                            // 395
+    }                                                                                                                // 356
+  });                                                                                                                // 356
+  Template.login.onRendered(function () {                                                                            // 398
+    return $('.slider').slider();                                                                                    // 826
+  });                                                                                                                // 398
+  Template.login.events({                                                                                            // 401
+    'submit form': function (event) {                                                                                // 402
+      var password, username;                                                                                        // 403
+      event.preventDefault();                                                                                        // 403
+      username = event.target.children.username.value;                                                               // 404
+      password = event.target.children.password.value;                                                               // 405
+      return Meteor.loginWithPassword(username, password, function (err) {                                           // 834
+        if (err) {                                                                                                   // 407
+          return Materialize.toast('Salah username / password', 3000);                                               // 836
+        } else {                                                                                                     // 407
+          return Router.go('/' + _.keys(roles())[0]);                                                                // 838
+        }                                                                                                            // 839
+      });                                                                                                            // 406
+    }                                                                                                                // 402
+  });                                                                                                                // 402
+  Template.pagination.events({                                                                                       // 412
+    'click #next': function () {                                                                                     // 413
+      return Session.set('page', 1 + page());                                                                        // 845
+    },                                                                                                               // 413
+    'click #prev': function () {                                                                                     // 414
+      return Session.set('page', -1 + page());                                                                       // 848
+    },                                                                                                               // 413
+    'click #num': function (event) {                                                                                 // 415
+      return Session.set('page', parseInt(event.target.innerText));                                                  // 851
+    }                                                                                                                // 413
+  });                                                                                                                // 413
+  Template.report.helpers({                                                                                          // 418
+    datas: function () {                                                                                             // 419
+      return Session.get('laporan');                                                                                 // 856
+    }                                                                                                                // 419
+  });                                                                                                                // 419
+  Template.report.events({                                                                                           // 421
+    'click .datepicker': function (event, template) {                                                                // 422
+      var type;                                                                                                      // 423
+      type = event.target.attributes.date.nodeValue;                                                                 // 423
+      return $('#' + type).pickadate({                                                                               // 863
+        onSet: function (data) {                                                                                     // 424
+          var end, start;                                                                                            // 425
+          Session.set(type + 'Date', data.select);                                                                   // 425
+          start = Session.get('startDate');                                                                          // 426
+          end = Session.get('endDate');                                                                              // 427
                                                                                                                      //
-          if (start && end) {                                                                                        // 435
-            return Meteor.call('report', template.data.jenis, start, end, function (err, res) {                      // 875
-              return res && Session.set('laporan', res);                                                             // 876
-            });                                                                                                      // 436
-          }                                                                                                          // 878
-        }                                                                                                            // 431
-      });                                                                                                            // 431
-    },                                                                                                               // 429
-    'click #export': function (event, template) {                                                                    // 438
-      var blob, content;                                                                                             // 439
-      content = exportcsv.exportToCSV(Session.get('laporan').csv, true, ';');                                        // 439
-      blob = new Blob([content], {                                                                                   // 440
-        type: 'text/plain;charset=utf-8'                                                                             // 440
-      });                                                                                                            // 440
-      return saveAs(blob, template.data.jenis + '.csv');                                                             // 888
-    }                                                                                                                // 429
-  });                                                                                                                // 429
-}                                                                                                                    // 891
+          if (start && end) {                                                                                        // 428
+            return Meteor.call('report', template.data.jenis, start, end, function (err, res) {                      // 870
+              return res && Session.set('laporan', res);                                                             // 871
+            });                                                                                                      // 429
+          }                                                                                                          // 873
+        }                                                                                                            // 424
+      });                                                                                                            // 424
+    },                                                                                                               // 422
+    'click #export': function (event, template) {                                                                    // 431
+      var blob, content;                                                                                             // 432
+      content = exportcsv.exportToCSV(Session.get('laporan').csv, true, ';');                                        // 432
+      blob = new Blob([content], {                                                                                   // 433
+        type: 'text/plain;charset=utf-8'                                                                             // 433
+      });                                                                                                            // 433
+      return saveAs(blob, template.data.jenis + '.csv');                                                             // 883
+    }                                                                                                                // 422
+  });                                                                                                                // 422
+}                                                                                                                    // 886
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"server.coffee.js":function(){
@@ -2461,7 +2422,7 @@ if (Meteor.isServer) {                                                          
       }                                                                                                              // 280
     },                                                                                                               // 13
     report: function (jenis, start, end) {                                                                           // 131
-      var docs, filter, look, look2;                                                                                 // 132
+      var docs, filter;                                                                                              // 132
                                                                                                                      //
       filter = function (arr) {                                                                                      // 132
         return _.filter(arr, function (i) {                                                                          // 285
@@ -2470,69 +2431,55 @@ if (Meteor.isServer) {                                                          
         });                                                                                                          // 132
       };                                                                                                             // 132
                                                                                                                      //
-      look = function (list, val) {                                                                                  // 134
-        return _.find(selects[list], function (i) {                                                                  // 291
-          return i.value === val;                                                                                    // 292
+      docs = _.flatMap(coll.pasien.find().fetch(), function (i) {                                                    // 134
+        return _.map(filter(i.rawat), function (j) {                                                                 // 291
+          var obj;                                                                                                   // 135
+          obj = {                                                                                                    // 135
+            no_mr: i.no_mr,                                                                                          // 136
+            nama_lengkap: _.startCase(i.regis.nama_lengkap),                                                         // 137
+            no_bill: j.nobill,                                                                                       // 138
+            cara_bayar: look('cara_bayar', j.cara_bayar).label,                                                      // 139
+            rujukan: j.rujukan ? look('rujukan', j.rujukan).label : '',                                              // 140
+            klinik: look('klinik', j.klinik).label,                                                                  // 141
+            diagnosa: j.diagnosa || '-',                                                                             // 142
+            tindakan: _.flatMap(['tindakan', 'labor', 'radio'], function (k) {                                       // 143
+              var saring;                                                                                            // 144
+              saring = _.filter(j[k], function (l) {                                                                 // 144
+                return l;                                                                                            // 304
+              });                                                                                                    // 144
+              return _.map(saring, function (l) {                                                                    // 306
+                return '/' + _.startCase(look2('tarif', l.nama).nama);                                               // 307
+              });                                                                                                    // 145
+            }),                                                                                                      // 143
+            harga: 'Rp ' + j.total.semua,                                                                            // 146
+            petugas: Meteor.users.findOne({                                                                          // 147
+              _id: j.petugas                                                                                         // 147
+            }).username,                                                                                             // 147
+            keluar: j.keluar ? look('keluar', j.keluar).label : '-',                                                 // 148
+            baru_lama: 'L'                                                                                           // 149
+          };                                                                                                         // 136
+                                                                                                                     //
+          if (jenis === 'pendaftaran') {                                                                             // 150
+            return _.pick(obj, ['no_mr', 'nama_lengkap', 'cara_bayar', 'rujukan', 'klinik', 'baru_lama']);           // 318
+          } else if (jenis === 'pembayaran') {                                                                       // 150
+            return _.pick(obj, ['tanggal', 'no_bill', 'no_mr', 'nama_lengkap', 'klinik', 'tindakan', 'harga', 'petugas']);
+          } else if (jenis === 'rawat_jalan') {                                                                      // 152
+            return _.pick(obj, ['tanggal', 'no_mr', 'nama_lengkap', 'kelamin', 'umur', 'cara_bayar', 'diagnosa', 'tindakan', 'petugas', 'keluar', 'rujukan']);
+          }                                                                                                          // 323
         });                                                                                                          // 134
-      };                                                                                                             // 134
-                                                                                                                     //
-      look2 = function (list, id) {                                                                                  // 135
-        return _.find(coll[list].find().fetch(), function (i) {                                                      // 296
-          return i._id === id;                                                                                       // 297
-        });                                                                                                          // 135
-      };                                                                                                             // 135
-                                                                                                                     //
-      docs = _.flatMap(coll.pasien.find().fetch(), function (i) {                                                    // 136
-        return _.map(filter(i.rawat), function (j) {                                                                 // 301
-          var obj, pick;                                                                                             // 137
-          obj = {                                                                                                    // 137
-            no_mr: i.no_mr,                                                                                          // 138
-            nama_lengkap: _.startCase(i.regis.nama_lengkap),                                                         // 139
-            no_bill: j.nobill,                                                                                       // 140
-            cara_bayar: look('cara_bayar', j.cara_bayar).label,                                                      // 141
-            rujukan: j.rujukan ? look('rujukan', j.rujukan).label : '',                                              // 142
-            klinik: look('klinik', j.klinik).label,                                                                  // 143
-            diagnosa: j.diagnosa || '-',                                                                             // 144
-            tindakan: _.flatMap(['tindakan', 'labor', 'radio'], function (k) {                                       // 145
-              var saring;                                                                                            // 146
-              saring = _.filter(j[k], function (l) {                                                                 // 146
-                return l;                                                                                            // 314
-              });                                                                                                    // 146
-              return _.map(saring, function (l) {                                                                    // 316
-                return '/' + _.startCase(look2('tarif', l.nama).nama);                                               // 317
-              });                                                                                                    // 147
-            }),                                                                                                      // 145
-            harga: 'Rp ' + j.total.semua,                                                                            // 148
-            petugas: Meteor.users.findOne({                                                                          // 149
-              _id: j.petugas                                                                                         // 149
-            }).username,                                                                                             // 149
-            keluar: j.keluar ? look('keluar', j.keluar).label : '-',                                                 // 150
-            baru_lama: 'L'                                                                                           // 151
-          };                                                                                                         // 138
-                                                                                                                     //
-          if (jenis === 'pendaftaran') {                                                                             // 152
-            pick = _.pick(obj, ['no_mr', 'nama_lengkap', 'cara_bayar', 'rujukan', 'klinik', 'baru_lama']);           // 153
-          } else if (jenis === 'pembayaran') {                                                                       // 152
-            pick = _.pick(obj, ['tanggal', 'no_bill', 'no_mr', 'nama_lengkap', 'klinik', 'tindakan', 'harga', 'petugas']);
-          } else if (jenis === 'rawat_jalan') {                                                                      // 154
-            pick = _.pick(obj, ['tanggal', 'no_mr', 'nama_lengkap', 'kelamin', 'umur', 'cara_bayar', 'diagnosa', 'tindakan', 'petugas', 'keluar', 'rujukan']);
-          }                                                                                                          // 333
-                                                                                                                     //
-          return pick;                                                                                               // 334
-        });                                                                                                          // 136
-      });                                                                                                            // 136
-      return {                                                                                                       // 337
-        headers: _.map(_.keys(docs[0]), function (i) {                                                               // 159
-          return _.startCase(i);                                                                                     // 339
-        }),                                                                                                          // 159
-        rows: _.map(docs, function (i) {                                                                             // 160
-          return _.values(i);                                                                                        // 342
-        }),                                                                                                          // 160
-        csv: docs                                                                                                    // 161
-      };                                                                                                             // 159
+      });                                                                                                            // 134
+      return {                                                                                                       // 326
+        headers: _.map(_.keys(docs[0]), function (i) {                                                               // 156
+          return _.startCase(i);                                                                                     // 328
+        }),                                                                                                          // 156
+        rows: _.map(docs, function (i) {                                                                             // 157
+          return _.values(i);                                                                                        // 331
+        }),                                                                                                          // 157
+        csv: docs                                                                                                    // 158
+      };                                                                                                             // 156
     }                                                                                                                // 13
   });                                                                                                                // 13
-}                                                                                                                    // 348
+}                                                                                                                    // 337
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},{
@@ -2542,6 +2489,7 @@ if (Meteor.isServer) {                                                          
     ".coffee"
   ]
 });
+require("./folder/parent/funcs.coffee.js");
 require("./folder/hooks.coffee.js");
 require("./folder/menus.coffee.js");
 require("./folder/modules.coffee.js");

@@ -3,8 +3,8 @@
     "name": "standard-minifier-js",
     "version": "2.1.1"
   },
-  "totalMinifiedBytes": 2533746,
-  "totalMinifiedGzipBytes": 820645,
+  "totalMinifiedBytes": 2533961,
+  "totalMinifiedGzipBytes": 820618,
   "minifiedBytesByPackage": {
     "packages/meteor.js": 8650,
     "packages/meteor-base.js": 68,
@@ -826,20 +826,23 @@
     "packages/autoupdate.js": 1998,
     "packages/global-imports.js": 1806,
     "app/app.js": [
-      83404,
+      83619,
       {
         "folder": {
           "template.panduan.js": 6847,
-          "hooks.coffee.js": 1916,
+          "parent": {
+            "funcs.coffee.js": 977
+          },
+          "hooks.coffee.js": 1780,
           "menus.coffee.js": 547,
           "modules.coffee.js": 1014,
-          "pdf.coffee.js": 3847,
+          "pdf.coffee.js": 3788,
           "selects.coffee.js": 2276
         },
         "template.view.js": 38398,
-        "both.coffee.js": 7385,
-        "client.coffee.js": 15618,
-        "server.coffee.js": 4917
+        "both.coffee.js": 7192,
+        "client.coffee.js": 15327,
+        "server.coffee.js": 4763
       }
     ],
     "packages/mdg_validation-error.js": [
