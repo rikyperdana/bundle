@@ -1102,7 +1102,7 @@ function fresh(url, parsedUrl) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
-// ../../.1.3.17.rfmwpc++os+web.browser+web.cordova/npm/node_modules/useragent/package.json                           //
+// ../../.1.3.17.6jkx0k++os+web.browser+web.cordova/npm/node_modules/useragent/package.json                           //
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
