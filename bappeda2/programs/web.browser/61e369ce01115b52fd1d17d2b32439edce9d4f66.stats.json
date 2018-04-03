@@ -3,8 +3,8 @@
     "name": "standard-minifier-js",
     "version": "2.2.3"
   },
-  "totalMinifiedBytes": 1668877,
-  "totalMinifiedGzipBytes": 467785,
+  "totalMinifiedBytes": 1695170,
+  "totalMinifiedGzipBytes": 475954,
   "minifiedBytesByPackage": {
     "packages/meteor.js": 9011,
     "packages/meteor-base.js": 68,
@@ -15,14 +15,14 @@
     "packages/base64.js": 1702,
     "packages/modules-runtime.js": 4097,
     "packages/modules.js": [
-      121959,
+      121995,
       {
         "node_modules": {
           "meteor": {
             "modules": {
               "client.js": 124,
               "css.js": 261,
-              "install-packages.js": 2565,
+              "install-packages.js": 2601,
               "process.js": 347,
               "reify.js": 149,
               "stubs.js": 97,
@@ -636,7 +636,7 @@
     "packages/standard-minifier-css.js": 78,
     "packages/standard-minifier-js.js": 77,
     "packages/shell-server.js": 69,
-    "packages/coffeescript.js": 66,
+    "packages/zenkogu_livescript-compiler.js": 15627,
     "packages/jquery.js": [
       96877,
       {
@@ -768,6 +768,7 @@
     "packages/planettraining_material-design-icons-font.js": 98,
     "packages/izzilab_shelljs.js": 192,
     "packages/materialize_materialize.js": 130552,
+    "packages/outatime_geolib.js": 11246,
     "packages/webapp.js": [
       955,
       {
@@ -797,28 +798,25 @@
     "packages/hot-code-push.js": 70,
     "packages/launch-screen.js": 875,
     "packages/autoupdate.js": 1998,
-    "packages/global-imports.js": 1608,
+    "packages/global-imports.js": 1704,
     "app/app.js": [
-      24930,
+      24282,
       {
-        "template.view.js": 5986,
+        "template.view.js": 6085,
         "folder": {
-          "global": {
-            "funcs.coffee": 131
-          },
           "parent": {
-            "funcs.coffee": 326
+            "funcs.ls.js": 220
           },
-          "arr.coffee": 958,
-          "funcs.coffee": 312,
-          "hooks.coffee": 518
+          "arr.ls.js": 913,
+          "funcs.ls.js": 206,
+          "hooks.ls.js": 716
         },
         "plugins": {
           "leafletAjax.js": 9676
         },
-        "both.coffee": 1144,
-        "client.coffee": 4719,
-        "server.coffee": 544
+        "both.ls.js": 1130,
+        "client.ls.js": 4312,
+        "server.ls.js": 497
       }
     ],
     "packages/mdg_validation-error.js": [
