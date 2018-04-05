@@ -6,6 +6,7 @@ ReactiveVar = Package['reactive-var'].ReactiveVar;
 Tracker = Package.tracker.Tracker;
 Deps = Package.tracker.Deps;
 ECMAScript = Package.ecmascript.ECMAScript;
+prelude = Package['zenkogu:livescript-compiler'].prelude;
 Router = Package['iron:router'].Router;
 RouteController = Package['iron:router'].RouteController;
 lodash = Package['stevezhu:lodash'].lodash;

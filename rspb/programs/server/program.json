@@ -203,6 +203,9 @@
       "path": "packages/coffeescript.js"
     },
     {
+      "path": "packages/zenkogu_livescript-compiler.js"
+    },
+    {
       "path": "packages/mquandalle_jade.js"
     },
     {
@@ -361,7 +364,6 @@
     },
     {
       "node_modules": "npm/node_modules",
-      "sourceMap": "app/app.js.map",
       "path": "app/app.js"
     },
     {

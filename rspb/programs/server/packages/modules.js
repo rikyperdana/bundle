@@ -116,6 +116,7 @@ install("standard-minifier-css");
 install("standard-minifier-js");
 install("shell-server", "meteor/shell-server/main.js");
 install("coffeescript");
+install("zenkogu:livescript-compiler");
 install("mquandalle:jade");
 install("templating-compiler");
 install("templating-runtime");
