@@ -62,7 +62,8 @@ if (Meteor.isClient) {
     return roles()[name];
   };
   this.userRole = function(name){
-    return roles()[currentRoute()][0] === name;
+    var ref$, ref1$;
+    return ((ref$ = roles()) != null ? (ref1$ = ref$[currentRoute()]) != null ? ref1$[0] : void 8 : void 8) === name;
   };
   this.tag = function(tag, val){
     return "<" + tag + ">" + val + "</" + tag + ">";
@@ -153,7 +154,7 @@ if (Meteor.isClient) {
       stop = moment();
       doc.spm = stop.diff(begin, 'minutes');
       doc.petugas = Meteor.userId();
-      doc.nobill = parseInt(_.toString(Date.now())).substr(7, 13);
+      doc.nobill = parseInt(_.toString(Date.now()).substr(7, 13));
       return doc;
     }
     function fn$(k){
@@ -1523,14 +1524,14 @@ if (Meteor.isClient) {
   });
   Template.menu.helpers({
     menus: function(){
-      return _.initial(_.flatMap(_.keys(roles()), function(i){
+      return _.initial(_.flatMap(roles(), function(i, j){
         var find;
-        find = _.find(rights, function(j){
-          return j.group === i;
+        find = _.find(rights, function(k){
+          return k.group === j;
         });
-        return _.map(find.list, function(j){
-          return _.find(modules, function(k){
-            return k.name === j;
+        return _.map(find.list, function(k){
+          return _.find(modules, function(l){
+            return l.name === k;
           });
         });
       }));
@@ -1602,21 +1603,22 @@ if (Meteor.isClient) {
       return Session.get('preview');
     },
     omitFields: function(){
-      var arr;
+      var arr, ref$;
       arr = ['anamesa_perawat', 'fisik', 'anamesa_dokter', 'diagnosa', 'planning', 'tindakan', 'labor', 'radio', 'obat', 'spm', 'keluar', 'pindah'];
-      if (!formDoc().billRegis) {
+      if (!((ref$ = formDoc()) != null && ref$.billRegis)) {
         return arr;
-      } else if (_.split(Meteor.user().username, '.')[0] !== 'dr') {
+      } else if ('dr' !== _.first(_.split(Meteor.user().username, '.'))) {
         return slice$.call(arr, 2, arr.length + 1 || 9e9);
       }
     },
     roleFilter: function(arr){
       return _.reverse(_.filter(arr, function(i){
-        var find;
-        find = _.find(selects.klinik, function(j){
+        var this$ = this;
+        return i.klinik === function(it){
+          return it.value;
+        }(_.find(selects.klinik, function(j){
           return j.label === _.startCase(roles().jalan[0]);
-        });
-        return i.klinik === find.value;
+        }));
       }));
     },
     userPoli: function(){
@@ -1633,7 +1635,7 @@ if (Meteor.isClient) {
       });
     },
     pasiens: function(){
-      var selector, options, arr, byName, byNoMR, ref$, elem, selSub;
+      var selector, options, arr, byName, byNoMR, kliniks, ref$, elem, selSub;
       if (currentPar('no_mr')) {
         selector = {
           no_mr: parseInt(currentPar('no_mr'))
@@ -1670,18 +1672,19 @@ if (Meteor.isClient) {
         };
         return Meteor.subscribe('coll', 'pasien', selector, options).ready() && coll.pasien.find().fetch();
       } else if (roles().jalan) {
+        kliniks = _.map(roles().jalan, function(i){
+          var this$ = this;
+          return function(it){
+            return it.value;
+          }(_.find(selects.klinik, function(j){
+            return i === _.snakeCase(j.label);
+          }));
+        });
         selector = {
           rawat: {
             $elemMatch: {
               klinik: {
-                $in: _.map(roles().jalan, function(i){
-                  var this$ = this;
-                  return function(it){
-                    return it.value;
-                  }(_.find(selects.klinik, function(j){
-                    return i === _.snakeCase(j.label);
-                  }));
-                })
+                $in: kliniks
               },
               tanggal: {
                 $gt: new Date(new Date().getDate() - 2)
@@ -1750,10 +1753,6 @@ if (Meteor.isClient) {
   Template.pasien.events({
     'click #showForm': function(){
       var later;
-      Session.set('showForm', !Session.get('showForm'));
-      if (userGroup('regis')) {
-        Session.set('formDoc', null);
-      }
       later = function(){
         var list;
         $('.autoform-remove-item').trigger('click');
@@ -1780,9 +1779,15 @@ if (Meteor.isClient) {
           });
         }
       };
-      Meteor.setTimeout(later, 1000);
-      Meteor.subscribe('coll', 'gudang', {}, {});
-      return Session.set('begin', moment());
+      if (!(userGroup('jalan') && !Session.get('formDoc'))) {
+        Session.set('showForm', !Session.get('showForm'));
+        if (userGroup('regis')) {
+          Session.set('formDoc', null);
+        }
+        Meteor.subscribe('coll', 'gudang', {}, {});
+        Session.set('begin', new Date());
+        return Meteor.setTimeout(later, 1000);
+      }
     },
     'dblclick #row': function(){
       return Router.go('/' + currentRoute() + '/' + this.no_mr);
