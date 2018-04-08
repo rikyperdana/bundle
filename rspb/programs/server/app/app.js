@@ -69,9 +69,10 @@ if (Meteor.isClient) {
     return "<" + tag + ">" + val + "</" + tag + ">";
   };
   this.userName = function(id){
-    return Meteor.users.findOne({
+    var ref$;
+    return (ref$ = Meteor.users.findOne({
       _id: id
-    }).username;
+    })) != null ? ref$.username : void 8;
   };
   this.show = console.log;
   this.sessNull = function(){
@@ -2040,7 +2041,8 @@ if (Meteor.isClient) {
       return {
         barang: ['Jenis Barang', 'Nama Barang', 'Stok Gudang', 'Stok Apotik'],
         batch: ['No Batch', 'Masuk', 'Kadaluarsa', 'Beli', 'Jual', 'Di Gudang', 'Di Apotik', 'Suplier'],
-        amprah: ['Ruangan', 'Peminta', 'Meminta', 'Penyerah', 'Menyerahkan', 'Tanggal']
+        amprah: ['Ruangan', 'Peminta', 'Meminta', 'Penyerah', 'Menyerahkan', 'Tanggal'],
+        latestAmprah: ['Nama', 'Ruangan', 'Peminta', 'Diminta', 'Tanggal']
       };
     },
     formType: function(){
@@ -2110,6 +2112,9 @@ if (Meteor.isClient) {
     },
     schemaAmprah: function(){
       return new SimpleSchema(schema.amprah);
+    },
+    latestAmprah: function(){
+      return Session.get('latestAmprah');
     }
   });
   Template.gudang.events({
@@ -2164,7 +2169,16 @@ if (Meteor.isClient) {
       Session.set('nearEds', null);
       returnable = $('#returnable').is(':checked');
       return Meteor.call('nearEds', returnable, function(err, res){
-        return res && Session.set('nearEds', res);
+        if (res) {
+          return Session.set('nearEds', res);
+        }
+      });
+    },
+    'click #latestAmprah': function(){
+      return Meteor.call('latestAmprah', function(err, res){
+        if (res) {
+          return Session.set('latestAmprah', res);
+        }
       });
     },
     'dblclick #nearEd': function(){
@@ -2844,6 +2858,17 @@ if (Meteor.isServer) {
         }
       }
       return coll.gudang.update(barang._id, barang);
+    },
+    latestAmprah: function(){
+      return _.map(coll.gudang.find().fetch(), function(i){
+        if (i.amprah) {
+          return _.assign(i, {
+            amprah: _.filter(i.amprah, function(j){
+              return !j.penyerah;
+            })
+          });
+        }
+      });
     }
   });
 }
