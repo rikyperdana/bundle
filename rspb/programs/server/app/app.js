@@ -24,9 +24,7 @@ this.randomId = function(){
   return Math.random().toString(36).slice(2);
 };
 this.zeros = function(num){
-  var size;
-  size = _.size(_.toString(num));
-  return repeatString$('0', 6 - size) + num;
+  return repeatString$('0', 6 - num.toString().length) + num;
 };
 this.monthDiff = function(date){
   var diff;
@@ -1754,32 +1752,6 @@ if (Meteor.isClient) {
   Template.pasien.events({
     'click #showForm': function(){
       var later;
-      later = function(){
-        var list;
-        $('.autoform-remove-item').trigger('click');
-        if (currentRoute() === 'jalan') {
-          _.map(['cara_bayar', 'klinik', 'karcis', 'rujukan'], function(i){
-            $('div[data-schema-key="' + i + '"]').prepend(tag('p', _.startCase(i)));
-            if (formDoc()) {
-              $('input[name="' + i + '"][value="' + formDoc()[i] + '"]').attr({
-                checked: true
-              });
-              return $('input[name="' + i + '"]').attr({
-                disabled: 'disabled'
-              });
-            }
-          });
-          _.map(['anamesa_perawat'], function(i){
-            return $('textarea[name="' + i + '"]').val(formDoc()[i]);
-          });
-        }
-        list = ['cara_bayar', 'kelamin', 'agama', 'nikah', 'pendidikan', 'darah', 'pekerjaan'];
-        if (currentRoute() === 'regis') {
-          return _.map(list, function(i){
-            return $('div[data-schema-key="regis.' + i + '"]').prepend(tag('p', _.startCase(i)));
-          });
-        }
-      };
       if (!(userGroup('jalan') && !Session.get('formDoc'))) {
         Session.set('showForm', !Session.get('showForm'));
         if (userGroup('regis')) {
@@ -1787,7 +1759,32 @@ if (Meteor.isClient) {
         }
         Meteor.subscribe('coll', 'gudang', {}, {});
         Session.set('begin', new Date());
-        return Meteor.setTimeout(later, 1000);
+        return partialize$.apply(Meteor, [Meteor.setTimeout, [void 8, 1000], [0]])(later = function(){
+          var list;
+          $('.autoform-remove-item').trigger('click');
+          if (currentRoute() === 'jalan') {
+            _.map(['cara_bayar', 'klinik', 'karcis', 'rujukan'], function(i){
+              $('div[data-schema-key="' + i + '"]').prepend(tag('p', _.startCase(i)));
+              if (formDoc()) {
+                $('input[name="' + i + '"][value="' + formDoc()[i] + '"]').attr({
+                  checked: true
+                });
+                return $('input[name="' + i + '"]').attr({
+                  disabled: 'disabled'
+                });
+              }
+            });
+            _.map(['anamesa_perawat'], function(i){
+              return $('textarea[name="' + i + '"]').val(formDoc()[i]);
+            });
+          }
+          list = ['cara_bayar', 'kelamin', 'agama', 'nikah', 'pendidikan', 'darah', 'pekerjaan'];
+          if (currentRoute() === 'regis') {
+            return _.map(list, function(i){
+              return $('div[data-schema-key="regis.' + i + '"]').prepend(tag('p', _.startCase(i)));
+            });
+          }
+        });
       }
     },
     'dblclick #row': function(){
@@ -1877,13 +1874,15 @@ if (Meteor.isClient) {
           if (res.submit) {
             params = ['request'].concat(slice$.call(nodes), [res.value]);
             return Meteor.call.apply(Meteor, slice$.call(params).concat([function(err, res){
-              var rekap, flat;
+              var rekap, flat, this$ = this;
               if (res) {
                 MaterializeModal.message({
                   title: 'Penyerahan Obat',
-                  message: _.map(res, function(val, key){
+                  message: function(it){
+                    return it.join('');
+                  }(_.map(res, function(val, key){
                     return tag('p', key + ": " + val);
-                  }).join('')
+                  }))
                 });
                 rekap = Session.get('rekap') || [];
                 flat = _.flatten(_.toPairs(res));
@@ -1951,14 +1950,14 @@ if (Meteor.isClient) {
             modifier = {
               regis: {
                 nama_lengkap: _.startCase(data.nama_lengkap),
-                alamat: _.startCase(data.alamat != null),
-                agama: data.agama != null ? parseInt(data.agama) : void 8,
-                ayah: data.ayah != null ? _.startCase(data.ayah) : void 8,
-                nikah: data.nikah != null ? parseInt(data.nikah) : void 8,
-                pekerjaan: data.pekerjaan != null ? parseInt(data.pekerjaan) : void 8,
-                pendidikan: data.pendidikan != null ? parseInt(data.pendidikan) : void 8,
-                tgl_lahir: Date.parse(data.tgl_lahir != null) ? new Date(date.tgl_lahir) : void 8,
-                tmpt_kelahiran: data.tmpt_kelahiran != null ? _.startCase(data.tmpt_kelahiran) : void 8
+                alamat: data.alamat ? _.startCase(data.alamat) : void 8,
+                agama: data.agama ? parseInt(data.agama) : void 8,
+                ayah: data.ayah ? _.startCase(data.ayah) : void 8,
+                nikah: data.nikah ? parseInt(data.nikah) : void 8,
+                pekerjaan: data.pekerjaan ? parseInt(data.pekerjaan) : void 8,
+                pendidikan: data.pendidikan ? parseInt(data.pendidikan) : void 8,
+                tgl_lahir: Date.parse(data.tgl_lahir) ? new Date(data.tgl_lahir) : void 8,
+                tmpt_kelahiran: data.tmpt_kelahiran ? _.startCase(data.tmpt_kelahiran) : void 8
               }
             };
             return Meteor.call('import', 'pasien', selector, modifier);
@@ -2074,11 +2073,10 @@ if (Meteor.isClient) {
               return sum + n[name];
             }, 0);
           };
-          j.akumulasi = {
+          return _.assign(j, {
             digudang: reduced('digudang'),
             diapotik: reduced('diapotik')
-          };
-          return j;
+          });
         });
       };
       if (currentPar('idbarang')) {
@@ -2396,6 +2394,17 @@ function in$(x, xs){
   while (++i < l) if (x === xs[i]) return true;
   return false;
 }
+function partialize$(f, args, where){
+  var context = this;
+  return function(){
+    var params = slice$.call(arguments), i,
+        len = params.length, wlen = where.length,
+        ta = args ? args.concat() : [], tw = where ? where.concat() : [];
+    for(i = 0; i < len; ++i) { ta[tw[0]] = params[i]; tw.shift(); }
+    return len < wlen && len ?
+      partialize$.apply(context, [f, ta, tw]) : f.apply(context, ta);
+  };
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"server.ls.js":function(){
@@ -2421,15 +2430,12 @@ if (Meteor.isServer) {
   });
   Meteor.methods({
     'import': function(name, selector, modifier, arrName){
-      var find, sel, obj, ref$;
-      find = coll[name].findOne(selector);
-      if (!find) {
-        return coll[name].upsert(selector, {
-          $set: modifier
-        });
-      } else if (arrName) {
+      var sel, obj, ref$;
+      if (!arrName) {
+        return coll[name].insert(_.assign(selector, modifier));
+      } else {
         sel = {
-          _id: find._id
+          _id: coll[name].findOne(selector)._id
         };
         obj = (ref$ = {}, ref$[arrName + ""] = modifier[arrName][0], ref$);
         return coll[name].update(sel, {
@@ -2438,7 +2444,7 @@ if (Meteor.isServer) {
       }
     },
     'export': function(jenis){
-      var arr, find;
+      var arr;
       if (jenis === 'regis') {
         arr = _.map(coll.pasien.find().fetch(), function(i){
           return {
@@ -2447,11 +2453,6 @@ if (Meteor.isServer) {
           };
         });
       } else if (jenis === 'jalan') {
-        find = function(type, value){
-          return _.find(selects[type], function(i){
-            return i.value === value;
-          }).label;
-        };
         arr = _.flatMap(coll.pasien.find().fetch(), function(i){
           if (i.rawat) {
             return _.map(i.rawat, function(j){
@@ -2459,7 +2460,7 @@ if (Meteor.isServer) {
                 no_mr: i.no_mr,
                 nama_lengkap: i.regis.nama_lengkap,
                 idbayar: j.idbayar,
-                cara_bayar: find('cara_bayar', j.cara_bayar),
+                cara_bayar: look('cara_bayar', j.cara_bayar).label,
                 klinik: find('klinik', j.klinik)
               };
             });

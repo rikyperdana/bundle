@@ -3,8 +3,8 @@
     "name": "standard-minifier-js",
     "version": "2.1.1"
   },
-  "totalMinifiedBytes": 2570349,
-  "totalMinifiedGzipBytes": 828959,
+  "totalMinifiedBytes": 2570491,
+  "totalMinifiedGzipBytes": 829010,
   "minifiedBytesByPackage": {
     "packages/meteor.js": 8650,
     "packages/meteor-base.js": 68,
@@ -827,12 +827,12 @@
     "packages/autoupdate.js": 1998,
     "packages/global-imports.js": 1861,
     "app/app.js": [
-      104289,
+      104431,
       {
         "folder": {
           "template.panduan.js": 10769,
           "parent": {
-            "funcs.ls.js": 1456
+            "funcs.ls.js": 1444
           },
           "hooks.ls.js": 2151,
           "modules.ls.js": 908,
@@ -842,8 +842,8 @@
         },
         "template.view.js": 48087,
         "both.ls.js": 8492,
-        "client.ls.js": 17848,
-        "server.ls.js": 6469
+        "client.ls.js": 18087,
+        "server.ls.js": 6384
       }
     ],
     "packages/mdg_validation-error.js": [
