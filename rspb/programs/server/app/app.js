@@ -213,12 +213,14 @@ if (Meteor.isClient) {
     formToDoc: function(doc){
       Session.set('preview', modForm(doc));
       if (currentRoute() === 'regis') {
-        Meteor.call('patientExist', doc.no_mr, function(err, res){
-          if (res) {
-            Materialize.toast('No MR sudah dipakai pasien yang lain', 3000);
-            return $('input[name="no_mr"]').val('');
-          }
-        });
+        if (!Session.get('showForm')) {
+          Meteor.call('patientExist', doc.no_mr, function(err, res){
+            if (res) {
+              Materialize.toast('No MR sudah dipakai pasien yang lain', 3000);
+              return $('input[name="no_mr"]').val('');
+            }
+          });
+        }
       }
       return doc;
     }
@@ -466,8 +468,11 @@ if (Meteor.isClient) {
         return k._id === j.nama;
       }
     },
-    payRegCard: function(no_mr, amount, words){
-      var pdf;
+    payRegCard: function(no_mr, idbayar, amount, words){
+      var doc, pdf;
+      doc = coll.pasien.findOne({
+        no_mr: parseInt(no_mr)
+      });
       pdf = pdfMake.createPdf({
         content: [
           {
@@ -478,11 +483,7 @@ if (Meteor.isClient) {
             alignment: 'center'
           }, {
             columns: [
-              ['TANGGAL', 'NO. MR', 'NAMA PASIEN', 'TARIF', '\n\nPETUGAS'], _.map([
-                moment().format('DD/MM/YYYY'), zeros(no_mr), _.startCase(coll.pasien.findOne({
-                  no_mr: no_mr
-                }).regis.nama_lengkap), 'Rp ' + amount, '\n\n' + _.startCase(Meteor.user().username)
-              ], function(i){
+              ['TANGGAL', 'NO. MR', 'NAMA PASIEN', 'TARIF', '\n\nPETUGAS'], _.map([moment().format('DD/MM/YYYY'), zeros(no_mr), _.startCase(doc.regis.nama_lengkap), 'Rp ' + amount, '\n\n' + _.startCase(Meteor.user().username)], function(i){
                 return ': ' + i;
               })
             ]
@@ -581,7 +582,7 @@ this.selects = {
   kelamin: ['laki_laki', 'perempuan'],
   agama: ['islam', 'katolik', 'protestan', 'buddha', 'hindu', 'kong_hu_chu'],
   pendidikan: ['sd', 'smp', 'sma', 'diploma', 's1', 's2', 's3', 'tidak_sekolah'],
-  dara: ['a', 'b', 'c', 'ab', 'o'],
+  darah: ['a', 'b', 'c', 'ab', 'o'],
   cara_bayar: ['umum', 'bpjs', 'jamkesda_pekanbaru', 'jamkesda_kampar', 'lapas_dinsos', 'free'],
   nikah: ['nikah', 'belum_nikah', 'janda', 'duda'],
   klinik: ['penyakit_dalam', 'gigi', 'kebidanan', 'tht', 'anak', 'saraf', 'mata', 'bedah', 'paru', 'tb_dots', 'kulit', 'fisioterapi', 'gizi', 'metadon', 'psikologi', 'tindakan', 'aps_labor', 'aps_radio'],
@@ -1471,6 +1472,13 @@ if (Meteor.isClient) {
     rupiah: function(val){
       return 'Rp ' + numeral(val).format('0,0');
     },
+    currentRoute: function(name){
+      if (!name) {
+        return currentRoute();
+      } else {
+        return currentRoute() === name;
+      }
+    },
     currentPar: function(param){
       return currentPar(param);
     },
@@ -1505,9 +1513,6 @@ if (Meteor.isClient) {
       var ref$;
       return (ref$ = look2(option, value)) != null ? ref$[field] : void 8;
     },
-    routeIs: function(name){
-      return currentRoute() === name;
-    },
     userGroup: function(name){
       return userGroup(name);
     },
@@ -1538,17 +1543,17 @@ if (Meteor.isClient) {
   });
   Template.menu.helpers({
     menus: function(){
-      return _.initial(_.flatMap(roles(), function(i, j){
+      return _.flatMap(roles(), function(i, j){
         var find;
         find = _.find(rights, function(k){
           return k.group === j;
         });
-        return _.map(find.list, function(k){
+        return _.initial(_.map(find.list, function(k){
           return _.find(modules, function(l){
             return l.name === k;
           });
-        });
-      }));
+        }));
+      });
     },
     navTitle: function(){
       var find;
@@ -1573,7 +1578,7 @@ if (Meteor.isClient) {
         bayar: ['no_mr', 'nama', 'tanggal', 'total_biaya', 'cara_bayar', 'klinik', 'aksi'],
         labor: ['no_mr', 'pasien', 'grup', 'order', 'aksi'],
         radio: ['no_mr', 'pasien', 'order', 'aksi'],
-        obat: ['no_mr', 'pasien', 'nama_obat', 'kali', 'dosis', 'bentuk', 'jumlah', 'serah'],
+        obat: ['tanggal', 'no_mr', 'pasien', 'dokter', 'klinik', 'nama_obat', 'aturan', 'jumlah', 'serah'],
         rawat: ['tanggal', 'klinik', 'cara_bayar', 'bayar_pendaftaran', 'bayar_tindakan', 'cek'],
         fisik: ['tekanan_darah', 'nadi', 'suhu', 'pernapasan', 'berat', 'tinggi', 'lila'],
         previewDokter: ['Tindakan', 'Dokter', 'Harga'],
@@ -1858,7 +1863,7 @@ if (Meteor.isClient) {
         if (ok) {
           if (nodes[1]) {
             Meteor.call.apply(Meteor, ['billRegis'].concat([nodes[0], nodes[1]], [true]));
-            return makePdf.payRegCard(nodes[1], nodes[2], '...');
+            return makePdf.payRegCard.apply(makePdf, [nodes[0], nodes[1], nodes[2]].concat(['...']));
           } else {
             Meteor.call('billCard', nodes[0], false);
             return makePdf.payRegCard(10000, 'Sepuluh Ribu Rupiah');
@@ -2101,8 +2106,10 @@ if (Meteor.isClient) {
             }, 0);
           };
           return _.assign(j, {
-            digudang: reduced('digudang'),
-            diapotik: reduced('diapotik')
+            akumulasi: {
+              digudang: reduced('digudang'),
+              diapotik: reduced('diapotik')
+            }
           });
         });
       };
@@ -2232,7 +2239,9 @@ if (Meteor.isClient) {
           message: 'Jumlah diserahkan',
           callback: function(err, res){
             if (res.submit) {
-              return Meteor.call('amprah', currentPar('idbarang'), self.idamprah, parseInt(res.value));
+              return Meteor.call('amprah', currentPar('idbarang'), self.idamprah, parseInt(res.value), function(err, res){
+                return res && Meteor.call('transfer', currentPar('idbarang'), false, parseInt(res.value));
+              });
             }
           }
         });
@@ -2635,7 +2644,24 @@ if (Meteor.isServer) {
       var selector, modifier;
       selector = {
         idbarang: idbarang,
-        'batch.idbatch': idbatch
+        'batch.idbatch': idbatch || function(){
+          var filtered, this$ = this;
+          filtered = _.filter(coll.gudang.findOne({
+            idbarang: idbarang
+          }).batch, function(i){
+            var a, b;
+            a = function(){
+              return i.digudang > 0;
+            };
+            b = function(){
+              return 0 < monthDiff(i.kadaluarsa);
+            };
+            return a() && b();
+          });
+          return function(it){
+            return it[0].idbatch;
+          }(_.sortBy(filtered, 'kadaluarsa'));
+        }()
       };
       modifier = {
         $inc: {
