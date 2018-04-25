@@ -212,15 +212,13 @@ if (Meteor.isClient) {
     },
     formToDoc: function(doc){
       Session.set('preview', modForm(doc));
-      if (currentRoute() === 'regis') {
-        if (!Session.get('showForm')) {
-          Meteor.call('patientExist', doc.no_mr, function(err, res){
-            if (res) {
-              Materialize.toast('No MR sudah dipakai pasien yang lain', 3000);
-              return $('input[name="no_mr"]').val('');
-            }
-          });
-        }
+      if (currentRoute('regis') && Session.get('showForm')) {
+        Meteor.call('patientExist', doc.no_mr, function(err, res){
+          if (res) {
+            Materialize.toast('No MR sudah dipakai pasien yang lain', 3000);
+            return $('input[name="no_mr"]').val('');
+          }
+        });
       }
       return doc;
     }
@@ -582,7 +580,7 @@ this.selects = {
   kelamin: ['laki_laki', 'perempuan'],
   agama: ['islam', 'katolik', 'protestan', 'buddha', 'hindu', 'kong_hu_chu'],
   pendidikan: ['sd', 'smp', 'sma', 'diploma', 's1', 's2', 's3', 'tidak_sekolah'],
-  darah: ['a', 'b', 'c', 'ab', 'o'],
+  darah: ['a', 'b', 'ab', 'o'],
   cara_bayar: ['umum', 'bpjs', 'jamkesda_pekanbaru', 'jamkesda_kampar', 'lapas_dinsos', 'free'],
   nikah: ['nikah', 'belum_nikah', 'janda', 'duda'],
   klinik: ['penyakit_dalam', 'gigi', 'kebidanan', 'tht', 'anak', 'saraf', 'mata', 'bedah', 'paru', 'tb_dots', 'kulit', 'fisioterapi', 'gizi', 'metadon', 'psikologi', 'tindakan', 'aps_labor', 'aps_radio'],
@@ -1441,7 +1439,6 @@ if (Meteor.isClient) {
     }
   });
   Router.onAfterAction(function(){
-    sessNull();
     if (!in$(currentRoute(), _.uniq(_.flatMap(roles(), function(i, j){
       var this$ = this;
       return function(it){
@@ -1450,7 +1447,7 @@ if (Meteor.isClient) {
         return k.group === j;
       }));
     })))) {
-      return Router.go('/');
+      return sessNull() && Router.go('/');
     }
   });
   globalHelpers = {
@@ -1626,7 +1623,7 @@ if (Meteor.isClient) {
       arr = ['anamesa_perawat', 'fisik', 'anamesa_dokter', 'diagnosa', 'planning', 'tindakan', 'labor', 'radio', 'obat', 'spm', 'keluar', 'pindah'];
       if (!((ref$ = formDoc()) != null && ref$.billRegis)) {
         return arr;
-      } else if ('dr' !== _.first(_.split(Meteor.user().username, '.'))) {
+      } else if (!('dr' || 'drg' === _.first(_.split(Meteor.user().username, '.')))) {
         return slice$.call(arr, 2, arr.length + 1 || 9e9);
       }
     },
@@ -2062,7 +2059,7 @@ if (Meteor.isClient) {
           blob = new Blob([content], {
             type: 'text/plain;charset=utf-8'
           });
-          return saveAs(blob, select + ".csv");
+          return saveAs(blob, '#select.csv');
         }
       });
     }
@@ -2466,17 +2463,22 @@ if (Meteor.isServer) {
   });
   Meteor.methods({
     'import': function(name, selector, modifier, arrName){
-      var sel, obj, ref$;
+      var find, sel, obj, ref$;
       if (!arrName) {
         return coll[name].insert(_.assign(selector, modifier));
       } else {
-        sel = {
-          _id: coll[name].findOne(selector)._id
-        };
-        obj = (ref$ = {}, ref$[arrName + ""] = modifier[arrName][0], ref$);
-        return coll[name].update(sel, {
-          $push: obj
-        });
+        find = coll[name].findOne(selector);
+        if (!find) {
+          return coll[name].insert(_.assign(selector, modifier));
+        } else {
+          sel = {
+            _id: find._id
+          };
+          obj = (ref$ = {}, ref$[arrName + ""] = modifier[arrName][0], ref$);
+          return coll[name].update(sel, {
+            $push: obj
+          });
+        }
       }
     },
     'export': function(jenis){
