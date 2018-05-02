@@ -87,7 +87,9 @@ if (Meteor.isClient) {
   };
   this.sessNull = function(){
     return _.map(Session.keys, function(i, j){
-      return Session.set(j, null);
+      if (j !== 'page' && j !== 'limit') {
+        return Session.set(j, null);
+      }
     });
   };
 }
@@ -370,16 +372,12 @@ if (Meteor.isClient) {
           }, {
             columns: [
               ['NO. MR', 'NAMA LENGKAP', 'TEMPAT & TANGGAL LAHIR', 'GOLONGAN DARAH', 'JENIS KELAMIN', 'AGAMA', 'PENDIDIKAN', 'PEKERJAAN', 'NAMA AYAH', 'NAMA IBU', 'NAMA SUAMI / ISTRI', 'ALAMAT', 'NO. TELP / HP'], _.map([zeros(doc.no_mr), doc.regis.nama_lengkap, (doc.regis.tmpt_lahir || '-') + ', ' + moment(doc.regis.tgl_lahir).format('D/MM/YYYY')].concat(
-                slice$.call(function(){
-                  return _.map(['darah', 'kelamin', 'agama', 'pendidikan', 'pekerjaan'], function(i){
-                    var ref$;
-                    return ((ref$ = look(i, doc.regis[i])) != null ? ref$.label : void 8) || '-';
-                  });
-                }()), slice$.call(function(){
-                  return _.map(['ayah', 'ibu', 'pasangan', 'alamat', 'kontak'], function(i){
-                    return doc.regis[i] || '-';
-                  });
-                }())
+                slice$.call(_.map(['darah', 'kelamin', 'agama', 'pendidikan', 'pekerjaan'], function(i){
+                  var ref$;
+                  return ((ref$ = look(i, doc.regis[i])) != null ? ref$.label : void 8) || '-';
+                })), slice$.call(_.map(['ayah', 'ibu', 'pasangan', 'alamat', 'kontak'], function(i){
+                  return doc.regis[i] || '-';
+                }))
               ), function(i){
                 return ': ' + i;
               })
@@ -394,11 +392,9 @@ if (Meteor.isClient) {
                   text: 'Keterangan',
                   alignment: 'center'
                 }
-              ]].concat(slice$.call(function(){
-                return _.map([['Saya akan mentaati peraturan yang berlaku di RSUD Petala Bumi'], ['Saya memberi kuasa kepada dokter dan semua tenaga kesehatan untuk melakukan pemeriksaan / pengobatan / tindakan yang diperlakukan upaya kesembuhan saya / pasien tersebut diatas'], ['Saya memberi kuasa kepada dokter dan semua tenaga kesehatan yang ikut merawat saya untuk memberikan keterangan medis saya kepada yang bertanggung jawab atas biaya perawatan saya.'], ['Saya memberi kuasa kepada RSUD Petala Bumi untuk menginformasikan identitas sosial saya kepada keluarga / rekan / masyarakat'], ['Saya mengatakan bahwa informasi hasil pemeriksaan / rekam medis saya dapat digunakan untuk pendidikan / penelitian demi kemajuan ilmu kesehatan']], function(i){
-                  return [' ', ' '].concat(slice$.call(i));
-                });
-              }()))
+              ]].concat(slice$.call(_.map([['Saya akan mentaati peraturan yang berlaku di RSUD Petala Bumi'], ['Saya memberi kuasa kepada dokter dan semua tenaga kesehatan untuk melakukan pemeriksaan / pengobatan / tindakan yang diperlakukan upaya kesembuhan saya / pasien tersebut diatas'], ['Saya memberi kuasa kepada dokter dan semua tenaga kesehatan yang ikut merawat saya untuk memberikan keterangan medis saya kepada yang bertanggung jawab atas biaya perawatan saya.'], ['Saya memberi kuasa kepada RSUD Petala Bumi untuk menginformasikan identitas sosial saya kepada keluarga / rekan / masyarakat'], ['Saya mengatakan bahwa informasi hasil pemeriksaan / rekam medis saya dapat digunakan untuk pendidikan / penelitian demi kemajuan ilmu kesehatan']], function(i){
+                return [' ', ' '].concat(slice$.call(i));
+              })))
             }
           }, '\nPetunjuk :', 'S: Setuju', 'TS: Tidak Setuju', {
             alignment: 'justify',
@@ -1584,9 +1580,6 @@ if (Meteor.isClient) {
         previewObat: ['Nama', 'Dosis', 'Bentuk', 'Kali', 'Jumlah']
       };
     },
-    route: function(){
-      return currentRoute();
-    },
     formType: function(){
       if (currentRoute() === 'regis') {
         if (currentPar('no_mr')) {
@@ -1619,11 +1612,11 @@ if (Meteor.isClient) {
       return Session.get('preview');
     },
     omitFields: function(){
-      var arr, ref$;
+      var arr, ref$, ref1$;
       arr = ['anamesa_perawat', 'fisik', 'anamesa_dokter', 'diagnosa', 'planning', 'tindakan', 'labor', 'radio', 'obat', 'spm', 'keluar', 'pindah'];
       if (!((ref$ = formDoc()) != null && ref$.billRegis)) {
         return arr;
-      } else if (!('dr' || 'drg' === _.first(_.split(Meteor.user().username, '.')))) {
+      } else if ((ref1$ = _.first(_.split(Meteor.user().username, '.'))) !== 'dr' && ref1$ !== 'drg') {
         return slice$.call(arr, 2, arr.length + 1 || 9e9);
       }
     },
@@ -1679,7 +1672,10 @@ if (Meteor.isClient) {
           no_mr: parseInt(search())
         };
         selector = {
-          $or: [byName, byNoMR]
+          $or: [byName, byNoMR],
+          no_mr: {
+            $ne: NaN
+          }
         };
         options = {
           fields: {
