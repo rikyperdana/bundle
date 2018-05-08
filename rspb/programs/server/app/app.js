@@ -2232,8 +2232,8 @@ if (Meteor.isClient) {
           message: 'Jumlah diserahkan',
           callback: function(err, res){
             if (res.submit) {
-              return Meteor.call('amprah', currentPar('idbarang'), self.idamprah, parseInt(res.value), function(err, res){
-                return res && Meteor.call('transfer', currentPar('idbarang'), false, parseInt(res.value));
+              return Meteor.call('amprah', currentPar('idbarang'), self.idamprah, parseInt(res.value), function(err2, res2){
+                return res2 && Meteor.call('transfer', currentPar('idbarang'), false, parseInt(res.value));
               });
             }
           }
