@@ -1025,15 +1025,13 @@ schema.rawat = {
   'rawat.$.cara_bayar': {
     type: Number,
     autoform: {
-      options: selects.cara_bayar,
-      type: 'select-radio-inline'
+      options: selects.cara_bayar
     }
   },
   'rawat.$.klinik': {
     type: Number,
     autoform: {
-      options: selects.klinik,
-      type: 'select-radio-inline'
+      options: selects.klinik
     }
   },
   'rawat.$.karcis': {
@@ -1046,8 +1044,7 @@ schema.rawat = {
     type: Number,
     optional: true,
     autoform: {
-      options: selects.rujukan,
-      type: 'select-radio-inline'
+      options: selects.rujukan
     }
   },
   'rawat.$.billRegis': {
@@ -1777,15 +1774,12 @@ if (Meteor.isClient) {
           var list, arr;
           $('.autoform-remove-item').trigger('click');
           if (currentRoute() === 'jalan') {
-            _.map(['cara_bayar', 'klinik', 'karcis', 'rujukan'], function(i){
+            _.map(['cara_bayar', 'klinik', 'rujukan'], function(i){
               $('div[data-schema-key="' + i + '"]').prepend(tag('p', _.startCase(i)));
               if (formDoc()) {
-                $('input[name="' + i + '"][value="' + formDoc()[i] + '"]').attr({
-                  checked: true
-                });
-                return $('input[name="' + i + '"]').attr({
-                  disabled: 'disabled'
-                });
+                return $('select[name="' + i + '"]').val(formDoc()[i]).attr({
+                  disabled: disabled
+                }).material_select();
               }
             });
             _.map(['anamesa_perawat'], function(i){
@@ -2149,20 +2143,6 @@ if (Meteor.isClient) {
     'dblclick #row': function(){
       return Router.go('/' + currentRoute() + '/' + this.idbarang);
     },
-    'dblclick #transfer': function(){
-      var self;
-      self = this;
-      if (roles().farmasi) {
-        return MaterializeModal.prompt({
-          message: 'Transfer Gudang > Apotek',
-          callback: function(err, res){
-            if (res.submit) {
-              return Meteor.call('transfer', currentPar('idbarang'), self.idbatch, parseInt(res.value));
-            }
-          }
-        });
-      }
-    },
     'click #rmBarang': function(){
       var self, dialog;
       self = this;
@@ -2233,7 +2213,12 @@ if (Meteor.isClient) {
           callback: function(err, res){
             if (res.submit) {
               return Meteor.call('amprah', currentPar('idbarang'), self.idamprah, parseInt(res.value), function(err2, res2){
-                return res2 && Meteor.call('transfer', currentPar('idbarang'), false, parseInt(res.value));
+                return res2 && Meteor.call('transfer', currentPar('idbarang'), parseInt(res.value), function(err3, res3){
+                  return res3 && MaterializeModal.message({
+                    title: 'Transferkan Barang',
+                    message: JSON.stringify(res3)
+                  });
+                });
               });
             }
           }
@@ -2638,36 +2623,40 @@ if (Meteor.isServer) {
         return new Date(l.kadaluarsa).getTime();
       }
     },
-    transfer: function(idbarang, idbatch, amount){
-      var selector, modifier;
-      selector = {
-        idbarang: idbarang,
-        'batch.idbatch': idbatch || function(){
-          var filtered, this$ = this;
-          filtered = _.filter(coll.gudang.findOne({
-            idbarang: idbarang
-          }).batch, function(i){
-            var a, b;
-            a = function(){
-              return i.digudang > 0;
-            };
-            b = function(){
-              return 0 < monthDiff(i.kadaluarsa);
-            };
-            return a() && b();
-          });
-          return function(it){
-            return it[0].idbatch;
-          }(_.sortBy(filtered, 'kadaluarsa'));
-        }()
-      };
-      modifier = {
-        $inc: {
-          'batch.$.digudang': -amount,
-          'batch.$.diapotik': amount
+    transfer: function(idbarang, amount){
+      var findStock, give, i$, ref$, len$, i, findBatch, key;
+      findStock = coll.gudang.findOne({
+        idbarang: idbarang
+      });
+      give = {};
+      for (i$ = 0, len$ = (ref$ = (fn$())).length; i$ < len$; ++i$) {
+        i = ref$[i$];
+        findBatch = _.find(findStock.batch, fn1$);
+        findBatch.digudang -= 1;
+        findBatch.diapotik += 1;
+        key = findBatch.nobatch;
+        give[key] || (give[key] = 0);
+        give[key] += 1;
+      }
+      coll.gudang.update(findStock._id, findStock);
+      return give;
+      function fn$(){
+        var i$, to$, results$ = [];
+        for (i$ = 1, to$ = amount; i$ <= to$; ++i$) {
+          results$.push(i$);
         }
-      };
-      return coll.gudang.update(selector, modifier);
+        return results$;
+      }
+      function fn1$(j){
+        var a, b;
+        a = function(){
+          return j.digudang > 0;
+        };
+        b = function(){
+          return 0 < monthDiff(j.kadaluarsa);
+        };
+        return a() && b();
+      }
     },
     rmPasien: function(no_mr){
       return coll.pasien.remove({
