@@ -22,5 +22,6 @@ LaunchScreen = Package['launch-screen'].LaunchScreen;
 meteorInstall = Package.modules.meteorInstall;
 meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 Promise = Package.promise.Promise;
+Accounts = Package['accounts-base'].Accounts;
 Autoupdate = Package.autoupdate.Autoupdate;
 

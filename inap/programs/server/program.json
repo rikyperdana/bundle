@@ -128,6 +128,13 @@
       "path": "packages/underscore.js"
     },
     {
+      "sourceMap": "packages/rate-limit.js.map",
+      "path": "packages/rate-limit.js"
+    },
+    {
+      "path": "packages/ddp-rate-limiter.js"
+    },
+    {
       "path": "packages/ecmascript-runtime-client.js"
     },
     {
@@ -223,6 +230,28 @@
       "path": "packages/momentjs_moment.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/npm-bcrypt/node_modules",
+      "path": "packages/npm-bcrypt.js"
+    },
+    {
+      "sourceMap": "packages/accounts-base.js.map",
+      "path": "packages/accounts-base.js"
+    },
+    {
+      "path": "packages/sha.js"
+    },
+    {
+      "path": "packages/srp.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/email/node_modules",
+      "path": "packages/email.js"
+    },
+    {
+      "sourceMap": "packages/accounts-password.js.map",
+      "path": "packages/accounts-password.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {
@@ -242,6 +271,9 @@
     {
       "node_modules": "npm/node_modules",
       "path": "app/app.js"
+    },
+    {
+      "path": "packages/service-configuration.js"
     }
   ]
 }

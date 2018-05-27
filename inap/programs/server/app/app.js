@@ -61,17 +61,19 @@ if (Meteor.isClient) {
             return "m" + size + " " + obj.color;
           }(),
           ondblclick: function(){
-            state.edit = {
-              group: groupId,
-              room: doc
-            };
-            return m.redraw();
+            if (Meteor.userId()) {
+              state.edit = {
+                group: groupId,
+                room: doc
+              };
+              return m.redraw();
+            }
           }
         };
       }
     };
     return m('.row', m('.divider'), m('h4.center', attr.header, obj.label), obj.rooms.map(function(i){
-      return m('.col', attr.room(i, obj.name), m('.col.m6', m('p.white-text.center', _.startCase(i.name))), m('.col.m6', m('p.white-text.center', (i.use || 0) + " of " + i.cap)));
+      return m('.col', attr.room(i, obj.name), m('.col.m6', m('p.white-text.center', i.name)), m('.col.m6', m('p.white-text.center', (i.use || 0) + " of " + i.cap)));
     }));
   };
   front = function(){
@@ -97,21 +99,41 @@ if (Meteor.isClient) {
               }
             });
           }
+        },
+        login: {
+          onsubmit: function(e){
+            var ref$, username, password;
+            e.preventDefault();
+            ref$ = _.map(e.target), username = ref$[0], password = ref$[1];
+            return Meteor.loginWithPassword(username.value, password.value, function(err){
+              return $('#modalLogin').modal('close');
+            });
+          }
         }
       },
       reset: {
         ondblclick: function(){
-          return Meteor.call('reset', function(err, res){
-            if (res) {
-              return m.redraw();
-            }
-          });
+          if (Meteor.userId()) {
+            return Meteor.call('reset', function(err, res){
+              if (res) {
+                return m.redraw();
+              }
+            });
+          }
         }
       },
       modal: {
         bangsal: {
           oncreate: function(){
             return $('#modalBangsal').modal().modal('open');
+          }
+        },
+        login: {
+          oncreate: function(){
+            return $('#modalLogin').modal();
+          },
+          onclick: function(){
+            return $('#modalLogin').modal('open');
           }
         }
       },
@@ -122,24 +144,35 @@ if (Meteor.isClient) {
           });
         },
         ondblclick: function(){
-          return $('#modalMarquee').modal().modal('open');
+          return Meteor.userId()(and$('#modalMarquee')).modal().modal('open');
         }
       }
     };
     return {
       view: function(){
         var ref$;
-        return m('.container', m('.row', m('.left', m('h5', moment(new Date()).format('D MMM YYYY'))), m('.right', m('a', attr.reset, 'Reset'))), state.edit ? m('.modal#modalBangsal', attr.modal.bangsal, m('form', attr.form.bangsal, m('.modal-content', m('h4', 'Bangsal terpakai'), m('.input-field', m('input', {
+        return m('div', m('nav.teal', m('.nav-wrapper', m('a.brand-logo.center', 'Sistem Informasi Ketersediaan Bangsal RSUD Petala Bumi'))), m('.container', m('h5.left', moment(new Date()).format('D MMM YYYY')), m('a.right', attr.modal.login, 'Login'), m('a.right', attr.reset, 'Reset'), state.edit ? m('.modal#modalBangsal', attr.modal.bangsal, m('form', attr.form.bangsal, m('.modal-content', m('h4', 'Bangsal terpakai'), m('.input-field', m('input', {
           type: 'text',
           id: state.edit.group
         }))), m('.modal-footer', m('input.btn-flat', {
           type: 'submit'
-        })))) : void 8, coll.bangsal.find().fetch().map(makeRooms), m('.marquee', attr.marquee, m('h5', ((ref$ = coll.marquee.findOne()) != null ? ref$.text : void 8) || 'no info')), m('.modal#modalMarquee', m('form', attr.form.marquee, m('.modal-content', m('h4', 'Konten Marquee'), m('.input-field', m('input', {
+        })))) : void 8, m('.modal#modalLogin', m('.modal-content', m('form', attr.form.login, m('h5.center', 'Login Admin Bangsal'), m('input', {
+          type: 'text',
+          id: 'username',
+          placeholder: 'Username'
+        }), m('input', {
+          type: 'password',
+          id: 'password',
+          placeholder: 'Password'
+        }), m('input.btn', {
+          type: 'submit',
+          value: 'Login'
+        })))), coll.bangsal.find().fetch().map(makeRooms), m('.marquee', attr.marquee, m('h5', ((ref$ = coll.marquee.findOne()) != null ? ref$.text : void 8) || 'no info')), m('.modal#modalMarquee', m('form', attr.form.marquee, m('.modal-content', m('h4', 'Konten Marquee'), m('.input-field', m('input', {
           type: 'text',
           id: 'marquee'
         }))), m('.modal-footer', m('input.btn-flat', {
           type: 'submit'
-        })))));
+        }))))));
       }
     };
   };
@@ -174,92 +207,92 @@ if (Meteor.isServer) {
   this.seeder = [
     {
       name: 'hnd',
-      label: 'Hang Nadim',
+      label: 'Ruangan Hang Nadim',
       color: 'red',
       rooms: [
         {
-          name: 'laki-laki',
+          name: 'Laki-laki',
           cap: 6
         }, {
-          name: 'perempuan',
+          name: 'Perempuan',
           cap: 7
         }
       ]
     }, {
       name: 'hlk',
-      label: 'Hang Lekir',
+      label: 'Ruangan Hang Lekir',
       color: 'blue',
       rooms: [
         {
-          name: 'laki-laki',
+          name: 'Laki-laki',
           cap: 6
         }, {
-          name: 'perempuan',
+          name: 'Perempuan',
           cap: 6
         }, {
-          name: 'anak',
+          name: 'Anak',
           cap: 10
         }
       ]
     }, {
       name: 'dmd',
-      label: 'Dang Merdu',
+      label: 'Ruangan Dang Merdu',
       color: 'green',
       rooms: [
         {
-          name: 'dm2',
+          name: 'DM2',
           cap: 2
         }, {
-          name: 'dm3',
+          name: 'DM3',
           cap: 2
         }, {
-          name: 'dm4',
+          name: 'DM4',
           cap: 4
         }, {
-          name: 'dm5',
+          name: 'DM5',
           cap: 3
         }, {
-          name: 'dm6',
+          name: 'DM6',
           cap: 3
         }, {
-          name: 'dm8',
+          name: 'DM8',
           cap: 2
         }, {
-          name: 'dm9',
+          name: 'DM9',
           cap: 2
         }, {
-          name: 'dm10',
+          name: 'DM10',
           cap: 1
         }, {
-          name: 'dm11',
+          name: 'DM11',
           cap: 2
         }, {
-          name: 'dm13',
+          name: 'DM12',
           cap: 1
         }, {
-          name: 'dm13',
+          name: 'DM13',
           cap: 3
         }, {
-          name: 'dm14',
+          name: 'DM14',
           cap: 3
         }, {
-          name: 'isolasi',
+          name: 'Isolasi',
           cap: 1
         }
       ]
     }, {
       name: 'others',
-      label: 'Lainnya',
+      label: 'Ruangan Lainnya',
       color: 'purple',
       rooms: [
         {
-          name: 'perina',
+          name: 'Perina',
           cap: 3
         }, {
-          name: 'icu',
+          name: 'ICU',
           cap: 2
         }, {
-          name: 'kb',
+          name: 'Dang Purnama',
           cap: 18
         }
       ]
