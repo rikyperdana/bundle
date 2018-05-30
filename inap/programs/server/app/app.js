@@ -79,7 +79,7 @@ if (Meteor.isClient) {
       }
     };
     return m('.row', m('.divider'), m('h4.center', attr.header, obj.label), obj.rooms.map(function(i){
-      return m('.col', attr.room(i, obj.name), m('.col.m6', m('p.white-text.center', i.name)), m('.col.m6', m('p.white-text.center', (i.use || 0) + " of " + i.cap)));
+      return m('.col', attr.room(i, obj.name), m('.col.m6', m('p.white-text.center', i.name)), m('.col.m6', m('p.white-text.center', "sedia " + (i.cap - (i.use || 0)) + " dari " + i.cap)));
     }));
   };
   front = function(){
@@ -119,7 +119,7 @@ if (Meteor.isClient) {
         }
       },
       reset: {
-        ondblclick: function(){
+        onclick: function(){
           if (Meteor.userId()) {
             return Meteor.call('reset', function(err, res){
               if (res) {
@@ -127,6 +127,11 @@ if (Meteor.isClient) {
               }
             });
           }
+        }
+      },
+      logout: {
+        onclick: function(){
+          return Meteor.logout();
         }
       },
       modal: {
@@ -150,15 +155,23 @@ if (Meteor.isClient) {
             duration: 15000
           });
         },
-        ondblclick: function(){
+        ondclick: function(){
           return Meteor.userId() && $('#modalMarquee').modal().modal('open');
         }
       }
     };
     return {
       view: function(){
-        var date, ref$, ref1$;
-        return m('div', m('nav.teal', m('.nav-wrapper', m('a.brand-logo.center', 'Sistem Informasi Ketersediaan Bangsal RSUD Petala Bumi'))), m('.container', m('.row', (date = (ref$ = coll.lastUpdate.findOne()) != null ? ref$.date : void 8) ? m('h5.left', moment(date).format('LT D MM YYYY')) : void 8, m('a.right', attr.modal.login, 'Login'), m('a.right', attr.reset, 'Reset')), state.edit ? m('.modal#modalBangsal', attr.modal.bangsal, m('form', attr.form.bangsal, m('.modal-content', m('h4', 'Bangsal terpakai'), m('.input-field', m('input', {
+        var ref$;
+        return m('div', m('nav.teal', m('.nav-wrapper', m('a.brand-logo.center', 'Sistem Informasi Ketersediaan Tempat Tidur RSUD Petala Bumi'))), m('.container', m('.row', function(){
+          var date, ref$;
+          date = ((ref$ = coll.lastUpdate.findOne()) != null ? ref$.date : void 8) || new Date();
+          if (date) {
+            return m('h5.left', moment(date).format('LT / D MMM YYYY') + "");
+          }
+        }(), Meteor.userId()
+          ? [m('a.right.btn-flat', attr.reset, 'Reset'), m('a.right.btn-flat', attr.logout, 'Logout')]
+          : m('a.right.btn-flat', attr.modal.login, 'Login')), state.edit ? m('.modal#modalBangsal', attr.modal.bangsal, m('form', attr.form.bangsal, m('.modal-content', m('h4', 'Bangsal terpakai'), m('.input-field', m('input', {
           type: 'text',
           id: state.edit.group
         }))), m('.modal-footer', m('input.btn-flat', {
@@ -174,7 +187,7 @@ if (Meteor.isClient) {
         }), m('input.btn', {
           type: 'submit',
           value: 'Login'
-        })))), coll.bangsal.find().fetch().map(makeRooms), m('.marquee', attr.marquee, m('h5', ((ref1$ = coll.marquee.findOne()) != null ? ref1$.text : void 8) || 'no info')), m('.modal#modalMarquee', m('form', attr.form.marquee, m('.modal-content', m('h4', 'Konten Marquee'), m('.input-field', m('input', {
+        })))), coll.bangsal.find().fetch().map(makeRooms), m('.marquee', attr.marquee, m('h5', ((ref$ = coll.marquee.findOne()) != null ? ref$.text : void 8) || 'no info')), m('.modal#modalMarquee', m('form', attr.form.marquee, m('.modal-content', m('h4', 'Konten Marquee'), m('.input-field', m('input', {
           type: 'text',
           id: 'marquee'
         }))), m('.modal-footer', m('input.btn-flat', {
