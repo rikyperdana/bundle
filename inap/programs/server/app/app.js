@@ -155,7 +155,7 @@ if (Meteor.isClient) {
             duration: 15000
           });
         },
-        ondclick: function(){
+        ondblclick: function(){
           return Meteor.userId() && $('#modalMarquee').modal().modal('open');
         }
       }
@@ -166,9 +166,7 @@ if (Meteor.isClient) {
         return m('div', m('nav.teal', m('.nav-wrapper', m('a.brand-logo.center', 'Sistem Informasi Ketersediaan Tempat Tidur RSUD Petala Bumi'))), m('.container', m('.row', function(){
           var date, ref$;
           date = ((ref$ = coll.lastUpdate.findOne()) != null ? ref$.date : void 8) || new Date();
-          if (date) {
-            return m('h5.left', moment(date).format('LT / D MMM YYYY') + "");
-          }
+          return date && m('h5.left', 'Last Update: ' + moment(date).format('LT / D MMM YYYY'));
         }(), Meteor.userId()
           ? [m('a.right.btn-flat', attr.reset, 'Reset'), m('a.right.btn-flat', attr.logout, 'Logout')]
           : m('a.right.btn-flat', attr.modal.login, 'Login')), state.edit ? m('.modal#modalBangsal', attr.modal.bangsal, m('form', attr.form.bangsal, m('.modal-content', m('h4', 'Bangsal terpakai'), m('.input-field', m('input', {
@@ -281,7 +279,7 @@ if (Meteor.isServer) {
           name: 'DM9',
           cap: 2
         }, {
-          name: 'DM10',
+          name: 'DM10 (VIP)',
           cap: 1
         }, {
           name: 'DM11',
