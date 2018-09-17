@@ -782,7 +782,7 @@ if (Meteor.isClient) {
   comp.perusahaan = function(){
     return {
       view: function(){
-        var that, ref$;
+        var that, ref$, ref1$;
         return m('.content', {
           oncreate: function(){
             return Meteor.subscribe('coll', 'company', {
@@ -860,7 +860,7 @@ if (Meteor.isClient) {
             return m('br');
           }), (that = coll.company.findOne({
             _id: m.route.param('idperusahaan')
-          })) ? that.reports.map(function(i){
+          })) ? (ref1$ = that.reports) != null ? ref1$.map(function(i){
             return m('div', m('h5', "Semester " + i.semester_ke), m('table.table', [
               {
                 head: 'Tanggal Lapor',
@@ -896,7 +896,7 @@ if (Meteor.isClient) {
                 return m('tr', [m('th', k.head), m('td', k.cell)]);
               })));
             })));
-          }) : void 8));
+          }) : void 8 : void 8));
       }
     };
   };
