@@ -762,7 +762,7 @@ if (Meteor.isClient) {
               }
             ], [
               'Logout', function(){
-                return Meteor.logout();
+                return [Meteor.logout(), m.route.set('/welcome')];
               }
             ]
           ];
@@ -792,13 +792,26 @@ if (Meteor.isClient) {
             });
           }
         }, !m.route.param('idperusahaan')
-          ? m('div', m('h5', 'Daftar Perusahaan'), m('table.table', m('thead', m('tr', m('th', 'Nama Perusahaan'))), m('tbody', coll.company.find().fetch().map(function(i){
+          ? m('div', m('h5', 'Daftar Perusahaan'), m('table.table', m('thead', m('tr', ['nama_perusahaan', 'hapus'].map(function(i){
+            return m('th', _.startCase(i));
+          }))), m('tbody', coll.company.find().fetch().map(function(i){
             return m('tr', {
               ondblclick: function(){
                 return m.route.set("/perusahaan/" + i._id);
               }
-            }, m('td', _.startCase(i.profil.nama_perusahaan)));
-          }))))
+            }, m('td', _.startCase(i.profil.nama_perusahaan)), m('td', m('.button.is-danger', {
+              onclick: function(){
+                return state.modal = i._id;
+              }
+            }, m('span', 'Hapus'))));
+          }))), state.modal ? elem.modal({
+            title: 'Yakin hapus perusahaan?',
+            confirm: 'Hapus',
+            action: function(){
+              coll.company.remove(state.modal);
+              return state.modal = null;
+            }
+          }) : void 8)
           : m('div', m('h5', 'Profil Perusahaan'), (that = (ref$ = coll.company.findOne({
             _id: m.route.param('idperusahaan')
           })) != null ? ref$.profil : void 8) ? m('table.table', [
@@ -855,7 +868,12 @@ if (Meteor.isClient) {
             }),
             scope: 'reports',
             id: 'formSemester',
-            buttonContent: 'Tambahkan'
+            buttonContent: 'Tambahkan',
+            hooks: {
+              after: function(){
+                return state.showForm = null;
+              }
+            }
           })), [0, 1].map(function(){
             return m('br');
           }), (that = coll.company.findOne({
@@ -918,7 +936,12 @@ if (Meteor.isClient) {
           collection: coll.company,
           schema: new SimpleSchema(schema.company),
           type: 'insert',
-          id: 'formCompany'
+          id: 'formCompany',
+          hooks: {
+            after: function(){
+              return state.showForm = null;
+            }
+          }
         })));
       }
     };
