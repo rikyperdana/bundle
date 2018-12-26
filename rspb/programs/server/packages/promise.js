@@ -35,14 +35,18 @@ require("meteor-promise").makeCompatible(
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
 var global = this;
+var hasOwn = Object.prototype.hasOwnProperty;
 
 if (typeof global.Promise === "function") {
   exports.Promise = global.Promise;
 } else {
-  exports.Promise = require("promise/lib/es6-extensions");
+  exports.Promise = global.Promise =
+    require("promise/lib/es6-extensions");
 }
 
-exports.Promise.prototype.done = function (onFulfilled, onRejected) {
+var proto = exports.Promise.prototype;
+
+proto.done = function (onFulfilled, onRejected) {
   var self = this;
 
   if (arguments.length > 0) {
@@ -56,18 +60,43 @@ exports.Promise.prototype.done = function (onFulfilled, onRejected) {
   });
 };
 
+if (! hasOwn.call(proto, "finally")) {
+  proto["finally"] = function (onFinally) {
+    var threw = false, result;
+    return this.then(function (value) {
+      result = value;
+      // Most implementations of Promise.prototype.finally call
+      // Promise.resolve(onFinally()) (or this.constructor.resolve or even
+      // this.constructor[Symbol.species].resolve, depending on how spec
+      // compliant they're trying to be), but this implementation simply
+      // relies on the standard Promise behavior of resolving any value
+      // returned from a .then callback function.
+      return onFinally();
+    }, function (error) {
+      // Make the final .then callback (below) re-throw the error instead
+      // of returning it.
+      threw = true;
+      result = error;
+      return onFinally();
+    }).then(function () {
+      if (threw) throw result;
+      return result;
+    });
+  };
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 },"node_modules":{"meteor-promise":{"package.json":function(require,exports){
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// ../../.0.8.9.1k3ivtk++os+web.browser+web.cordova/npm/node_modules/meteor- //
+// node_modules/meteor/promise/node_modules/meteor-promise/package.json      //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
 exports.name = "meteor-promise";
-exports.version = "0.8.4";
+exports.version = "0.8.6";
 exports.main = "promise_server.js";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -330,9 +359,9 @@ var ZERO = valuePromise(0);
 var EMPTYSTRING = valuePromise('');
 
 function valuePromise(value) {
-  var p = new Promise(Promise._61);
-  p._81 = 1;
-  p._65 = value;
+  var p = new Promise(Promise._44);
+  p._83 = 1;
+  p._18 = value;
   return p;
 }
 Promise.resolve = function (value) {
@@ -369,11 +398,11 @@ Promise.all = function (arr) {
     function res(i, val) {
       if (val && (typeof val === 'object' || typeof val === 'function')) {
         if (val instanceof Promise && val.then === Promise.prototype.then) {
-          while (val._81 === 3) {
-            val = val._65;
+          while (val._83 === 3) {
+            val = val._18;
           }
-          if (val._81 === 1) return res(i, val._65);
-          if (val._81 === 2) reject(val._65);
+          if (val._83 === 1) return res(i, val._18);
+          if (val._83 === 2) reject(val._18);
           val.then(function (val) {
             res(i, val);
           }, reject);
@@ -428,14 +457,10 @@ Promise.prototype['catch'] = function (onRejected) {
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/promise/server.js");
+var exports = require("/node_modules/meteor/promise/server.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.promise = exports, {
+Package._define("promise", exports, {
   Promise: Promise
 });
 

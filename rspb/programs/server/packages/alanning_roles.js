@@ -797,11 +797,7 @@ function strContains (haystack, needle) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['alanning:roles'] = {}, {
+Package._define("alanning:roles", {
   Roles: Roles
 });
 

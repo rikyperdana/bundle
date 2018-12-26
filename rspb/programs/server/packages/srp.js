@@ -8,7 +8,6 @@ var Random = Package.random.Random;
 var check = Package.check.check;
 var Match = Package.check.Match;
 var SHA256 = Package.sha.SHA256;
-var _ = Package.underscore._;
 
 /* Package-scope variables */
 var BigInteger, SRP;
@@ -1395,9 +1394,9 @@ var paramsFromOptions = function (options) {
   if (!options) // fast path
     return _defaults;
 
-  var ret = _.extend({}, _defaults);
+  var ret = { ..._defaults };
 
-  _.each(['N', 'g', 'k'], function (p) {
+  ['N', 'g', 'k'].forEach(function (p) {
     if (options[p]) {
       if (typeof options[p] === "string")
         ret[p] = new BigInteger(options[p], 16);
@@ -1424,11 +1423,7 @@ var paramsFromOptions = function (options) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.srp = {}, {
+Package._define("srp", {
   SRP: SRP
 });
 

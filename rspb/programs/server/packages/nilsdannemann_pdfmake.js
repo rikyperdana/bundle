@@ -19,7 +19,6 @@ var meteorEnv = Package.meteor.meteorEnv;
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['nilsdannemann:pdfmake'] = {};
+Package._define("nilsdannemann:pdfmake");
 
 })();

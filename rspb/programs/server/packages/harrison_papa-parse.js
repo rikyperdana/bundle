@@ -881,11 +881,7 @@ function isFunction(func)
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['harrison:papa-parse'] = {}, {
+Package._define("harrison:papa-parse", {
   Papa: Papa
 });
 

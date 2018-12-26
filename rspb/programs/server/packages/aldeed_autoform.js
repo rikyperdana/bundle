@@ -29,7 +29,6 @@ SimpleSchema.extendOptions({
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['aldeed:autoform'] = {};
+Package._define("aldeed:autoform");
 
 })();

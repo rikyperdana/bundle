@@ -28,14 +28,6 @@
       "path": "packages/modules.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
-      "path": "packages/es5-shim.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/promise/node_modules",
-      "path": "packages/promise.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
       "path": "packages/ecmascript-runtime-server.js"
     },
@@ -48,52 +40,84 @@
       "path": "packages/ecmascript.js"
     },
     {
-      "path": "packages/underscore.js"
-    },
-    {
-      "path": "packages/base64.js"
-    },
-    {
-      "path": "packages/ejson.js"
-    },
-    {
-      "path": "packages/id-map.js"
-    },
-    {
-      "path": "packages/ordered-dict.js"
-    },
-    {
-      "path": "packages/tracker.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
       "path": "packages/babel-runtime.js"
     },
     {
-      "sourceMap": "packages/random.js.map",
-      "path": "packages/random.js"
+      "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "path": "packages/promise.js"
     },
     {
-      "path": "packages/mongo-id.js"
+      "path": "packages/url.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/http/node_modules",
+      "path": "packages/http.js"
+    },
+    {
+      "path": "packages/dynamic-import.js"
+    },
+    {
+      "sourceMap": "packages/base64.js.map",
+      "path": "packages/base64.js"
+    },
+    {
+      "sourceMap": "packages/ejson.js.map",
+      "path": "packages/ejson.js"
+    },
+    {
+      "sourceMap": "packages/diff-sequence.js.map",
       "path": "packages/diff-sequence.js"
     },
     {
       "path": "packages/geojson-utils.js"
     },
     {
+      "sourceMap": "packages/id-map.js.map",
+      "path": "packages/id-map.js"
+    },
+    {
+      "sourceMap": "packages/random.js.map",
+      "path": "packages/random.js"
+    },
+    {
+      "sourceMap": "packages/mongo-id.js.map",
+      "path": "packages/mongo-id.js"
+    },
+    {
+      "sourceMap": "packages/ordered-dict.js.map",
+      "path": "packages/ordered-dict.js"
+    },
+    {
+      "path": "packages/tracker.js"
+    },
+    {
       "sourceMap": "packages/minimongo.js.map",
       "path": "packages/minimongo.js"
     },
     {
+      "sourceMap": "packages/check.js.map",
       "path": "packages/check.js"
     },
     {
+      "sourceMap": "packages/retry.js.map",
       "path": "packages/retry.js"
     },
     {
+      "sourceMap": "packages/callback-hook.js.map",
+      "path": "packages/callback-hook.js"
+    },
+    {
+      "sourceMap": "packages/ddp-common.js.map",
       "path": "packages/ddp-common.js"
+    },
+    {
+      "path": "packages/reload.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/socket-stream-client/node_modules",
+      "sourceMap": "packages/socket-stream-client.js.map",
+      "path": "packages/socket-stream-client.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
@@ -101,58 +125,31 @@
       "path": "packages/ddp-client.js"
     },
     {
+      "path": "packages/underscore.js"
+    },
+    {
+      "sourceMap": "packages/rate-limit.js.map",
       "path": "packages/rate-limit.js"
     },
     {
       "path": "packages/ddp-rate-limiter.js"
     },
     {
+      "path": "packages/ecmascript-runtime-client.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
+      "sourceMap": "packages/logging.js.map",
       "path": "packages/logging.js"
     },
     {
+      "sourceMap": "packages/routepolicy.js.map",
       "path": "packages/routepolicy.js"
     },
     {
-      "path": "packages/deps.js"
-    },
-    {
-      "path": "packages/htmljs.js"
-    },
-    {
-      "path": "packages/html-tools.js"
-    },
-    {
-      "path": "packages/blaze-tools.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/spacebars-compiler/node_modules",
-      "path": "packages/spacebars-compiler.js"
-    },
-    {
-      "path": "packages/observe-sequence.js"
-    },
-    {
-      "path": "packages/jquery.js"
-    },
-    {
-      "path": "packages/reactive-var.js"
-    },
-    {
-      "path": "packages/blaze.js"
-    },
-    {
-      "path": "packages/spacebars.js"
-    },
-    {
-      "path": "packages/ui.js"
-    },
-    {
-      "path": "packages/boilerplate-generator.js",
-      "assets": {
-        "boilerplate_web.browser.html": "assets/packages/boilerplate-generator/boilerplate_web.browser.html",
-        "boilerplate_web.cordova.html": "assets/packages/boilerplate-generator/boilerplate_web.cordova.html"
-      }
+      "node_modules": "npm/node_modules/meteor/boilerplate-generator/node_modules",
+      "sourceMap": "packages/boilerplate-generator.js.map",
+      "path": "packages/boilerplate-generator.js"
     },
     {
       "sourceMap": "packages/webapp-hashing.js.map",
@@ -162,9 +159,6 @@
       "node_modules": "npm/node_modules/meteor/webapp/node_modules",
       "sourceMap": "packages/webapp.js.map",
       "path": "packages/webapp.js"
-    },
-    {
-      "path": "packages/callback-hook.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ddp-server/node_modules",
@@ -187,7 +181,10 @@
       "path": "packages/mongo.js"
     },
     {
-      "path": "packages/blaze-html-templates.js"
+      "path": "packages/static-html.js"
+    },
+    {
+      "path": "packages/reactive-var.js"
     },
     {
       "path": "packages/standard-minifier-css.js"
@@ -196,117 +193,50 @@
       "path": "packages/standard-minifier-js.js"
     },
     {
-      "sourceMap": "packages/shell-server.js.map",
-      "path": "packages/shell-server.js"
+      "node_modules": "npm/node_modules/meteor/server-render/node_modules",
+      "sourceMap": "packages/server-render.js.map",
+      "path": "packages/server-render.js"
     },
     {
-      "path": "packages/coffeescript.js"
+      "sourceMap": "packages/shim-common.js.map",
+      "path": "packages/shim-common.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
+      "path": "packages/es5-shim.js"
+    },
+    {
+      "sourceMap": "packages/shell-server.js.map",
+      "path": "packages/shell-server.js"
     },
     {
       "path": "packages/zenkogu_livescript-compiler.js"
     },
     {
-      "path": "packages/mquandalle_jade.js"
-    },
-    {
-      "path": "packages/templating-compiler.js"
-    },
-    {
-      "path": "packages/templating-runtime.js"
-    },
-    {
-      "path": "packages/templating.js"
-    },
-    {
-      "path": "packages/iron_core.js"
-    },
-    {
-      "path": "packages/iron_dynamic-template.js"
-    },
-    {
-      "path": "packages/iron_layout.js"
-    },
-    {
-      "path": "packages/iron_url.js"
-    },
-    {
-      "path": "packages/iron_middleware-stack.js"
-    },
-    {
-      "path": "packages/iron_location.js"
-    },
-    {
-      "sourceMap": "packages/reactive-dict.js.map",
-      "path": "packages/reactive-dict.js"
-    },
-    {
-      "path": "packages/iron_controller.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/iron_router/node_modules",
-      "path": "packages/iron_router.js"
-    },
-    {
-      "path": "packages/stylus.js"
-    },
-    {
-      "path": "packages/fourseven_scss.js"
-    },
-    {
-      "path": "packages/momentjs_moment.js"
-    },
-    {
-      "path": "packages/aldeed_simple-schema.js"
-    },
-    {
-      "path": "packages/aldeed_autoform.js"
-    },
-    {
-      "path": "packages/gildaspk_autoform-materialize.js"
+      "path": "packages/lenville_bulma.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/stevezhu_lodash/node_modules",
       "path": "packages/stevezhu_lodash.js"
     },
     {
-      "path": "packages/session.js"
+      "path": "packages/deps.js"
     },
     {
-      "path": "packages/nilsdannemann_pdfmake.js"
+      "node_modules": "npm/node_modules/meteor/aldeed_simple-schema/node_modules",
+      "path": "packages/aldeed_simple-schema.js"
     },
     {
-      "path": "packages/planettraining_material-design-icons-font.js"
+      "path": "packages/mongo-livedata.js"
     },
     {
-      "path": "packages/harrison_papa-parse.js"
+      "path": "packages/aldeed_collection2.js"
     },
     {
-      "path": "packages/matdutour_popup-confirm.js"
+      "path": "packages/aldeed_autoform.js"
     },
     {
-      "path": "packages/vazco_universe-autoform-select.js"
-    },
-    {
-      "path": "packages/raix_eventemitter.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/tmeasday_check-npm-versions/node_modules",
-      "sourceMap": "packages/tmeasday_check-npm-versions.js.map",
-      "path": "packages/tmeasday_check-npm-versions.js"
-    },
-    {
-      "sourceMap": "packages/aldeed_collection2-core.js.map",
-      "path": "packages/aldeed_collection2-core.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/materialize_materialize/node_modules",
-      "path": "packages/materialize_materialize.js"
-    },
-    {
-      "path": "packages/meteorstuff_materialize-modal.js"
-    },
-    {
-      "path": "packages/brucejo_body-events.js"
+      "path": "packages/momentjs_moment.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/npm-bcrypt/node_modules",
@@ -331,20 +261,22 @@
       "path": "packages/accounts-password.js"
     },
     {
+      "path": "packages/jquery.js"
+    },
+    {
+      "path": "packages/harrison_papa-parse.js"
+    },
+    {
       "path": "packages/alanning_roles.js"
+    },
+    {
+      "path": "packages/nilsdannemann_pdfmake.js"
     },
     {
       "path": "packages/numeral_numeral.js"
     },
     {
-      "path": "packages/lfergon_exportcsv.js"
-    },
-    {
       "path": "packages/livedata.js"
-    },
-    {
-      "sourceMap": "packages/dynamic-import.js.map",
-      "path": "packages/dynamic-import.js"
     },
     {
       "path": "packages/hot-code-push.js"
@@ -353,22 +285,16 @@
       "path": "packages/launch-screen.js"
     },
     {
+      "sourceMap": "packages/autoupdate.js.map",
       "path": "packages/autoupdate.js"
     },
     {
-      "path": "packages/reload.js"
-    },
-    {
       "node_modules": "npm/node_modules",
-      "path": "packages/global-imports.js"
+      "path": "app/global-imports.js"
     },
     {
       "node_modules": "npm/node_modules",
       "path": "app/app.js"
-    },
-    {
-      "sourceMap": "packages/mdg_validation-error.js.map",
-      "path": "packages/mdg_validation-error.js"
     },
     {
       "path": "packages/service-configuration.js"

@@ -24,11 +24,7 @@ _ = lodash = Npm.require('lodash');
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['stevezhu:lodash'] = {}, {
+Package._define("stevezhu:lodash", {
   lodash: lodash,
   _: _
 });

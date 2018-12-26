@@ -3253,11 +3253,7 @@ try {                                                                           
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['momentjs:moment'] = {}, {
+Package._define("momentjs:moment", {
   moment: moment
 });
 

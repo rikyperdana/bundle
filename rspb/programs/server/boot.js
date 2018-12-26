@@ -2,7 +2,6 @@ var Fiber = require("fibers");
 var fs = require("fs");
 var path = require("path");
 var Future = require("fibers/future");
-var _ = require('underscore');
 var sourcemap_support = require('source-map-support');
 
 var bootUtils = require('./boot-utils.js');
@@ -11,7 +10,7 @@ var npmRequire = require('./npm-require.js').require;
 var Profile = require('./profile.js').Profile;
 
 // This code is duplicated in tools/main.js.
-var MIN_NODE_VERSION = 'v0.10.41';
+var MIN_NODE_VERSION = 'v8.0.0';
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
@@ -42,8 +41,68 @@ if (!process.env.APP_ID) {
 // Map from load path to its source map.
 var parsedSourceMaps = {};
 
+const meteorDebugFuture =
+  process.env.METEOR_INSPECT_BRK ? new Future : null;
+
+function maybeWaitForDebuggerToAttach() {
+  if (meteorDebugFuture) {
+    const { pause } = require("./debug.js");
+    const pauseThresholdMs = 50;
+    const pollIntervalMs = 500;
+    const waitStartTimeMs = +new Date;
+    const waitLimitMinutes = 5;
+    const waitLimitMs = waitLimitMinutes * 60 * 1000;
+
+    // This setTimeout not only waits for the debugger to attach, but also
+    // keeps the process alive by preventing the event loop from running
+    // empty while the main Fiber yields.
+    setTimeout(function poll() {
+      const pauseStartTimeMs = +new Date;
+
+      if (pauseStartTimeMs - waitStartTimeMs > waitLimitMs) {
+        console.error(
+          `Debugger did not attach after ${waitLimitMinutes} minutes; continuing.`
+        );
+
+        meteorDebugFuture.return();
+
+      } else {
+        // This pause function contains a debugger keyword that will only
+        // act as a breakpoint once a debugging client has attached to the
+        // process, so we keep calling pause() until the first time it
+        // takes at least pauseThresholdMs, which indicates that a client
+        // must be attached. The only other signal of a client attaching
+        // is an unreliable "Debugger attached" message printed to stderr
+        // by native C++ code, which requires the parent process to listen
+        // for that message and then process.send a message back to this
+        // process. By comparison, this polling strategy tells us exactly
+        // what we want to know: "Is the debugger keyword enabled yet?"
+        pause();
+
+        if (new Date - pauseStartTimeMs > pauseThresholdMs) {
+          // If the pause() function call took a meaningful amount of
+          // time, we can conclude the debugger keyword must be active,
+          // which means a debugging client must be connected, which means
+          // we should stop polling and let the main Fiber continue.
+          meteorDebugFuture.return();
+
+        } else {
+          // If the pause() function call didn't take a meaningful amount
+          // of time to execute, then the debugger keyword must not have
+          // caused a pause, which means a debugging client must not be
+          // connected, which means we should keep polling.
+          setTimeout(poll, pollIntervalMs);
+        }
+      }
+    }, pollIntervalMs);
+
+    // The polling will continue while we wait here.
+    meteorDebugFuture.wait();
+  }
+}
+
 // Read all the source maps into memory once.
-_.each(serverJson.load, function (fileInfo) {
+serverJson.load.forEach(function (fileInfo) {
   if (fileInfo.sourceMap) {
     var rawSourceMap = fs.readFileSync(
       path.resolve(serverDir, fileInfo.sourceMap), 'utf8');
@@ -63,11 +122,12 @@ _.each(serverJson.load, function (fileInfo) {
   }
 });
 
-var retrieveSourceMap = function (pathForSourceMap) {
-  if (_.has(parsedSourceMaps, pathForSourceMap))
+function retrieveSourceMap(pathForSourceMap) {
+  if (hasOwn.call(parsedSourceMaps, pathForSourceMap)) {
     return { map: parsedSourceMaps[pathForSourceMap] };
+  }
   return null;
-};
+}
 
 var origWrapper = sourcemap_support.wrapCallSite;
 var wrapCallSite = function (frame) {
@@ -155,7 +215,9 @@ var specialArgPaths = {
 };
 
 var loadServerBundles = Profile("Load server bundles", function () {
-  _.each(serverJson.load, function (fileInfo) {
+  var infos = [];
+
+  serverJson.load.forEach(function (fileInfo) {
     var code = fs.readFileSync(path.resolve(serverDir, fileInfo.path));
     var nonLocalNodeModulesPaths = [];
 
@@ -168,12 +230,16 @@ var loadServerBundles = Profile("Load server bundles", function () {
     if (typeof fileInfo.node_modules === "string") {
       addNodeModulesPath(fileInfo.node_modules);
     } else if (fileInfo.node_modules) {
-      _.each(fileInfo.node_modules, function (info, path) {
+      Object.keys(fileInfo.node_modules).forEach(function (path) {
+        const info = fileInfo.node_modules[path];
         if (! info.local) {
           addNodeModulesPath(path);
         }
       });
     }
+
+    // Add dev_bundle/server-lib/node_modules.
+    addNodeModulesPath("node_modules");
 
     function statOrNull(path) {
       try {
@@ -193,47 +259,45 @@ var loadServerBundles = Profile("Load server bundles", function () {
        */
       require: Profile(function getBucketName(name) {
         return "Npm.require(" + JSON.stringify(name) + ")";
-      }, function (name) {
-        if (nonLocalNodeModulesPaths.length === 0) {
-          return require(name);
+      }, function (name, error) {
+        if (nonLocalNodeModulesPaths.length > 0) {
+          var fullPath;
+
+          // Replace all backslashes with forward slashes, just in case
+          // someone passes a Windows-y module identifier.
+          name = name.split("\\").join("/");
+
+          nonLocalNodeModulesPaths.some(function (nodeModuleBase) {
+            var packageBase = files.convertToOSPath(files.pathResolve(
+              nodeModuleBase,
+              name.split("/", 1)[0]
+            ));
+
+            if (statOrNull(packageBase)) {
+              return fullPath = files.convertToOSPath(
+                files.pathResolve(nodeModuleBase, name)
+              );
+            }
+          });
+
+          if (fullPath) {
+            return require(fullPath);
+          }
         }
 
-        var fullPath;
-
-        nonLocalNodeModulesPaths.some(function (nodeModuleBase) {
-          var packageBase = files.convertToOSPath(files.pathResolve(
-            nodeModuleBase,
-            name.split("/", 1)[0]
-          ));
-
-          if (statOrNull(packageBase)) {
-            return fullPath = files.convertToOSPath(
-              files.pathResolve(nodeModuleBase, name)
-            );
-          }
-        });
-
-        if (fullPath) {
-          return require(fullPath);
+        var resolved = require.resolve(name);
+        if (resolved === name && ! path.isAbsolute(resolved)) {
+          // If require.resolve(id) === id and id is not an absolute
+          // identifier, it must be a built-in module like fs or http.
+          return require(resolved);
         }
 
-        try {
-          return require(name);
-        } catch (e) {
-          // Try to guess the package name so we can print a nice
-          // error message
-          // fileInfo.path is a standard path, use files.pathSep
-          var filePathParts = fileInfo.path.split(files.pathSep);
-          var packageName = filePathParts[1].replace(/\.js$/, '');
-
-          // XXX better message
-          throw new Error(
-            "Can't find npm module '" + name +
-              "'. Did you forget to call 'Npm.depends' in package.js " +
-              "within the '" + packageName + "' package?");
-          }
+        throw error || new Error(
+          "Cannot find module " + JSON.stringify(name)
+        );
       })
     };
+
     var getAsset = function (assetPath, encoding, callback) {
       var fut;
       if (! callback) {
@@ -261,7 +325,7 @@ var loadServerBundles = Profile("Load server bundles", function () {
       // using this string elsewhere.
       assetPath = files.unicodeNormalizePath(assetPath);
 
-      if (!fileInfo.assets || !_.has(fileInfo.assets, assetPath)) {
+      if (! fileInfo.assets || ! hasOwn.call(fileInfo.assets, assetPath)) {
         _callback(new Error("Unknown asset: " + assetPath));
       } else {
         var filePath = path.join(serverDir, fileInfo.assets[assetPath]);
@@ -289,7 +353,7 @@ var loadServerBundles = Profile("Load server bundles", function () {
         // using this string elsewhere.
         assetPath = files.unicodeNormalizePath(assetPath);
 
-        if (!fileInfo.assets || !_.has(fileInfo.assets, assetPath)) {
+        if (! fileInfo.assets || ! hasOwn.call(fileInfo.assets, assetPath)) {
           throw new Error("Unknown asset: " + assetPath);
         }
 
@@ -325,17 +389,33 @@ var loadServerBundles = Profile("Load server bundles", function () {
 
     var scriptPath =
       parsedSourceMaps[absoluteFilePath] ? absoluteFilePath : fileInfoOSPath;
-    // The final 'true' is an undocumented argument to runIn[Foo]Context that
-    // causes it to print out a descriptive error message on parse error. It's
-    // what require() uses to generate its errors.
-    var func = require('vm').runInThisContext(wrapped, scriptPath, true);
+
+    var func = require('vm').runInThisContext(wrapped, {
+      filename: scriptPath,
+      displayErrors: true
+    });
+
     var args = [Npm, Assets];
 
     specialKeys.forEach(function (key) {
       args.push(specialArgs[key]);
     });
 
-    Profile(fileInfo.path, func).apply(global, args);
+    if (meteorDebugFuture) {
+      infos.push({
+        fn: Profile(fileInfo.path, func),
+        args
+      });
+    } else {
+      // Allows us to use code-coverage if the debugger is not enabled
+      Profile(fileInfo.path, func).apply(global, args);
+    }
+  });
+
+  maybeWaitForDebuggerToAttach();
+
+  infos.forEach(info => {
+    info.fn.apply(global, info.args);
   });
 });
 
@@ -359,11 +439,15 @@ var runMain = Profile("Run main()", function () {
     mains.push(main);
     globalMain = main;
   }
-  typeof Package !== 'undefined' && _.each(Package, function (p, n) {
-    if ('main' in p && p.main !== globalMain) {
-      mains.push(p.main);
-    }
-  });
+  if (typeof Package !== "undefined") {
+    Object.keys(Package).forEach(function (name) {
+      const { main } = Package[name];
+      if (typeof main === "function" &&
+          main !== globalMain) {
+        mains.push(main);
+      }
+    });
+  }
   if (! mains.length) {
     process.stderr.write("Program has no main() function.\n");
     process.exit(1);
