@@ -276,6 +276,9 @@
       "path": "packages/numeral_numeral.js"
     },
     {
+      "path": "packages/lfergon_exportcsv.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {

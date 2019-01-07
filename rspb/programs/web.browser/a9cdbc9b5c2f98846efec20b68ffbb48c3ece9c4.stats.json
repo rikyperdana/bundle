@@ -3,8 +3,8 @@
     "name": "standard-minifier-js",
     "version": "2.3.3"
   },
-  "totalMinifiedBytes": 1945965,
-  "totalMinifiedGzipBytes": 672168,
+  "totalMinifiedBytes": 1953578,
+  "totalMinifiedGzipBytes": 674689,
   "minifiedBytesByPackage": {
     "packages/meteor.js": 8958,
     "packages/meteor-base.js": 31,
@@ -13,14 +13,14 @@
     "packages/ecmascript.js": 30,
     "packages/modules-runtime.js": 4023,
     "packages/modules.js": [
-      135922,
+      135945,
       {
         "node_modules": {
           "meteor": {
             "modules": {
               "client.js": 124,
               "css.js": 261,
-              "install-packages.js": 2348,
+              "install-packages.js": 2371,
               "process.js": 347,
               "reify.js": 149,
               "stubs.js": 97,
@@ -899,6 +899,7 @@
     "packages/alanning_roles.js": 6345,
     "packages/nilsdannemann_pdfmake.js": 985216,
     "packages/numeral_numeral.js": 7065,
+    "packages/lfergon_exportcsv.js": 3142,
     "packages/hot-code-push.js": 33,
     "packages/launch-screen.js": 787,
     "packages/autoupdate.js": [
@@ -913,21 +914,21 @@
         }
       }
     ],
-    "app/global-imports.js": 1128,
+    "app/global-imports.js": 1220,
     "app/app.js": [
-      62683,
+      67037,
       {
         "folder": {
-          "funcs.ls.js": 9693,
+          "funcs.ls.js": 9758,
           "modules.ls.js": 567,
-          "parent.ls.js": 2680,
+          "parent.ls.js": 3131,
           "pdf.ls.js": 5382,
           "rights.ls.js": 572,
-          "selects.ls.js": 3256
+          "selects.ls.js": 3280
         },
-        "both.ls.js": 9676,
-        "client.ls.js": 26905,
-        "server.ls.js": 3467
+        "both.ls.js": 9792,
+        "client.ls.js": 28698,
+        "server.ls.js": 5372
       }
     ],
     "packages/service-configuration.js": 711

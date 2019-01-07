@@ -133,6 +133,7 @@ install("harrison:papa-parse");
 install("alanning:roles");
 install("nilsdannemann:pdfmake");
 install("numeral:numeral");
+install("lfergon:exportcsv");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");
