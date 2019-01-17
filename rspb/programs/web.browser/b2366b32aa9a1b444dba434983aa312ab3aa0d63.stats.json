@@ -3,8 +3,8 @@
     "name": "standard-minifier-js",
     "version": "2.3.3"
   },
-  "totalMinifiedBytes": 1953578,
-  "totalMinifiedGzipBytes": 674689,
+  "totalMinifiedBytes": 1954536,
+  "totalMinifiedGzipBytes": 675068,
   "minifiedBytesByPackage": {
     "packages/meteor.js": 8958,
     "packages/meteor-base.js": 31,
@@ -916,19 +916,19 @@
     ],
     "app/global-imports.js": 1220,
     "app/app.js": [
-      67037,
+      67995,
       {
         "folder": {
           "funcs.ls.js": 9758,
           "modules.ls.js": 567,
-          "parent.ls.js": 3131,
-          "pdf.ls.js": 5382,
+          "parent.ls.js": 3282,
+          "pdf.ls.js": 5794,
           "rights.ls.js": 572,
           "selects.ls.js": 3280
         },
         "both.ls.js": 9792,
-        "client.ls.js": 28698,
-        "server.ls.js": 5372
+        "client.ls.js": 28873,
+        "server.ls.js": 5592
       }
     ],
     "packages/service-configuration.js": 711
