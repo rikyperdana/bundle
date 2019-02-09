@@ -134,6 +134,7 @@ install("alanning:roles");
 install("nilsdannemann:pdfmake");
 install("numeral:numeral");
 install("lfergon:exportcsv");
+install("sakulstra:aggregate");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");

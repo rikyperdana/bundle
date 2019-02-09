@@ -279,6 +279,9 @@
       "path": "packages/lfergon_exportcsv.js"
     },
     {
+      "path": "packages/sakulstra_aggregate.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {
