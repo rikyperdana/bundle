@@ -54,25 +54,6 @@ this.reverse = function(it){
 };
 if (Meteor.isClient) {
   this.m = require('mithril');
-  this.abnormalize = function(obj){
-    var recurse;
-    recurse = function(name, value){
-      var ref$;
-      if (value != null && value.getMonth) {
-        return ref$ = {}, ref$[name + ""] = value, ref$;
-      } else if (_.isObject(value)) {
-        return _.assign.apply(_, [{}].concat(slice$.call(_.map(value, function(val, key){
-          return recurse(name + "." + key, val);
-        }))));
-      } else {
-        return ref$ = {}, ref$[name + ""] = value, ref$;
-      }
-    };
-    return _.assign.apply(_, [{}].concat(slice$.call(_.map(recurse('obj', obj), function(val, key){
-      var ref$;
-      return ref$ = {}, ref$[key.substring(4) + ""] = val, ref$;
-    }))));
-  };
   this.normalize = function(obj){
     var recurse, key, val;
     recurse = function(value, name){
@@ -92,7 +73,7 @@ if (Meteor.isClient) {
           return res;
         }
       } else {
-        if (+name) {
+        if (+name + 1) {
           return value;
         } else {
           return ref$ = {}, ref$[name + ""] = value, ref$;
@@ -109,7 +90,7 @@ if (Meteor.isClient) {
     return obj;
   };
   this.autoForm = function(opts){
-    var state, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, optionList, ref$, key$, stateTempGet, abnDoc, normed, attr, columnize, inputTypes;
+    var state, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, optionList, ref$, key$, stateTempGet, clonedDoc, usedDoc, normed, attr, columnize, inputTypes;
     state = afState;
     scope = (that = opts.scope) ? new SimpleSchema(function(){
       var reducer;
@@ -130,21 +111,16 @@ if (Meteor.isClient) {
     omitFields = opts.omitFields ? _.pull.apply(_, [_.values(usedSchema._firstLevelSchemaKeys)].concat(slice$.call(opts.omitFields))) : void 8;
     usedFields = ors(arr = [omitFields, opts.fields, usedSchema._firstLevelSchemaKeys]);
     optionList = function(name){
-      var arr, ref$, ref1$;
+      var arr, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$;
       return ors(arr = [
         (ref$ = theSchema(name)) != null ? (ref1$ = ref$.allowedValues) != null ? ref1$.map(function(i){
           return {
             value: i,
             label: _.startCase(i)
           };
-        }) : void 8 : void 8, function(){
-          var ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
-          if (_.isFunction((ref$ = theSchema(name)) != null ? (ref1$ = ref$.autoform) != null ? ref1$.options : void 8 : void 8)) {
-            return (ref2$ = theSchema(name)) != null ? (ref3$ = ref2$.autoform) != null ? ref3$.options() : void 8 : void 8;
-          } else {
-            return (ref4$ = theSchema(name)) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options : void 8 : void 8;
-          }
-        }(), ['true', 'false'].map(function(i){
+        }) : void 8 : void 8, _.isFunction((ref2$ = theSchema(name)) != null ? (ref3$ = ref2$.autoform) != null ? ref3$.options : void 8 : void 8)
+          ? (ref4$ = theSchema(name)) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options() : void 8 : void 8
+          : (ref6$ = theSchema(name)) != null ? (ref7$ = ref6$.autoform) != null ? ref7$.options : void 8 : void 8, ['true', 'false'].map(function(i){
           return {
             value: JSON.parse(i),
             label: _.startCase(i)
@@ -165,9 +141,10 @@ if (Meteor.isClient) {
         });
       }
     };
-    if (that = opts.doc) {
-      abnDoc = abnormalize(that);
+    if (that = opts.scope) {
+      clonedDoc = _.assign({}, opts.doc, (ref$ = {}, ref$[that + ""] = [], ref$));
     }
+    usedDoc = clonedDoc || opts.doc;
     normed = function(it){
       return it.replace(/\d/g, '$');
     };
@@ -225,10 +202,17 @@ if (Meteor.isClient) {
           obj = normalize(_.merge.apply(_, temp.concat(formValues)));
           context = usedSchema.newContext();
           context.validate(_.merge({}, obj, opts.doc || {}));
-          state.errors[opts.id] = _.assign.apply(_, [{}].concat(slice$.call(context._invalidKeys.map(function(it){
-            var ref$;
-            return ref$ = {}, ref$[it.name + ""] = it.type, ref$;
-          }))));
+          state.errors[opts.id] = _.assign.apply(_, [{}].concat(slice$.call(function(){
+            var a;
+            a = context._invalidKeys.filter(function(i){
+              var arr, ref$;
+              return ands(arr = [i.type !== 'keyNotInSchema', !((ref$ = theSchema(normed(i.name))) != null && ref$.autoValue)]);
+            });
+            return a.map(function(it){
+              var ref$;
+              return ref$ = {}, ref$[it.name + ""] = it.type, ref$;
+            });
+          }())));
           after = function(err, res){
             var ref$;
             if (res) {
@@ -242,7 +226,7 @@ if (Meteor.isClient) {
               },
               update: function(){
                 return opts.collection.update({
-                  _id: abnDoc._id
+                  _id: usedDoc._id
                 }, {
                   $set: doc || obj
                 }, after);
@@ -253,7 +237,7 @@ if (Meteor.isClient) {
               'update-pushArray': function(){
                 var ref$;
                 return opts.collection.update({
-                  _id: abnDoc._id
+                  _id: usedDoc._id
                 }, {
                   $push: (ref$ = {}, ref$[opts.scope + ""] = {
                     $each: _.values(obj[opts.scope])
@@ -267,12 +251,14 @@ if (Meteor.isClient) {
               }
             };
           };
-          if (that = (ref$ = opts.hooks) != null ? ref$.before : void 8) {
-            return that(obj, function(moded){
-              return formTypes(moded)[opts.type]();
-            });
-          } else {
-            return formTypes()[opts.type]();
+          if (_.values(state.errors[opts.id]).length === 0) {
+            if (that = (ref$ = opts.hooks) != null ? ref$.before : void 8) {
+              return that(obj, function(moded){
+                return formTypes(moded)[opts.type]();
+              });
+            } else {
+              return formTypes()[opts.type]();
+            }
           }
         }
       },
@@ -282,7 +268,7 @@ if (Meteor.isClient) {
           type: 'radio',
           name: name,
           id: name + "" + value,
-          checked: value === (((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || (abnDoc != null ? abnDoc[name] : void 8)),
+          checked: value === (((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || (usedDoc != null ? usedDoc[name] : void 8)),
           onchange: function(){
             return state.temp[opts.id].push({
               name: name,
@@ -295,7 +281,7 @@ if (Meteor.isClient) {
         var ref$;
         return {
           name: name,
-          value: ((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || (abnDoc != null ? abnDoc[name] : void 8),
+          value: ((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || (usedDoc != null ? usedDoc[name] : void 8),
           onchange: function(arg$){
             var target;
             target = arg$.target;
@@ -334,7 +320,7 @@ if (Meteor.isClient) {
             ? in$(value.toString(), _.map(that.value, function(it){
               return it.toString();
             }))
-            : abnDoc != null && abnDoc[name + ".0"] ? in$(value.toString(), _.compact(_.map(abnDoc, function(val, key){
+            : usedDoc != null && usedDoc[name + ".0"] ? in$(value.toString(), _.compact(_.map(usedDoc, function(val, key){
               if (_.includes(key, name)) {
                 return val.toString();
               }
@@ -413,8 +399,9 @@ if (Meteor.isClient) {
       return structure(recDom(chunk(it)));
     };
     inputTypes = function(name, schema){
-      var label, ref$, error;
-      label = ((ref$ = theSchema(name)) != null ? ref$.label : void 8) || _.startCase(_.last(_.split(name, '.')));
+      var title, arr, ref$, label, error;
+      title = ors(arr = [(ref$ = theSchema(normed(name))) != null ? ref$.label : void 8, _.startCase(_.last(_.split(normed(name), '.')))]);
+      label = m('label.label', m('span', title), !theSchema(normed(name)).optional ? m('span.has-text-danger', '*') : void 8);
       error = _.startCase(_.find(state.errors[opts.id], function(val, key){
         return key === name;
       }));
@@ -433,32 +420,31 @@ if (Meteor.isClient) {
           });
         },
         textarea: function(){
-          return m('div', m('textarea.textarea', {
+          return m('div', label, m('textarea.textarea', {
             name: name,
             id: name,
             'class': error ? 'is-danger' : void 8,
-            placeholder: label,
-            value: state.form[opts.id][name] || (abnDoc != null ? abnDoc[name] : void 8)
+            value: state.form[opts.id][name] || (usedDoc != null ? usedDoc[name] : void 8)
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         range: function(){
           var ref$;
-          return m('div', m('label.label', label), m('input', {
+          return m('div', label, m('input', {
             type: 'range',
             id: name,
             name: name,
             'class': error ? 'is-danger' : void 8,
-            value: state.form[opts.id][name] || (abnDoc != null ? (ref$ = abnDoc[name]) != null ? ref$.toString() : void 8 : void 8)
+            value: state.form[opts.id][name] || (usedDoc != null ? (ref$ = usedDoc[name]) != null ? ref$.toString() : void 8 : void 8)
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         checkbox: function(){
-          return m('div', m('label.label', label), optionList(name).map(function(j){
+          return m('div', label, optionList(name).map(function(j){
             return m('label.checkbox', m('input', attr.checkbox(name, j.value)), m('span', _.startCase(j.label)));
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         select: function(){
           var arr, ref$;
-          return m('div', m('label.label', label), m('.select', m('select', attr.select(name), m('option', {
+          return m('div', label, m('.select', m('select', attr.select(name), m('option', {
             value: ''
           }, ors(arr = [(ref$ = theSchema(normed(name)).autoform) != null ? ref$.firstLabel : void 8, 'Select One'])), optionList(normed(name)).map(function(j){
             return m('option', {
@@ -467,9 +453,9 @@ if (Meteor.isClient) {
           }))), error ? m('p.help.is-danger', error) : void 8);
         },
         radio: function(){
-          return m('.control', m('label.label', label), optionList(name).map(function(j){
+          return m('.control', label, optionList(normed(name)).map(function(j){
             return m('label.radio', m('input', attr.radio(name, j.value)), m('span', _.startCase(j.label)));
-          }));
+          }), error ? m('p.help.is-danger', error) : void 8);
         },
         other: function(){
           var defaultInputTypes, defaultType, maped, ref$, ref1$, that, ref2$, ref3$, sorted, filtered, found, docLen, this$ = this;
@@ -494,15 +480,15 @@ if (Meteor.isClient) {
           } else if (((ref1$ = defaultType()) != null ? ref1$[0] : void 8) === 'radio') {
             return inputTypes(name, defaultType()[0]).radio();
           } else if (that = (ref2$ = defaultType()) != null ? ref2$[0] : void 8) {
-            return m('.field', m('label.label', m('span', label), !schema.optional ? m('span.has-text-danger', '*') : void 8), m('.control', m('input.input', {
+            return m('.field', label, m('.control', m('input.input', {
               'class': error ? 'is-danger' : void 8,
               type: ((ref3$ = schema.autoform) != null ? ref3$.type : void 8) || that,
               name: name,
               id: name,
               value: function(){
                 var date, ref$;
-                date = (abnDoc != null ? abnDoc[name] : void 8) && that === 'date' && moment(abnDoc[name]).format('YYYY-MM-DD');
-                return ((ref$ = state.form[opts.id]) != null ? ref$[name] : void 8) || date || (abnDoc != null ? abnDoc[name] : void 8);
+                date = (usedDoc != null ? usedDoc[name] : void 8) && that === 'date' && moment(usedDoc[name]).format('YYYY-MM-DD');
+                return ((ref$ = state.form[opts.id]) != null ? ref$[name] : void 8) || date || (usedDoc != null ? usedDoc[name] : void 8);
               }()
             })), error ? m('p.help.is-danger', error) : void 8);
           } else if (schema.type === Object) {
@@ -536,7 +522,7 @@ if (Meteor.isClient) {
               ? 1
               : function(it){
                 return it.length - 1;
-              }(_.filter(abnDoc, function(val, key){
+              }(_.filter(usedDoc, function(val, key){
                 return _.includes(key, name + ".");
               }));
             return m('.box', opts.scope !== name ? m('div', m('h5.subtitle', label), m('a.button.is-success', attr.arrLen(name, 'inc'), '+ Add'), m('a.button.is-warning', attr.arrLen(name, 'dec'), '- Rem')) : void 8, (function(){
@@ -1201,7 +1187,8 @@ this.selects = {
   bak: ['normal', 'retensia', 'inkontinesia', 'poliuria', 'disuria', 'lainnya'],
   bicara: ['normal', 'gangguan_bicara', 'lainnya'],
   hambatan: ['tidak_ada', 'pendengaran', 'cemas', 'motivasi_memburuk', 'bahasa', 'lainnya'],
-  potensial: ['proses_penyakit', 'pengobatan', 'nutrisi', 'tindakan', 'lainnya']
+  potensial: ['proses_penyakit', 'pengobatan', 'nutrisi', 'tindakan', 'lainnya'],
+  returnable: ['bisa', 'tidak']
 };
 _.map(selects, function(i, j){
   return selects[j] = _.map(selects[j], function(m, n){
@@ -1271,7 +1258,7 @@ selects.bhp = function(){
 selects.dokter = function(){
   var selPoli, a;
   if (Meteor.isClient) {
-    selPoli = 1 + afState.form.formJalan['rawat.1.klinik'];
+    selPoli = afState.form.formJalan['rawat.1.klinik'] - 1;
     a = Meteor.users.find().fetch().filter(function(i){
       var arr, ref$, this$ = this;
       return ands(arr = [
@@ -1290,6 +1277,54 @@ selects.dokter = function(){
     });
   }
 };
+selects.provinsi = function(){
+  if (Meteor.isClient) {
+    return coll.daerah.find().fetch().filter(function(it){
+      return it.provinsi && !it.kabupaten;
+    }).map(function(it){
+      return {
+        value: it.provinsi,
+        label: _.startCase(it.daerah)
+      };
+    });
+  }
+};
+selects.kabupaten = function(){
+  if (Meteor.isClient) {
+    return coll.daerah.find().fetch().filter(function(it){
+      return it.kabupaten && it.provinsi;
+    }).map(function(it){
+      return {
+        value: it.kabupaten,
+        label: _.startCase(it.daerah)
+      };
+    });
+  }
+};
+selects.kecamatan = function(){
+  if (Meteor.isClient) {
+    return coll.daerah.find().fetch().filter(function(it){
+      return it.kecamatan && it.kabupaten;
+    }).map(function(it){
+      return {
+        value: it.kecamatan,
+        label: _.startCase(it.daerah)
+      };
+    });
+  }
+};
+selects.kelurahan = function(){
+  if (Meteor.isClient) {
+    return coll.daerah.find().fetch().filter(function(it){
+      return it.kelurahan && it.kecamatan;
+    }).map(function(it){
+      return {
+        value: it.kelurahan,
+        label: _.startCase(it.daerah)
+      };
+    });
+  }
+};
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"both.ls.js":function(){
@@ -1301,7 +1336,7 @@ selects.dokter = function(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 // Generated by LiveScript 1.5.0
-['pasien', 'gudang', 'tarif', 'rekap', 'amprah'].map(function(i){
+['pasien', 'gudang', 'tarif', 'rekap', 'amprah', 'daerah'].map(function(i){
   coll[i] = new Meteor.Collection(i);
   coll[i].allow(_.merge.apply(_, ['insert', 'update', 'remove'].map(function(it){
     var ref$;
@@ -1352,6 +1387,7 @@ if (Meteor.isClient) {
     },
     'regis.kelamin': {
       type: Number,
+      optional: true,
       autoform: {
         options: selects.kelamin
       }
@@ -1398,18 +1434,34 @@ if (Meteor.isClient) {
       type: String,
       optional: true
     },
-    'regis.kabupaten': {
-      type: String,
+    'regis.provinsi': {
+      type: Number,
       optional: true,
-      label: 'Kabupaten/Kota'
+      autoform: {
+        options: selects.provinsi
+      }
+    },
+    'regis.kabupaten': {
+      type: Number,
+      optional: true,
+      label: 'Kabupaten/Kota',
+      autoform: {
+        options: selects.kabupaten
+      }
     },
     'regis.kecamatan': {
-      type: String,
-      optional: true
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.kecamatan
+      }
     },
     'regis.kelurahan': {
-      type: String,
-      optional: true
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.kelurahan
+      }
     },
     'regis.kontak': {
       type: String,
@@ -1537,16 +1589,10 @@ if (Meteor.isClient) {
     },
     'aturan.kali': {
       type: Number,
-      label: 'kali sehari'
+      label: 'Kali sehari'
     },
     'aturan.dosis': {
       type: String
-    },
-    'aturan.bentuk': {
-      type: Number,
-      autoform: {
-        type: 'hidden'
-      }
     },
     jumlah: {
       type: Number
@@ -1620,6 +1666,7 @@ if (Meteor.isClient) {
     },
     'rawat.$.dokter': {
       type: String,
+      optional: true,
       autoform: {
         options: selects.dokter
       }
@@ -1680,8 +1727,8 @@ if (Meteor.isClient) {
       }
     },
     'rawat.$.fisik': {
-      type: [new SimpleSchema(schema.fisik)],
-      optional: true
+      optional: true,
+      type: new SimpleSchema(schema.fisik)
     },
     'rawat.$.cara_masuk': {
       type: Number,
@@ -1863,14 +1910,12 @@ if (Meteor.isClient) {
   schema.rawatDoctor = {
     'rawat.$.anamesa_dokter': {
       type: String,
-      optional: true,
       autoform: {
         type: 'textarea'
       }
     },
     'rawat.$.diagnosa': {
-      type: [String],
-      optional: true
+      type: [String]
     },
     'rawat.$.planning': {
       type: String,
@@ -2055,8 +2100,7 @@ if (Meteor.isClient) {
     },
     'batch.$.beli': {
       type: Number,
-      decimal: true,
-      optional: true
+      decimal: true
     },
     'batch.$.jual': {
       type: Number,
@@ -2068,11 +2112,15 @@ if (Meteor.isClient) {
       optional: true
     },
     'batch.$.returnable': {
-      type: Boolean,
-      optional: true
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.returnable
+      }
     },
     'batch.$.anggaran': {
       type: Number,
+      optional: true,
       autoform: {
         options: selects.anggaran
       }
@@ -2451,8 +2499,22 @@ if (Meteor.isClient) {
     pasien: function(){
       return {
         view: function(){
-          var ref$, that, ref1$, arr, this$ = this;
-          return m('.content', userGroup('regis') && userRole('admin') ? elem.report({
+          var arr, ref$, that, ref1$, this$ = this;
+          return m('.content', {
+            oncreate: Meteor.subscribe('coll', 'daerah', {
+              $and: arr = [
+                {
+                  provinsi: {
+                    $exists: true
+                  }
+                }, {
+                  kabupaten: {
+                    $exists: false
+                  }
+                }
+              ]
+            })
+          }, userGroup('regis') && userRole('admin') ? elem.report({
             title: 'Laporan Kunjungan Poliklinik',
             action: function(arg$){
               var start, end, type;
@@ -2478,10 +2540,53 @@ if (Meteor.isClient) {
             buttonContent: 'Simpan',
             columns: 3,
             onchange: function(doc){
-              var that;
-              if (that = doc.value) {
-                return Meteor.call('onePasien', that, function(err, res){
-                  return res && alert("No. MR " + that + " sudah terpakai");
+              var arr;
+              if (doc.name === 'no_mr') {
+                return Meteor.call('onePasien', doc.value, function(err, res){
+                  if (res) {
+                    afState.errors.formRegis = {
+                      no_mr: 'Terpakai'
+                    };
+                  } else {
+                    delete afState.errors.formRegis.no_mr;
+                  }
+                  return m.redraw();
+                });
+              } else if (doc.name === 'regis.provinsi') {
+                return Meteor.subscribe('coll', 'daerah', {
+                  $and: arr = [
+                    {
+                      provinsi: +doc.value
+                    }, {
+                      kabupaten: {
+                        $exists: true
+                      }
+                    }
+                  ]
+                });
+              } else if (doc.name === 'regis.kabupaten') {
+                return Meteor.subscribe('coll', 'daerah', {
+                  $and: arr = [
+                    {
+                      kabupaten: +doc.value
+                    }, {
+                      kecamatan: {
+                        $exists: true
+                      }
+                    }
+                  ]
+                });
+              } else if (doc.name === 'regis.kecamatan') {
+                return Meteor.subscribe('coll', 'daerah', {
+                  $and: arr = [
+                    {
+                      kecamatan: +doc.value
+                    }, {
+                      kelurahan: {
+                        $exists: true
+                      }
+                    }
+                  ]
                 });
               }
             },
@@ -2490,7 +2595,30 @@ if (Meteor.isClient) {
                 var ref$;
                 return cb(_.merge(doc, {
                   regis: {
-                    petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
+                    petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$),
+                    provinsi: function(it){
+                      return it != null ? it.daerah : void 8;
+                    }(coll.daerah.findOne({
+                      provinsi: doc.provinsi
+                    })),
+                    kabupaten: function(it){
+                      return it != null ? it.daerah : void 8;
+                    }(coll.daerah.findOne({
+                      provinsi: doc.provinsi,
+                      kabupaten: doc.kabupaten
+                    })),
+                    kecamatan: function(it){
+                      return it != null ? it.daerah : void 8;
+                    }(coll.daerah.findOne({
+                      kabupaten: doc.kabupaten,
+                      kecamatan: doc.kecamatan
+                    })),
+                    kelurahan: function(it){
+                      return it != null ? it.daerah : void 8;
+                    }(coll.daerah.findOne({
+                      kecamatan: doc.kecamatan,
+                      kelurahan: doc.kelurahan
+                    }))
                   }
                 }));
               },
@@ -2816,8 +2944,8 @@ if (Meteor.isClient) {
                 })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
                   return m('th', _.startCase(i));
                 }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(that != null ? (ref1$ = that.rawat) != null ? ref1$.reverse() : void 8 : void 8)) != null ? ref$.map(function(i){
-                  var that;
-                  return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase(Meteor.users.find(that).username) : void 8].concat(
+                  var that, ref$;
+                  return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
                     slice$.call(['billRegis', 'status_bayar'].map(function(it){
                       if (i[it]) {
                         return 'Sudah';
@@ -2840,7 +2968,9 @@ if (Meteor.isClient) {
                       }, m('span', 'Hapus')) : void 8
                     ]
                   ).map(function(j){
-                    return m('td', j);
+                    if (j) {
+                      return m('td', j);
+                    }
                   }));
                 }) : void 8)), state.modal ? elem.modal({
                   title: 'Rincian rawat',
@@ -2848,7 +2978,11 @@ if (Meteor.isClient) {
                     return it.regis.nama_lengkap;
                   }(coll.pasien.findOne(m.route.param('idpasien')))), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
                     return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
-                  })), (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
+                  })), (that = state.modal.fisik) ? m('div', m('br'), m('table', m('tr', m('th', 'Fisik'))), m('table.table', m('thead', m('tr', _.map(that, function(v, k){
+                    return m('th', _.startCase(k));
+                  }))), m('tbody', m('tr', _.map(that, function(v, k){
+                    return m('td', v);
+                  }))))) : void 8, (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
                     var arr;
                     return m('tr', tds(arr = [_.startCase(look2('tarif', i.nama).nama), rupiah(i.harga)]));
                   }) : void 8, m('tr', m('th', 'Total'), m('td', rupiah(_.sum(that.map(function(it){
@@ -2877,7 +3011,7 @@ if (Meteor.isClient) {
     bayar: function(){
       return {
         view: function(){
-          var that, tindakans, ref$, uraian, ref1$, ref2$, params;
+          var that, tindakans, ref$, uraian, arr, ref1$, ref2$, params;
           return m('.content', m('table.table', {
             oncreate: function(){
               Meteor.subscribe('coll', 'tarif');
@@ -2928,7 +3062,7 @@ if (Meteor.isClient) {
           }))), (that = state.modal) ? (tindakans = (ref$ = state.modal.tindakan) != null ? ref$.map(function(it){
             var arr;
             return arr = [_.startCase(look2('tarif', it.nama).nama), it.harga];
-          }) : void 8, uraian = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
+          }) : void 8, uraian = [ands(arr = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
             return state.modal[it];
           }), elem.modal({
             title: 'Sudah bayar?',
@@ -3093,7 +3227,7 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var ref$, that, ref1$, ref2$;
-          return m('.content', userGroup('farmasi') ? elem.report({
+          return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
             title: 'Laporan Stok Barang',
             action: function(arg$){
               var start, end, type;
@@ -3402,8 +3536,17 @@ if (Meteor.isClient) {
                       Meteor.call('import', 'tarif', sel, opt);
                     }
                     if (data.password) {
-                      return ['newUser', 'importRoles'].map(function(i){
+                      ['newUser', 'importRoles'].map(function(i){
                         return Meteor.call(i, data);
+                      });
+                    }
+                    if (data.daerah) {
+                      return coll.daerah.insert({
+                        daerah: _.lowerCase(data.daerah),
+                        provinsi: (that = data.provinsi) ? +that : void 8,
+                        kabupaten: (that = data.kabupaten) ? +that : void 8,
+                        kecamatan: (that = data.kecamatan) ? +that : void 8,
+                        kelurahan: (that = data.kelurahan) ? +that : void 8
                       });
                     }
                   }
