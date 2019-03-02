@@ -202,8 +202,8 @@ if (Meteor.isClient) {
           });
           obj = normalize(_.merge.apply(_, temp.concat(formValues)));
           context = usedSchema.newContext();
-          context.validate(_.merge({}, obj, opts.doc || {}));
-          state.errors[opts.id] = _.assign.apply(_, [{}].concat(slice$.call(function(){
+          context.validate(_.merge({}, obj, !opts.scope ? opts.doc || {} : void 8));
+          state.errors[opts.id] = _.merge.apply(_, [{}].concat(slice$.call(function(){
             var a;
             a = context._invalidKeys.filter(function(i){
               var arr, ref$;
@@ -3154,8 +3154,8 @@ if (Meteor.isClient) {
             return i.rawat.map(function(j){
               var okay, arr;
               okay = function(){
-                if (j.cara_bayar === 1 && j.status_bayar) {
-                  return !j.givenDrug;
+                if (j.cara_bayar === 1) {
+                  return j.status_bayar && !j.givenDrug;
                 } else {
                   return !j.givenDrug;
                 }
