@@ -282,6 +282,13 @@
       "path": "packages/sakulstra_aggregate.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/izzilab_shelljs/node_modules",
+      "path": "packages/izzilab_shelljs.js"
+    },
+    {
+      "path": "packages/mrt_cron.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {

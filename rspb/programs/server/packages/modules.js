@@ -135,6 +135,8 @@ install("nilsdannemann:pdfmake");
 install("numeral:numeral");
 install("lfergon:exportcsv");
 install("sakulstra:aggregate");
+install("izzilab:shelljs");
+install("mrt:cron");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");
