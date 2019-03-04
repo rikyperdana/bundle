@@ -113,14 +113,14 @@ if (Meteor.isClient) {
     optionList = function(name){
       var arr, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$;
       return ors(arr = [
-        (ref$ = theSchema(name)) != null ? (ref1$ = ref$.allowedValues) != null ? ref1$.map(function(i){
+        (ref$ = theSchema(normed(name))) != null ? (ref1$ = ref$.allowedValues) != null ? ref1$.map(function(i){
           return {
             value: i,
             label: _.startCase(i)
           };
-        }) : void 8 : void 8, _.isFunction((ref2$ = theSchema(name)) != null ? (ref3$ = ref2$.autoform) != null ? ref3$.options : void 8 : void 8)
-          ? (ref4$ = theSchema(name)) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options() : void 8 : void 8
-          : (ref6$ = theSchema(name)) != null ? (ref7$ = ref6$.autoform) != null ? ref7$.options : void 8 : void 8, ['true', 'false'].map(function(i){
+        }) : void 8 : void 8, _.isFunction((ref2$ = theSchema(normed(name))) != null ? (ref3$ = ref2$.autoform) != null ? ref3$.options : void 8 : void 8)
+          ? (ref4$ = theSchema(normed(name))) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options(name) : void 8 : void 8
+          : (ref6$ = theSchema(normed(name))) != null ? (ref7$ = ref6$.autoform) != null ? ref7$.options : void 8 : void 8, ['true', 'false'].map(function(i){
           return {
             value: JSON.parse(i),
             label: _.startCase(i)
@@ -447,7 +447,7 @@ if (Meteor.isClient) {
           var arr, ref$;
           return m('div', label, m('.select', m('select', attr.select(name), m('option', {
             value: ''
-          }, ors(arr = [(ref$ = theSchema(normed(name)).autoform) != null ? ref$.firstLabel : void 8, 'Select One'])), optionList(normed(name)).map(function(j){
+          }, ors(arr = [(ref$ = theSchema(normed(name)).autoform) != null ? ref$.firstLabel : void 8, 'Select One'])), optionList(name).map(function(j){
             return m('option', {
               value: j.value
             }, j.label);
@@ -1210,6 +1210,59 @@ selects.tindakan = function(){
     }) : void 8;
   }
 };
+selects.grupTindakan = function(){
+  var a, ref$;
+  if (Meteor.isClient) {
+    a = (ref$ = coll.tarif) != null ? ref$.find().fetch().filter(function(it){
+      var arr, this$ = this;
+      return ands(arr = [
+        it.first === 'jalan', it.second === _.snakeCase(function(it){
+          return it.label;
+        }(selects.klinik.find(function(it){
+          var this$ = this;
+          return it.value === function(it){
+            return it.klinik;
+          }(coll.pasien.findOne().rawat.find(function(it){
+            return it.idrawat === state.docRawat;
+          }));
+        })))
+      ]);
+    }) : void 8;
+    return _.uniqBy(a, 'third').map(function(it){
+      return {
+        value: it.third,
+        label: _.startCase(it.third)
+      };
+    });
+  }
+};
+selects.namaTindakan = function(name){
+  var current, a, ref$;
+  if (Meteor.isClient) {
+    current = _.initial(name.split('.')).join('.') + ".grup";
+    a = (ref$ = coll.tarif) != null ? ref$.find().fetch().filter(function(it){
+      var arr, this$ = this;
+      return ands(arr = [
+        it.first === 'jalan', it.second === _.snakeCase(function(it){
+          return it.label;
+        }(selects.klinik.find(function(it){
+          var this$ = this;
+          return it.value === function(it){
+            return it.klinik;
+          }(coll.pasien.findOne().rawat.find(function(it){
+            return it.idrawat === state.docRawat;
+          }));
+        }))), it.third === afState.form.formNurse[current]
+      ]);
+    }) : void 8;
+    return a.map(function(it){
+      return {
+        value: it._id,
+        label: _.startCase(it.nama)
+      };
+    });
+  }
+};
 selects.gudang = function(){
   if (Meteor.isClient) {
     return coll.gudang.find().fetch().map(function(i){
@@ -1263,7 +1316,7 @@ selects.dokter = function(){
     a = Meteor.users.find().fetch().filter(function(i){
       var arr, ref$, this$ = this;
       return ands(arr = [
-        (ref$ = _.split(i.username, '.')[0]) === 'dr' || ref$ === 'drg', _.includes(i.roles.jalan, function(it){
+        (ref$ = _.split(i.username, '.')[0]) === 'dr' || ref$ === 'drg', _.includes((ref$ = i.roles) != null ? ref$.jalan : void 8, function(it){
           return it[selPoli];
         }(selects.klinik.map(function(it){
           return _.snakeCase(it.label);
@@ -1532,20 +1585,16 @@ if (Meteor.isClient) {
         return randomId();
       }
     },
+    grup: {
+      type: String,
+      autoform: {
+        options: selects.grupTindakan
+      }
+    },
     nama: {
       type: String,
       autoform: {
-        options: function(){
-          return _.compact(coll.tarif.find().fetch().map(function(i){
-            var ref$;
-            if (in$(i.jenis, (ref$ = roles()) != null ? ref$.jalan : void 8)) {
-              return {
-                value: i._id,
-                label: _.startCase(i.nama)
-              };
-            }
-          }));
-        }
+        options: selects.namaTindakan
       }
     },
     harga: {
@@ -2195,11 +2244,6 @@ if (Meteor.isClient) {
       }
     }
   };
-}
-function in$(x, xs){
-  var i = -1, l = xs.length >>> 0;
-  while (++i < l) if (x === xs[i]) return true;
-  return false;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2910,12 +2954,14 @@ if (Meteor.isClient) {
                   columns: 3,
                   hooks: {
                     before: function(doc, cb){
+                      var base;
+                      base = that.rawat.find(function(it){
+                        return it.idrawat === state.docRawat;
+                      });
                       return Meteor.call('rmRawat', that._id, state.docRawat, function(err, res){
                         var arr, ref$;
-                        return res && cb(_.merge(doc.rawat[0], that.rawat.find(function(it){
-                          return it.idrawat === state.docRawat;
-                        }), {
-                          status_bayar: ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan]) ? true : void 8,
+                        return res && cb(_.merge(doc.rawat[0], base, {
+                          status_bayar: ors(arr = [base.cara_bayar !== 1, ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan])]) ? true : void 8,
                           petugas: (ref$ = {}, ref$[(isDr() ? 'dokter' : 'perawat') + ""] = Meteor.userId(), ref$)
                         }));
                       });
