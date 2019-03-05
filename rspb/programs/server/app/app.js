@@ -2385,7 +2385,7 @@ if (Meteor.isClient) {
     },
     manajemen: {
       headers: {
-        tarif: ['nama', 'jenis', 'harga', 'grup', 'active']
+        tarif: ['nama', 'harga', 'first', 'second', 'third', 'active']
       }
     },
     amprah: {
@@ -3574,8 +3574,9 @@ if (Meteor.isClient) {
                       };
                       opt = {
                         harga: +data.harga,
-                        jenis: _.snakeCase(data.jenis),
-                        grup: (that = data.grup) ? _.startCase(that) : void 8,
+                        first: data.first,
+                        second: data.second,
+                        third: (that = data.third) ? that : void 8,
                         active: true
                       };
                       Meteor.call('import', 'tarif', sel, opt);
@@ -3610,9 +3611,8 @@ if (Meteor.isClient) {
             }, m('thead', m('tr', attr.manajemen.headers.tarif.map(function(i){
               return m('th', _.startCase(i));
             }))), m('tbody', pagins(coll.tarif.find().fetch()).map(function(i){
-              return m('tr', attr.manajemen.headers.tarif.map(function(j){
-                return m('td', _.startCase(i[j]));
-              }));
+              var arr;
+              return m('tr', tds(arr = [_.startCase(i.nama), rupiah(i.harga), _.startCase(i.first), _.startCase(i.second), _.startCase(i.third), i.active]));
             }))), elem.pagins());
           }
         }
