@@ -2491,32 +2491,21 @@ if (Meteor.isClient) {
               });
             }
           }, Meteor.userId() && m('.column.is-2', m('aside.menu.box', m('p.menu-label', 'Admin Menu'), m('ul.menu-list', attr.layout.rights().map(function(i){
-            var that;
-            return m('li', m("a#" + i.name, {
-              onclick: function(e){
-                if (in$(e.target.id, modules.map(function(it){
-                  return it.name;
-                }))) {
-                  return m.route.set(i.name);
-                }
-              },
+            return m('li', m('a', {
+              href: "/" + i.name,
+              oncreate: m.route.link,
               'class': state.activeMenu === i.name ? 'is-active' : void 8
-            }, m('span', i.full), (that = state.notify[i.name]) ? m('span', " (" + that + ")") : void 8, 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
-              return m('li', m("a#" + i[0], {
-                onclick: function(e){
-                  var ref$;
-                  if ((ref$ = e.target.id) === 'baru' || ref$ === 'lama') {
-                    return m.route.set("/regis/" + e.target.id);
-                  }
-                }
-              }, m('span', _.startCase(i[1]))));
+            }, i.full), 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
+              return m('li', m('a', {
+                href: "/regis/" + i[0],
+                oncreate: m.route.link
+              }, _.startCase(i[1])));
             })) : void 8, same(['manajemen', currentRoute(), i.name]) ? m('ul', ['users', 'imports'].map(function(i){
               return m('li', m('a', {
-                onclick: function(){
-                  return m.route.set("/manajemen/" + i);
-                }
+                href: "/manajemen/" + i,
+                oncreate: m.route.link
               }, m('span', _.startCase(i))));
-            })) : void 8));
+            })) : void 8);
           })))), m('.column', (that = comp) ? m(that) : void 8)));
         }
       };
