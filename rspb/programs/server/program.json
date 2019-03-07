@@ -28,6 +28,21 @@
       "path": "packages/modules.js"
     },
     {
+      "path": "packages/modern-browsers.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
+      "path": "packages/es5-shim.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "path": "packages/promise.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ecmascript-runtime-client/node_modules",
+      "path": "packages/ecmascript-runtime-client.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
       "path": "packages/ecmascript-runtime-server.js"
     },
@@ -44,15 +59,12 @@
       "path": "packages/babel-runtime.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/promise/node_modules",
-      "path": "packages/promise.js"
+      "node_modules": "npm/node_modules/meteor/fetch/node_modules",
+      "path": "packages/fetch.js"
     },
     {
-      "path": "packages/url.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/http/node_modules",
-      "path": "packages/http.js"
+      "node_modules": "npm/node_modules/meteor/inter-process-messaging/node_modules",
+      "path": "packages/inter-process-messaging.js"
     },
     {
       "path": "packages/dynamic-import.js"
@@ -89,6 +101,7 @@
       "path": "packages/ordered-dict.js"
     },
     {
+      "sourceMap": "packages/tracker.js.map",
       "path": "packages/tracker.js"
     },
     {
@@ -135,9 +148,6 @@
       "path": "packages/ddp-rate-limiter.js"
     },
     {
-      "path": "packages/ecmascript-runtime-client.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
       "sourceMap": "packages/logging.js.map",
       "path": "packages/logging.js"
@@ -173,6 +183,15 @@
       "path": "packages/allow-deny.js"
     },
     {
+      "path": "packages/mongo-dev-server.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/mongo-decimal/node_modules",
+      "sourceMap": "packages/mongo-decimal.js.map",
+      "path": "packages/mongo-decimal.js"
+    },
+    {
+      "sourceMap": "packages/binary-heap.js.map",
       "path": "packages/binary-heap.js"
     },
     {
@@ -193,21 +212,25 @@
       "path": "packages/standard-minifier-js.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/server-render/node_modules",
-      "sourceMap": "packages/server-render.js.map",
-      "path": "packages/server-render.js"
-    },
-    {
-      "sourceMap": "packages/shim-common.js.map",
-      "path": "packages/shim-common.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
-      "path": "packages/es5-shim.js"
-    },
-    {
       "sourceMap": "packages/shell-server.js.map",
       "path": "packages/shell-server.js"
+    },
+    {
+      "path": "packages/less.js"
+    },
+    {
+      "node_modules": {
+        "npm/node_modules/meteor/johanbrook_publication-collector/node_modules": {
+          "packageName": "johanbrook:publication-collector",
+          "local": false
+        },
+        "npm/node_modules/meteor/johanbrook_publication-collector/test-app/node_modules": {
+          "packageName": "johanbrook:publication-collector",
+          "local": true
+        }
+      },
+      "sourceMap": "packages/johanbrook_publication-collector.js.map",
+      "path": "packages/johanbrook_publication-collector.js"
     },
     {
       "path": "packages/zenkogu_livescript-compiler.js"
@@ -250,6 +273,7 @@
       "path": "packages/sha.js"
     },
     {
+      "sourceMap": "packages/srp.js.map",
       "path": "packages/srp.js"
     },
     {

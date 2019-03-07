@@ -486,6 +486,7 @@ if (Meteor.isClient) {
               type: ((ref3$ = schema.autoform) != null ? ref3$.type : void 8) || that,
               name: name,
               id: name,
+              step: 'any',
               value: function(){
                 var date, ref$;
                 date = (usedDoc != null ? usedDoc[name] : void 8) && that === 'date' && moment(usedDoc[name]).format('YYYY-MM-DD');
@@ -1166,8 +1167,8 @@ this.selects = {
   darah: ['a', 'b', 'ab', 'o'],
   cara_bayar: ['umum', 'bpjs', 'jamkesda_pekanbaru', 'jamkesda_kampar', 'lapas_dinsos', 'jampersal'],
   nikah: ['nikah', 'belum_nikah', 'janda', 'duda'],
-  klinik: ['penyakit_dalam', 'gigi', 'kebidanan', 'tht', 'anak', 'saraf', 'mata', 'bedah', 'paru', 'tb_dots', 'kulit', 'fisioterapi', 'gizi', 'metadon', 'psikologi', 'tindakan', 'aps_labor', 'aps_radio'],
-  karcis: [40, 30, 40, 40, 40, 40, 40, 40, 40, 40, 40, 0, 25, 30, 25, 0, 0, 0],
+  klinik: ['penyakit_dalam', 'gigi', 'kebidanan', 'tht', 'anak', 'saraf', 'mata', 'bedah', 'paru', 'kulit', 'fisioterapi', 'gizi', 'psikologi', 'tindakan', 'aps_labor', 'aps_radio'],
+  karcis: [50, 30, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 0, 0],
   bentuk: ['butir', 'kapsul', 'tablet', 'sendok_makan', 'sendok_teh'],
   tipe_dokter: ['umum', 'spesialis'],
   rujukan: ['datang_sendiri', 'rs_lain', 'puskesmas', 'faskes_lainnya'],
@@ -2386,6 +2387,16 @@ if (Meteor.isClient) {
     manajemen: {
       headers: {
         tarif: ['nama', 'harga', 'first', 'second', 'third', 'active']
+      },
+      userList: function(){
+        var arr, that;
+        return pagins(_.reverse(ors(arr = [
+          (that = state.search) ? Meteor.users.find({
+            username: {
+              $regex: ".*" + that + ".*"
+            }
+          }).fetch() : void 8, Meteor.users.find().fetch()
+        ])));
       }
     },
     amprah: {
@@ -2482,17 +2493,28 @@ if (Meteor.isClient) {
           }, Meteor.userId() && m('.column.is-2', m('aside.menu.box', m('p.menu-label', 'Admin Menu'), m('ul.menu-list', attr.layout.rights().map(function(i){
             var that;
             return m('li', m("a#" + i.name, {
-              href: "/" + i.name,
+              onclick: function(e){
+                if (in$(e.target.id, modules.map(function(it){
+                  return it.name;
+                }))) {
+                  return m.route.set(i.name);
+                }
+              },
               'class': state.activeMenu === i.name ? 'is-active' : void 8
             }, m('span', i.full), (that = state.notify[i.name]) ? m('span', " (" + that + ")") : void 8, 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
-              return m('li', m('a', {
-                href: "/regis/" + i[0],
-                oncreate: m.route.link
-              }, i[1]));
+              return m('li', m("a#" + i[0], {
+                onclick: function(e){
+                  var ref$;
+                  if ((ref$ = e.target.id) === 'baru' || ref$ === 'lama') {
+                    return m.route.set("/regis/" + e.target.id);
+                  }
+                }
+              }, m('span', _.startCase(i[1]))));
             })) : void 8, same(['manajemen', currentRoute(), i.name]) ? m('ul', ['users', 'imports'].map(function(i){
               return m('li', m('a', {
-                href: "/manajemen/" + i,
-                oncreate: m.route.link
+                onclick: function(){
+                  return m.route.set("/manajemen/" + i);
+                }
               }, m('span', _.startCase(i))));
             })) : void 8));
           })))), m('.column', (that = comp) ? m(that) : void 8)));
@@ -3472,7 +3494,14 @@ if (Meteor.isClient) {
               value: 'Daftarkan'
             })))), [0, 1].map(function(){
               return m('br');
-            }), m('h5', 'Daftar Pengguna Sistem'), m('table.table', {
+            }), m('h5', 'Daftar Pengguna Sistem'), m('form', {
+              onkeypress: function(e){
+                return state.search = e.target.value;
+              }
+            }, m('input.input', {
+              type: 'text',
+              placeholder: 'Pencarian'
+            })), m('table.table', {
               oncreate: function(){
                 return Meteor.subscribe('users', {
                   onReady: function(){
@@ -3482,7 +3511,7 @@ if (Meteor.isClient) {
               }
             }, m('thead', m('tr', ['Username', 'Peran', 'Aksi'].map(function(i){
               return m('th', i);
-            }))), m('tbody', pagins(Meteor.users.find().fetch().reverse()).map(function(i){
+            }))), m('tbody', attr.manajemen.userList().map(function(i){
               return m('tr', {
                 ondblclick: function(){
                   return state.modal = i;
@@ -4322,6 +4351,7 @@ if (Meteor.isServer) {
     ".json"
   ]
 });
+
 require("/folder/funcs.ls.js");
 require("/folder/modules.ls.js");
 require("/folder/parent.ls.js");

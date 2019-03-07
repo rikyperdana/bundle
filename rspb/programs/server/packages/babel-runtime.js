@@ -23,6 +23,7 @@ try {
   var babelRuntimeVersion = require("@babel/runtime/package.json").version;
 } catch (e) {
   throw new Error([
+    "",
     "The @babel/runtime npm package could not be found in your node_modules ",
     "directory. Please run the following command to install it:",
     "",
@@ -31,12 +32,14 @@ try {
   ].join("\n"));
 }
 
-if (parseInt(babelRuntimeVersion, 10) < 6) {
-  throw new Error([
+if (parseInt(babelRuntimeVersion, 10) < 7 ||
+    (babelRuntimeVersion.indexOf("7.0.0-beta.") === 0 &&
+     parseInt(babelRuntimeVersion.split(".").pop(), 10) < 56)) {
+  console.error([
     "The version of @babel/runtime installed in your node_modules directory ",
     "(" + babelRuntimeVersion + ") is out of date. Please upgrade it by running ",
     "",
-    "  meteor npm install --save @babel/runtime",
+    "  meteor npm install --save @babel/runtime@latest",
     "",
     "in your application directory.",
     ""
@@ -45,7 +48,7 @@ if (parseInt(babelRuntimeVersion, 10) < 6) {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-},"node_modules":{"meteor-babel-helpers":{"package.json":function(require,exports){
+},"node_modules":{"meteor-babel-helpers":{"package.json":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////
 //                                                                                 //
@@ -53,9 +56,11 @@ if (parseInt(babelRuntimeVersion, 10) < 6) {
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
                                                                                    //
-exports.name = "meteor-babel-helpers";
-exports.version = "0.0.3";
-exports.main = "index.js";
+module.exports = {
+  "name": "meteor-babel-helpers",
+  "version": "0.0.3",
+  "main": "index.js"
+};
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,60 +72,7 @@ exports.main = "index.js";
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
                                                                                    //
-function canDefineNonEnumerableProperties() {
-  var testObj = {};
-  var testPropName = "t";
-
-  try {
-    Object.defineProperty(testObj, testPropName, {
-      enumerable: false,
-      value: testObj
-    });
-
-    for (var k in testObj) {
-      if (k === testPropName) {
-        return false;
-      }
-    }
-  } catch (e) {
-    return false;
-  }
-
-  return testObj[testPropName] === testObj;
-}
-
-function sanitizeEasy(value) {
-  return value;
-}
-
-function sanitizeHard(obj) {
-  if (Array.isArray(obj)) {
-    var newObj = {};
-    var keys = Object.keys(obj);
-    var keyCount = keys.length;
-    for (var i = 0; i < keyCount; ++i) {
-      var key = keys[i];
-      newObj[key] = obj[key];
-    }
-    return newObj;
-  }
-
-  return obj;
-}
-
-meteorBabelHelpers = module.exports = {
-  // Meteor-specific runtime helper for wrapping the object of for-in
-  // loops, so that inherited Array methods defined by es5-shim can be
-  // ignored in browsers where they cannot be defined as non-enumerable.
-  sanitizeForInObject: canDefineNonEnumerableProperties()
-    ? sanitizeEasy
-    : sanitizeHard,
-
-  // Exposed so that we can test sanitizeForInObject in environments that
-  // support defining non-enumerable properties.
-  _sanitizeForInObjectHard: sanitizeHard
-};
-
+module.useNode();
 /////////////////////////////////////////////////////////////////////////////////////
 
 }}}}}}},{
@@ -129,6 +81,7 @@ meteorBabelHelpers = module.exports = {
     ".json"
   ]
 });
+
 var exports = require("/node_modules/meteor/babel-runtime/babel-runtime.js");
 
 /* Exports */
