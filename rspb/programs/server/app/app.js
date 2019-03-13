@@ -767,12 +767,14 @@ if (Meteor.isClient) {
       title = arg$.title, action = arg$.action;
       return m('.box', m('h5', title), m('form.columns', {
         onsubmit: function(e){
-          var arr;
+          var arr, vals, that;
           return arr = [
-            e.preventDefault(), action({
-              start: new Date(e.target[0].value),
-              end: new Date(e.target[1].value),
-              type: e.target[2].value
+            e.preventDefault(), vals = [0, 1, 2].map(function(it){
+              return e.target[it].value;
+            }), action({
+              start: (that = vals[0]) ? new Date(that) : void 8,
+              end: (that = vals[1]) ? new Date(that) : void 8,
+              type: vals[2]
             })
           ];
         }
@@ -2343,22 +2345,31 @@ if (Meteor.isClient) {
           }));
         }) : void 8 : void 8;
       },
+      list: function(){
+        var this$ = this;
+        return function(it){
+          return it.fetch();
+        }(coll.pasien.find({
+          'regis.nama_lengkap': {
+            $options: 'i',
+            $regex: ".*" + (state.search || '') + ".*"
+          }
+        }));
+      },
       lastKlinik: function(arr){
         var ref$;
         if (!((ref$ = roles()) != null && ref$.jalan)) {
           return arr;
+        } else if (isDr()) {
+          return arr.filter(function(it){
+            var list;
+            return ands(list = [_.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter]);
+          });
         } else {
-          if (isDr()) {
-            return arr.filter(function(it){
-              var list;
-              return ands(list = [_.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter]);
-            });
-          } else {
-            return arr.filter(function(it){
-              var list;
-              return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis]);
-            });
-          }
+          return arr.filter(function(it){
+            var list;
+            return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis]);
+          });
         }
       }
     },
@@ -2757,18 +2768,20 @@ if (Meteor.isClient) {
             : (ref$ = m.route.get()) === '/regis/lama' || ref$ === '/jalan'
               ? m('div', userGroup('regis') && m('form', {
                 onsubmit: function(e){
-                  var byName, byNoMR;
+                  var val, byName, byNoMR;
                   e.preventDefault();
-                  if (e.target[0].value.length > 3) {
+                  val = e.target[0].value;
+                  if (val.length > 3) {
                     byName = {
                       'regis.nama_lengkap': {
                         $options: '-i',
-                        $regex: ".*" + e.target[0].value + ".*"
+                        $regex: ".*" + val + ".*"
                       }
                     };
                     byNoMR = {
-                      no_mr: +e.target[0].value
+                      no_mr: +val
                     };
+                    state.search = val;
                     return Meteor.subscribe('coll', 'pasien', {
                       $or: [byName, byNoMR]
                     }, {
@@ -2807,7 +2820,7 @@ if (Meteor.isClient) {
                 }
               }, m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
                 return m('th', _.startCase(i));
-              }))), m('tbody', attr.pasien.lastKlinik(coll.pasien.find().fetch()).map(function(i){
+              }))), m('tbody', attr.pasien.lastKlinik(attr.pasien.list()).map(function(i){
                 var rows, ref$, ref1$, ref2$;
                 rows = function(){
                   var arr, that, ref$, ref1$, ref2$;
@@ -3297,9 +3310,9 @@ if (Meteor.isClient) {
               placeholder: 'Pencarian'
             })), (ref$ = roles()) != null && ref$.farmasi ? m('button.button.is-success', {
               onclick: function(){
-                return state.showForm = !state.showForm;
+                return state.showFormFarmasi = !state.showFormFarmasi;
               }
-            }, m('span', '+Tambah Jenis Barang')) : void 8, state.showForm ? (m('h5', 'Form Barang Farmasi'), m(autoForm({
+            }, m('span', '+Tambah Jenis Barang')) : void 8, state.showFormFarmasi ? (m('h5', 'Form Barang Farmasi'), m(autoForm({
               collection: coll.gudang,
               schema: new SimpleSchema(schema.farmasi),
               type: 'insert',
@@ -3628,6 +3641,11 @@ if (Meteor.isClient) {
           var arr;
           return m('.content', {
             oncreate: function(){
+              Meteor.subscribe('users', {
+                onReady: function(){
+                  return m.redraw();
+                }
+              });
               Meteor.subscribe('coll', 'gudang', {
                 onReady: function(){
                   return m.redraw();

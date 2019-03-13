@@ -105,6 +105,7 @@ install("webapp", "meteor/webapp/webapp_server.js");
 install("ddp-server");
 install("ddp");
 install("allow-deny");
+install("mongo-dev-server", "meteor/mongo-dev-server/server.js");
 install("mongo-decimal", "meteor/mongo-decimal/decimal.js");
 install("binary-heap", "meteor/binary-heap/binary-heap.js");
 install("mongo");
