@@ -90,8 +90,11 @@ if (Meteor.isClient) {
     return obj;
   };
   this.autoForm = function(opts){
-    var state, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, optionList, ref$, key$, stateTempGet, clonedDoc, usedDoc, normed, attr, columnize, inputTypes;
+    var state, normed, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, optionList, ref$, key$, stateTempGet, clonedDoc, usedDoc, attr, columnize, inputTypes;
     state = afState;
+    normed = function(it){
+      return it.replace(/\d/g, '$');
+    };
     scope = (that = opts.scope) ? new SimpleSchema(function(){
       var reducer;
       reducer = function(res, val, key){
@@ -141,13 +144,8 @@ if (Meteor.isClient) {
         });
       }
     };
-    if (that = opts.scope) {
-      clonedDoc = _.assign({}, opts.doc, (ref$ = {}, ref$[that + ""] = [], ref$));
-    }
+    clonedDoc = opts.type === 'update-pushArray' ? _.assign({}, opts.doc, (ref$ = {}, ref$[opts.scope + ""] = [], ref$)) : void 8;
     usedDoc = clonedDoc || opts.doc;
-    normed = function(it){
-      return it.replace(/\d/g, '$');
-    };
     attr = {
       form: {
         id: opts.id,
@@ -282,7 +280,7 @@ if (Meteor.isClient) {
         var ref$;
         return {
           name: name,
-          value: ((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || (usedDoc != null ? usedDoc[name] : void 8),
+          value: ((ref$ = stateTempGet(name)) != null ? ref$.value : void 8) || _.get(usedDoc, name),
           onchange: function(arg$){
             var target;
             target = arg$.target;
@@ -459,7 +457,7 @@ if (Meteor.isClient) {
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         other: function(){
-          var defaultInputTypes, defaultType, maped, ref$, ref1$, that, ref2$, ref3$, sorted, filtered, found, docLen, this$ = this;
+          var defaultInputTypes, defaultType, maped, ref$, ref1$, that, ref2$, ref3$, arr, ref4$, sorted, filtered, found, docLen, this$ = this;
           defaultInputTypes = {
             text: String,
             number: Number,
@@ -487,11 +485,7 @@ if (Meteor.isClient) {
               name: name,
               id: name,
               step: 'any',
-              value: function(){
-                var date, ref$;
-                date = (usedDoc != null ? usedDoc[name] : void 8) && that === 'date' && moment(usedDoc[name]).format('YYYY-MM-DD');
-                return ((ref$ = state.form[opts.id]) != null ? ref$[name] : void 8) || date || (usedDoc != null ? usedDoc[name] : void 8);
-              }()
+              value: ors(arr = [(ref4$ = state.form[opts.id]) != null ? ref4$[name] : void 8, _.get(usedDoc, name) && that === 'date' && moment(_.get(usedDoc, name)).format('YYYY-MM-DD'), _.get(usedDoc, name)])
             })), error ? m('p.help.is-danger', error) : void 8);
           } else if (schema.type === Object) {
             sorted = function(){
@@ -2346,14 +2340,20 @@ if (Meteor.isClient) {
         }) : void 8 : void 8;
       },
       list: function(){
-        var this$ = this;
-        return function(it){
-          return it.fetch();
-        }(coll.pasien.find({
+        var byName, byNoMR, this$ = this;
+        byName = {
           'regis.nama_lengkap': {
             $options: 'i',
             $regex: ".*" + (state.search || '') + ".*"
           }
+        };
+        byNoMR = {
+          no_mr: +(state.search || '')
+        };
+        return function(it){
+          return it.fetch();
+        }(coll.pasien.find({
+          $or: [byName, byNoMR]
         }));
       },
       lastKlinik: function(arr){
@@ -2572,17 +2572,19 @@ if (Meteor.isClient) {
             action: function(arg$){
               var start, end, type;
               start = arg$.start, end = arg$.end, type = arg$.type;
-              return Meteor.call('visits', start, end, function(err, res){
-                var that, title, obj;
-                if (that = res) {
-                  title = "Kunjungan " + hari(start) + " - " + hari(end);
-                  obj = {
-                    Tabel: csv,
-                    Pdf: makePdf.csv
-                  };
-                  return obj[type](title, that);
-                }
-              });
+              if (start && end) {
+                return Meteor.call('visits', start, end, function(err, res){
+                  var that, title, obj;
+                  if (that = res) {
+                    title = "Kunjungan " + hari(start) + " - " + hari(end);
+                    obj = {
+                      Tabel: csv,
+                      Pdf: makePdf.csv
+                    };
+                    return obj[type](title, that);
+                  }
+                });
+              }
             }
           }) : void 8, (ref$ = m.route.param('jenis')) === 'baru' || ref$ === 'edit' ? m(autoForm({
             collection: coll.pasien,
@@ -3158,17 +3160,19 @@ if (Meteor.isClient) {
             action: function(arg$){
               var start, end, type;
               start = arg$.start, end = arg$.end, type = arg$.type;
-              return Meteor.call('incomes', start, end, function(err, res){
-                var that, title, obj;
-                if (that = res) {
-                  title = "Pemasukan " + hari(start) + " - " + hari(end);
-                  obj = {
-                    Tabel: csv,
-                    Pdf: makePdf.csv
-                  };
-                  return obj[type](title, that);
-                }
-              });
+              if (start && end) {
+                return Meteor.call('incomes', start, end, function(err, res){
+                  var that, title, obj;
+                  if (that = res) {
+                    title = "Pemasukan " + hari(start) + " - " + hari(end);
+                    obj = {
+                      Tabel: csv,
+                      Pdf: makePdf.csv
+                    };
+                    return obj[type](title, that);
+                  }
+                });
+              }
             }
           }) : void 8);
         }
@@ -3268,11 +3272,13 @@ if (Meteor.isClient) {
             action: function(arg$){
               var start, end, type;
               start = arg$.start, end = arg$.end, type = arg$.type;
-              return Meteor.call('dispenses', start, end, function(err, res){
-                if (res) {
-                  return csv("Pengeluaran Obat " + hari(start) + "-" + hari(end), res);
-                }
-              });
+              if (start && end) {
+                return Meteor.call('dispenses', start, end, function(err, res){
+                  if (res) {
+                    return csv("Pengeluaran Obat " + hari(start) + "-" + hari(end), res);
+                  }
+                });
+              }
             }
           }) : void 8);
         }
@@ -3287,17 +3293,19 @@ if (Meteor.isClient) {
             action: function(arg$){
               var start, end, type;
               start = arg$.start, end = arg$.end, type = arg$.type;
-              return Meteor.call('stocks', start, end, function(err, res){
-                var that, title, obj;
-                if (that = res) {
-                  title = "Stok Barang " + hari(start) + " - " + hari(end);
-                  obj = {
-                    Tabel: csv,
-                    Pdf: makePdf.csv
-                  };
-                  return obj[type](title, that);
-                }
-              });
+              if (start && end) {
+                return Meteor.call('stocks', start, end, function(err, res){
+                  var that, title, obj;
+                  if (that = res) {
+                    title = "Stok Barang " + hari(start) + " - " + hari(end);
+                    obj = {
+                      Tabel: csv,
+                      Pdf: makePdf.csv
+                    };
+                    return obj[type](title, that);
+                  }
+                });
+              }
             }
           }) : void 8, !m.route.param('idbarang')
             ? m('div', m('form', {

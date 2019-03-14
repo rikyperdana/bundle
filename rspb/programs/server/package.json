@@ -2,14 +2,14 @@
   "name": "meteor-dev-bundle",
   "private": true,
   "dependencies": {
-    "meteor-promise": "0.8.7",
     "fibers": "2.0.0",
+    "meteor-promise": "0.8.7",
+    "node-gyp": "^3.8.0",
+    "node-pre-gyp": "0.10.3",
     "promise": "8.0.2",
-    "underscore": "1.5.2",
-    "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
     "semver": "5.4.1",
-    "node-gyp": "3.7.0",
-    "node-pre-gyp": "0.10.3"
+    "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
+    "underscore": "1.5.2"
   },
   "devDependencies": {
     "split2": "2.1.1",
