@@ -485,7 +485,7 @@ if (Meteor.isClient) {
               name: name,
               id: name,
               step: 'any',
-              value: ors(arr = [(ref4$ = state.form[opts.id]) != null ? ref4$[name] : void 8, _.get(usedDoc, name) && that === 'date' && moment(_.get(usedDoc, name)).format('YYYY-MM-DD'), _.get(usedDoc, name)])
+              value: ors(arr = [(ref4$ = state.form[opts.id]) != null ? ref4$[name] : void 8, ands(arr = [_.get(usedDoc, name), that === 'date', moment(_.get(usedDoc, name)).format('YYYY-MM-DD')]), _.get(usedDoc, name)])
             })), error ? m('p.help.is-danger', error) : void 8);
           } else if (schema.type === Object) {
             sorted = function(){
@@ -2272,6 +2272,9 @@ if (Meteor.isClient) {
         });
       }
     },
+    pageAccess: function(list){
+      return in$(userGroup(), list);
+    },
     pasien: {
       showForm: {
         patient: {
@@ -2524,12 +2527,12 @@ if (Meteor.isClient) {
               href: "/" + i.name,
               oncreate: m.route.link,
               'class': state.activeMenu === i.name ? 'is-active' : void 8
-            }, i.full), 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
+            }, i.full), attr.pageAccess(['regis', 'jalan']) ? 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
               return m('li', m('a', {
                 href: "/regis/" + i[0],
                 oncreate: m.route.link
               }, _.startCase(i[1])));
-            })) : void 8, same(['manajemen', currentRoute(), i.name]) ? m('ul', ['users', 'imports'].map(function(i){
+            })) : void 8 : void 8, same(['manajemen', currentRoute(), i.name]) ? m('ul', ['users', 'imports'].map(function(i){
               return m('li', m('a', {
                 href: "/manajemen/" + i,
                 oncreate: m.route.link
@@ -2553,509 +2556,511 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var arr, ref$, that, ref1$, this$ = this;
-          return m('.content', {
-            oncreate: Meteor.subscribe('coll', 'daerah', {
-              $and: arr = [
-                {
-                  provinsi: {
-                    $exists: true
+          if (attr.pageAccess(['regis', 'jalan'])) {
+            return m('.content', {
+              oncreate: Meteor.subscribe('coll', 'daerah', {
+                $and: arr = [
+                  {
+                    provinsi: {
+                      $exists: true
+                    }
+                  }, {
+                    kabupaten: {
+                      $exists: false
+                    }
                   }
-                }, {
-                  kabupaten: {
-                    $exists: false
-                  }
+                ]
+              })
+            }, userGroup('regis') && userRole('admin') ? elem.report({
+              title: 'Laporan Kunjungan Poliklinik',
+              action: function(arg$){
+                var start, end, type;
+                start = arg$.start, end = arg$.end, type = arg$.type;
+                if (start && end) {
+                  return Meteor.call('visits', start, end, function(err, res){
+                    var that, title, obj;
+                    if (that = res) {
+                      title = "Kunjungan " + hari(start) + " - " + hari(end);
+                      obj = {
+                        Tabel: csv,
+                        Pdf: makePdf.csv
+                      };
+                      return obj[type](title, that);
+                    }
+                  });
                 }
-              ]
-            })
-          }, userGroup('regis') && userRole('admin') ? elem.report({
-            title: 'Laporan Kunjungan Poliklinik',
-            action: function(arg$){
-              var start, end, type;
-              start = arg$.start, end = arg$.end, type = arg$.type;
-              if (start && end) {
-                return Meteor.call('visits', start, end, function(err, res){
-                  var that, title, obj;
-                  if (that = res) {
-                    title = "Kunjungan " + hari(start) + " - " + hari(end);
-                    obj = {
-                      Tabel: csv,
-                      Pdf: makePdf.csv
-                    };
-                    return obj[type](title, that);
-                  }
-                });
               }
-            }
-          }) : void 8, (ref$ = m.route.param('jenis')) === 'baru' || ref$ === 'edit' ? m(autoForm({
-            collection: coll.pasien,
-            schema: new SimpleSchema(schema.regis),
-            type: m.route.param('idpasien') ? 'update' : 'insert',
-            id: 'formRegis',
-            doc: coll.pasien.findOne(m.route.param('idpasien')),
-            buttonContent: 'Simpan',
-            columns: 3,
-            onchange: function(doc){
-              var arr;
-              if (doc.name === 'no_mr') {
-                return Meteor.call('onePasien', doc.value, function(err, res){
-                  if (res) {
-                    afState.errors.formRegis = {
-                      no_mr: 'Terpakai'
-                    };
-                  } else {
-                    delete afState.errors.formRegis.no_mr;
-                  }
-                  return m.redraw();
-                });
-              } else if (doc.name === 'regis.provinsi') {
-                return Meteor.subscribe('coll', 'daerah', {
-                  $and: arr = [
-                    {
-                      provinsi: +doc.value
-                    }, {
-                      kabupaten: {
-                        $exists: true
-                      }
+            }) : void 8, (ref$ = m.route.param('jenis')) === 'baru' || ref$ === 'edit' ? m(autoForm({
+              collection: coll.pasien,
+              schema: new SimpleSchema(schema.regis),
+              type: m.route.param('idpasien') ? 'update' : 'insert',
+              id: 'formRegis',
+              doc: coll.pasien.findOne(m.route.param('idpasien')),
+              buttonContent: 'Simpan',
+              columns: 3,
+              onchange: function(doc){
+                var arr;
+                if (doc.name === 'no_mr') {
+                  return Meteor.call('onePasien', doc.value, function(err, res){
+                    if (res) {
+                      afState.errors.formRegis = {
+                        no_mr: 'Terpakai'
+                      };
+                    } else {
+                      delete afState.errors.formRegis.no_mr;
                     }
-                  ]
-                });
-              } else if (doc.name === 'regis.kabupaten') {
-                return Meteor.subscribe('coll', 'daerah', {
-                  $and: arr = [
-                    {
-                      kabupaten: +doc.value
-                    }, {
-                      kecamatan: {
-                        $exists: true
-                      }
-                    }
-                  ]
-                });
-              } else if (doc.name === 'regis.kecamatan') {
-                return Meteor.subscribe('coll', 'daerah', {
-                  $and: arr = [
-                    {
-                      kecamatan: +doc.value
-                    }, {
-                      kelurahan: {
-                        $exists: true
-                      }
-                    }
-                  ]
-                });
-              }
-            },
-            hooks: {
-              before: function(doc, cb){
-                var ref$;
-                return cb(_.merge(doc, {
-                  regis: {
-                    petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$),
-                    provinsi: function(it){
-                      return it != null ? it.daerah : void 8;
-                    }(coll.daerah.findOne({
-                      provinsi: doc.provinsi
-                    })),
-                    kabupaten: function(it){
-                      return it != null ? it.daerah : void 8;
-                    }(coll.daerah.findOne({
-                      provinsi: doc.provinsi,
-                      kabupaten: doc.kabupaten
-                    })),
-                    kecamatan: function(it){
-                      return it != null ? it.daerah : void 8;
-                    }(coll.daerah.findOne({
-                      kabupaten: doc.kabupaten,
-                      kecamatan: doc.kecamatan
-                    })),
-                    kelurahan: function(it){
-                      return it != null ? it.daerah : void 8;
-                    }(coll.daerah.findOne({
-                      kecamatan: doc.kecamatan,
-                      kelurahan: doc.kelurahan
-                    }))
-                  }
-                }));
-              },
-              after: function(id){
-                state.showAddPatient = null;
-                return m.route.set("/regis/lama/" + id);
-              }
-            }
-          })) : void 8, userRole('mr')
-            ? m('div', m('br', {
-              oncreate: function(){
-                return Meteor.subscribe('coll', 'tarif');
-              }
-            }), m('form.columns', {
-              onsubmit: function(e){
-                e.preventDefault();
-                return Meteor.call('onePasien', e.target[0].value, function(err, res){
-                  if (res) {
-                    return makePdf.icdx(res);
-                  }
-                });
-              }
-            }, m('.column', m('input.input', {
-              type: 'text',
-              placeholder: 'No MR Pasien'
-            })), m('.column', m('input.button.is-primary', {
-              type: 'submit',
-              value: 'Unduh'
-            }))), m('h5', 'Kodifikasi ICD 10'), m('table.table', {
-              oncreate: function(){
-                return Meteor.subscribe('coll', 'pasien', {
-                  rawat: {
-                    $elemMatch: {
-                      $and: [
-                        {
-                          'anamesa_dokter': {
-                            $exists: true
-                          }
-                        }, {
-                          icdx: {
-                            $exists: false
-                          }
+                    return m.redraw();
+                  });
+                } else if (doc.name === 'regis.provinsi') {
+                  return Meteor.subscribe('coll', 'daerah', {
+                    $and: arr = [
+                      {
+                        provinsi: +doc.value
+                      }, {
+                        kabupaten: {
+                          $exists: true
                         }
-                      ]
+                      }
+                    ]
+                  });
+                } else if (doc.name === 'regis.kabupaten') {
+                  return Meteor.subscribe('coll', 'daerah', {
+                    $and: arr = [
+                      {
+                        kabupaten: +doc.value
+                      }, {
+                        kecamatan: {
+                          $exists: true
+                        }
+                      }
+                    ]
+                  });
+                } else if (doc.name === 'regis.kecamatan') {
+                  return Meteor.subscribe('coll', 'daerah', {
+                    $and: arr = [
+                      {
+                        kecamatan: +doc.value
+                      }, {
+                        kelurahan: {
+                          $exists: true
+                        }
+                      }
+                    ]
+                  });
+                }
+              },
+              hooks: {
+                before: function(doc, cb){
+                  var ref$;
+                  return cb(_.merge(doc, {
+                    regis: {
+                      petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$),
+                      provinsi: function(it){
+                        return it != null ? it.daerah : void 8;
+                      }(coll.daerah.findOne({
+                        provinsi: doc.provinsi
+                      })),
+                      kabupaten: function(it){
+                        return it != null ? it.daerah : void 8;
+                      }(coll.daerah.findOne({
+                        provinsi: doc.provinsi,
+                        kabupaten: doc.kabupaten
+                      })),
+                      kecamatan: function(it){
+                        return it != null ? it.daerah : void 8;
+                      }(coll.daerah.findOne({
+                        kabupaten: doc.kabupaten,
+                        kecamatan: doc.kecamatan
+                      })),
+                      kelurahan: function(it){
+                        return it != null ? it.daerah : void 8;
+                      }(coll.daerah.findOne({
+                        kecamatan: doc.kecamatan,
+                        kelurahan: doc.kelurahan
+                      }))
                     }
-                  }
-                }, {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
+                  }));
+                },
+                after: function(id){
+                  state.showAddPatient = null;
+                  return m.route.set("/regis/lama/" + id);
+                }
               }
-            }, m('thead', attr.pasien.headers.icdFields.map(function(i){
-              return m('th', _.startCase(i));
-            })), m('tbody', coll.pasien.find().fetch().map(function(i){
-              return i.rawat.map(function(j){
-                var arr, ref$;
-                if (j.anamesa_dokter && !j.icdx) {
-                  return m('tr', tds(arr = [
-                    i.regis.nama_lengkap, hari(j.tanggal), look('klinik', j.klinik).label, '-', (ref$ = j.diagnosa) != null ? ref$[0] : void 8, '-', m('.button.is-info', {
-                      onclick: function(){
-                        return state.modal = _.merge({
-                          rawat: j,
-                          pasien: i
-                        });
-                      }
-                    }, m('span', 'Cek'))
-                  ]));
-                }
-              });
-            }))), (that = state.modal) ? elem.modal({
-              title: 'Kodekan ICD 10',
-              content: m('div', m('table.table', that.rawat.diagnosa.map(function(i, j){
-                return m('tr', [m('td', j + 1), m('td', _.startCase(i))]);
-              })), m(autoForm({
-                schema: new SimpleSchema({
-                  icdx: {
-                    type: [String]
-                  }
-                }),
-                type: 'method',
-                meteormethod: 'icdX',
-                hooks: {
-                  before: function(doc, cb){
-                    return cb(_.merge({}, state.modal, doc));
-                  },
-                  after: function(){
-                    state.modal = null;
-                    return m.redraw();
-                  }
-                }
-              })))
-            }) : void 8)
-            : (ref$ = m.route.get()) === '/regis/lama' || ref$ === '/jalan'
-              ? m('div', userGroup('regis') && m('form', {
-                onsubmit: function(e){
-                  var val, byName, byNoMR;
-                  e.preventDefault();
-                  val = e.target[0].value;
-                  if (val.length > 3) {
-                    byName = {
-                      'regis.nama_lengkap': {
-                        $options: '-i',
-                        $regex: ".*" + val + ".*"
-                      }
-                    };
-                    byNoMR = {
-                      no_mr: +val
-                    };
-                    state.search = val;
-                    return Meteor.subscribe('coll', 'pasien', {
-                      $or: [byName, byNoMR]
-                    }, {
-                      limit: 30
-                    }, {
-                      onReady: function(){
-                        return m.redraw();
-                      }
-                    });
-                  }
-                }
-              }, m('input.input', {
-                type: 'text',
-                placeholder: 'Pencarian'
-              })), m('table.table', {
+            })) : void 8, userRole('mr')
+              ? m('div', m('br', {
                 oncreate: function(){
-                  return Meteor.subscribe('users', {
-                    onReady: function(){
-                      var onKlinik;
-                      onKlinik = {
-                        rawat: {
-                          $elemMatch: {
-                            klinik: {
-                              $in: attr.pasien.ownKliniks()
+                  return Meteor.subscribe('coll', 'tarif');
+                }
+              }), m('form.columns', {
+                onsubmit: function(e){
+                  e.preventDefault();
+                  return Meteor.call('onePasien', e.target[0].value, function(err, res){
+                    if (res) {
+                      return makePdf.icdx(res);
+                    }
+                  });
+                }
+              }, m('.column', m('input.input', {
+                type: 'text',
+                placeholder: 'No MR Pasien'
+              })), m('.column', m('input.button.is-primary', {
+                type: 'submit',
+                value: 'Unduh'
+              }))), m('h5', 'Kodifikasi ICD 10'), m('table.table', {
+                oncreate: function(){
+                  return Meteor.subscribe('coll', 'pasien', {
+                    rawat: {
+                      $elemMatch: {
+                        $and: [
+                          {
+                            'anamesa_dokter': {
+                              $exists: true
+                            }
+                          }, {
+                            icdx: {
+                              $exists: false
                             }
                           }
+                        ]
+                      }
+                    }
+                  }, {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
+                }
+              }, m('thead', attr.pasien.headers.icdFields.map(function(i){
+                return m('th', _.startCase(i));
+              })), m('tbody', coll.pasien.find().fetch().map(function(i){
+                return i.rawat.map(function(j){
+                  var arr, ref$;
+                  if (j.anamesa_dokter && !j.icdx) {
+                    return m('tr', tds(arr = [
+                      i.regis.nama_lengkap, hari(j.tanggal), look('klinik', j.klinik).label, '-', (ref$ = j.diagnosa) != null ? ref$[0] : void 8, '-', m('.button.is-info', {
+                        onclick: function(){
+                          return state.modal = _.merge({
+                            rawat: j,
+                            pasien: i
+                          });
+                        }
+                      }, m('span', 'Cek'))
+                    ]));
+                  }
+                });
+              }))), (that = state.modal) ? elem.modal({
+                title: 'Kodekan ICD 10',
+                content: m('div', m('table.table', that.rawat.diagnosa.map(function(i, j){
+                  return m('tr', [m('td', j + 1), m('td', _.startCase(i))]);
+                })), m(autoForm({
+                  schema: new SimpleSchema({
+                    icdx: {
+                      type: [String]
+                    }
+                  }),
+                  type: 'method',
+                  meteormethod: 'icdX',
+                  hooks: {
+                    before: function(doc, cb){
+                      return cb(_.merge({}, state.modal, doc));
+                    },
+                    after: function(){
+                      state.modal = null;
+                      return m.redraw();
+                    }
+                  }
+                })))
+              }) : void 8)
+              : (ref$ = m.route.get()) === '/regis/lama' || ref$ === '/jalan'
+                ? m('div', userGroup('regis') && m('form', {
+                  onsubmit: function(e){
+                    var val, byName, byNoMR;
+                    e.preventDefault();
+                    val = e.target[0].value;
+                    if (val.length > 3) {
+                      byName = {
+                        'regis.nama_lengkap': {
+                          $options: '-i',
+                          $regex: ".*" + val + ".*"
                         }
                       };
-                      return Meteor.subscribe('coll', 'pasien', onKlinik, {
+                      byNoMR = {
+                        no_mr: +val
+                      };
+                      state.search = val;
+                      return Meteor.subscribe('coll', 'pasien', {
+                        $or: [byName, byNoMR]
+                      }, {
+                        limit: 30
+                      }, {
                         onReady: function(){
                           return m.redraw();
                         }
                       });
                     }
-                  });
-                }
-              }, m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
-                return m('th', _.startCase(i));
-              }))), m('tbody', attr.pasien.lastKlinik(attr.pasien.list()).map(function(i){
-                var rows, ref$, ref1$, ref2$;
-                rows = function(){
-                  var arr, that, ref$, ref1$, ref2$;
-                  if (i.no_mr) {
-                    return m('tr', {
-                      ondblclick: function(){
-                        return m.route.set(m.route.get() + "/" + i._id);
-                      }
-                    }, tds(arr = [(that = (ref$ = i.rawat) != null ? (ref1$ = ref$[((ref2$ = i.rawat) != null ? ref2$.length : void 8) - 1]) != null ? ref1$.tanggal : void 8 : void 8) ? hari(that) : void 8, i.no_mr, i.regis.nama_lengkap, (that = i.regis.tgl_lahir) ? moment(that).format('D MMM YYYY') : void 8, (that = i.regis.tmpt_lahir) ? _.startCase(that) : void 8, _.startCase(userRole())]));
                   }
-                };
-                if (currentRoute() === 'jalan') {
-                  if ((ref$ = i.rawat) != null && ((ref1$ = ref$.reverse()) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis))) {
-                    return rows();
-                  }
-                } else {
-                  return rows();
-                }
-              }))), userGroup('jalan') && !isDr() ? m('div', m('h5', 'Daftar Antrian Panggilan Dokter'), m('table.table', m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
-                return m('th', _.startCase(i));
-              }))), m('tbody', coll.pasien.find().fetch().map(function(i){
-                var doneByNurse, arr;
-                doneByNurse = function(){
-                  var arr;
-                  return ands(arr = [i.rawat[i.rawat.length - 1].anamesa_perawat, !i.rawat[i.rawat.length - 1].anamesa_dokter]);
-                };
-                if (doneByNurse()) {
-                  return m('tr', tds(arr = [hari(i.rawat[i.rawat.length - 1].tanggal), i.no_mr, i.regis.nama_lengkap, hari(i.regis.tgl_lahir), i.regis.tmpt_lahir, _.startCase(userRole())]));
-                }
-              })))) : void 8)
-              : m.route.param('idpasien')
-                ? m('div', {
+                }, m('input.input', {
+                  type: 'text',
+                  placeholder: 'Pencarian'
+                })), m('table.table', {
                   oncreate: function(){
-                    Meteor.subscribe('coll', 'tarif');
-                    Meteor.subscribe('coll', 'gudang');
-                    Meteor.subscribe('coll', 'pasien', {
-                      _id: m.route.param('idpasien')
-                    }, {
+                    return Meteor.subscribe('users', {
                       onReady: function(){
-                        return m.redraw();
-                      }
-                    });
-                    return isDr() && Meteor.subscribe('users', {
-                      username: {
-                        $options: '-i',
-                        $regex: '^dr'
-                      }
-                    });
-                  }
-                }, m('.content', m('h5', 'Rincian Pasien')), (that = coll.pasien.findOne(m.route.param('idpasien'))) ? m('div', m('table.table', [
-                  [
-                    {
-                      name: 'No. MR',
-                      data: that.no_mr
-                    }, {
-                      name: 'Tanggal Lahir',
-                      data: hari(that.regis.tgl_lahir)
-                    }
-                  ], [
-                    {
-                      name: 'Nama Lengkap',
-                      data: _.startCase(that.regis.nama_lengkap)
-                    }, {
-                      name: 'Tempat Lahir',
-                      data: _.startCase(that.regis.tmpt_lahir)
-                    }
-                  ], [
-                    {
-                      name: 'Tempat Tinggal',
-                      data: _.startCase(that.regis.alamat)
-                    }, {
-                      name: 'Umur',
-                      data: moment().diff(that.regis.tgl_lahir, 'years') + ' tahun'
-                    }
-                  ]
-                ].map(function(i){
-                  return m('tr', i.map(function(j){
-                    return [m('th', j.name), m('td', j.data)];
-                  }));
-                })), currentRoute() === 'regis' ? m('div', [
-                  [
-                    'Kartu', 'is-info', {
-                      onclick: function(){
-                        return makePdf.card(m.route.param('idpasien'));
-                      }
-                    }
-                  ], [
-                    'Consent', 'is-info', {
-                      onclick: function(){
-                        return makePdf.consent();
-                      }
-                    }
-                  ], [
-                    'Edit', 'is-warning', {
-                      onclick: function(){
-                        return m.route.set("/regis/edit/" + m.route.param('idpasien'));
-                      }
-                    }
-                  ], ['+Rawat Jalan', 'is-success', attr.pasien.showForm.rawat]
-                ].map(function(i){
-                  return m(".button." + i[1], _.merge({
-                    style: 'margin-right: 10px'
-                  }, i[2]), i[0]);
-                })) : void 8, state.showAddRawat && m(autoForm({
-                  collection: coll.pasien,
-                  schema: new SimpleSchema(schema.rawatRegis),
-                  type: 'update-pushArray',
-                  id: 'formJalan',
-                  scope: 'rawat',
-                  doc: that,
-                  buttonContent: 'Simpan',
-                  columns: 3,
-                  hooks: {
-                    before: function(doc, cb){
-                      var ref$;
-                      return cb(_.merge(doc, {
-                        petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
-                      }));
-                    },
-                    after: function(){
-                      state.showAddRawat = false;
-                      return m.redraw();
-                    }
-                  }
-                })), [0, 1].map(function(){
-                  return m('br');
-                }), state.docRawat && m('.content', m('h5', 'Rincian Rawat'), m('table.table', attr.pasien.rawatDetails(that.rawat.find(function(it){
-                  return it.idrawat === state.docRawat;
-                })).map(function(i){
-                  return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
-                }))), state.docRawat && m(autoForm({
-                  collection: coll.pasien,
-                  schema: new SimpleSchema(isDr()
-                    ? schema.rawatDoctor
-                    : schema.rawatNurse),
-                  type: 'update-pushArray',
-                  id: 'formNurse',
-                  scope: 'rawat',
-                  doc: that,
-                  buttonContent: 'Simpan',
-                  columns: 3,
-                  hooks: {
-                    before: function(doc, cb){
-                      var base;
-                      base = that.rawat.find(function(it){
-                        return it.idrawat === state.docRawat;
-                      });
-                      return Meteor.call('rmRawat', that._id, state.docRawat, function(err, res){
-                        var arr, ref$;
-                        return res && cb(_.merge(doc.rawat[0], base, {
-                          status_bayar: ors(arr = [base.cara_bayar !== 1, ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan])]) ? true : void 8,
-                          petugas: (ref$ = {}, ref$[(isDr() ? 'dokter' : 'perawat') + ""] = Meteor.userId(), ref$)
-                        }));
-                      });
-                    },
-                    after: function(doc){
-                      var that;
-                      if (that = doc.pindah) {
-                        coll.pasien.update({
-                          _id: m.route.param('idpasien')
-                        }, {
-                          $push: {
-                            rawat: {
-                              klinik: that,
-                              billRegis: doc.billRegis,
-                              cara_bayar: doc.cara_bayar,
-                              idrawat: randomId(),
-                              petugas: doc.petugas,
-                              tanggal: new Date()
+                        var onKlinik;
+                        onKlinik = {
+                          rawat: {
+                            $elemMatch: {
+                              klinik: {
+                                $in: attr.pasien.ownKliniks()
+                              }
                             }
+                          }
+                        };
+                        return Meteor.subscribe('coll', 'pasien', onKlinik, {
+                          onReady: function(){
+                            return m.redraw();
                           }
                         });
                       }
-                      state.docRawat = null;
-                      return m.redraw();
-                    }
+                    });
                   }
-                })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
+                }, m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
                   return m('th', _.startCase(i));
-                }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(that != null ? (ref1$ = that.rawat) != null ? ref1$.reverse() : void 8 : void 8)) != null ? ref$.map(function(i){
-                  var that, ref$;
-                  return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
-                    slice$.call(['billRegis', 'status_bayar'].map(function(it){
-                      if (i[it]) {
-                        return 'Sudah';
-                      } else {
-                        return 'Belum';
-                      }
-                    })), [
-                      userGroup('jalan') ? m('button.button.is-info', {
-                        onclick: function(){
-                          return state.modal = i;
-                        }
-                      }, m('span', 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
+                }))), m('tbody', attr.pasien.lastKlinik(attr.pasien.list()).map(function(i){
+                  var rows, ref$, ref1$, ref2$;
+                  rows = function(){
+                    var arr, that, ref$, ref1$, ref2$;
+                    if (i.no_mr) {
+                      return m('tr', {
                         ondblclick: function(){
-                          return Meteor.call('rmRawat', coll.pasien.findOne({
+                          return m.route.set(m.route.get() + "/" + i._id);
+                        }
+                      }, tds(arr = [(that = (ref$ = i.rawat) != null ? (ref1$ = ref$[((ref2$ = i.rawat) != null ? ref2$.length : void 8) - 1]) != null ? ref1$.tanggal : void 8 : void 8) ? hari(that) : void 8, i.no_mr, i.regis.nama_lengkap, (that = i.regis.tgl_lahir) ? moment(that).format('D MMM YYYY') : void 8, (that = i.regis.tmpt_lahir) ? _.startCase(that) : void 8, _.startCase(userRole())]));
+                    }
+                  };
+                  if (currentRoute() === 'jalan') {
+                    if ((ref$ = i.rawat) != null && ((ref1$ = ref$.reverse()) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis))) {
+                      return rows();
+                    }
+                  } else {
+                    return rows();
+                  }
+                }))), userGroup('jalan') && !isDr() ? m('div', m('h5', 'Daftar Antrian Panggilan Dokter'), m('table.table', m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
+                  return m('th', _.startCase(i));
+                }))), m('tbody', coll.pasien.find().fetch().map(function(i){
+                  var doneByNurse, arr;
+                  doneByNurse = function(){
+                    var arr;
+                    return ands(arr = [i.rawat[i.rawat.length - 1].anamesa_perawat, !i.rawat[i.rawat.length - 1].anamesa_dokter]);
+                  };
+                  if (doneByNurse()) {
+                    return m('tr', tds(arr = [hari(i.rawat[i.rawat.length - 1].tanggal), i.no_mr, i.regis.nama_lengkap, hari(i.regis.tgl_lahir), i.regis.tmpt_lahir, _.startCase(userRole())]));
+                  }
+                })))) : void 8)
+                : m.route.param('idpasien')
+                  ? m('div', {
+                    oncreate: function(){
+                      Meteor.subscribe('coll', 'tarif');
+                      Meteor.subscribe('coll', 'gudang');
+                      Meteor.subscribe('coll', 'pasien', {
+                        _id: m.route.param('idpasien')
+                      }, {
+                        onReady: function(){
+                          return m.redraw();
+                        }
+                      });
+                      return isDr() && Meteor.subscribe('users', {
+                        username: {
+                          $options: '-i',
+                          $regex: '^dr'
+                        }
+                      });
+                    }
+                  }, m('.content', m('h5', 'Rincian Pasien')), (that = coll.pasien.findOne(m.route.param('idpasien'))) ? m('div', m('table.table', [
+                    [
+                      {
+                        name: 'No. MR',
+                        data: that.no_mr
+                      }, {
+                        name: 'Tanggal Lahir',
+                        data: hari(that.regis.tgl_lahir)
+                      }
+                    ], [
+                      {
+                        name: 'Nama Lengkap',
+                        data: _.startCase(that.regis.nama_lengkap)
+                      }, {
+                        name: 'Tempat Lahir',
+                        data: _.startCase(that.regis.tmpt_lahir)
+                      }
+                    ], [
+                      {
+                        name: 'Tempat Tinggal',
+                        data: _.startCase(that.regis.alamat)
+                      }, {
+                        name: 'Umur',
+                        data: moment().diff(that.regis.tgl_lahir, 'years') + ' tahun'
+                      }
+                    ]
+                  ].map(function(i){
+                    return m('tr', i.map(function(j){
+                      return [m('th', j.name), m('td', j.data)];
+                    }));
+                  })), currentRoute() === 'regis' ? m('div', [
+                    [
+                      'Kartu', 'is-info', {
+                        onclick: function(){
+                          return makePdf.card(m.route.param('idpasien'));
+                        }
+                      }
+                    ], [
+                      'Consent', 'is-info', {
+                        onclick: function(){
+                          return makePdf.consent();
+                        }
+                      }
+                    ], [
+                      'Edit', 'is-warning', {
+                        onclick: function(){
+                          return m.route.set("/regis/edit/" + m.route.param('idpasien'));
+                        }
+                      }
+                    ], ['+Rawat Jalan', 'is-success', attr.pasien.showForm.rawat]
+                  ].map(function(i){
+                    return m(".button." + i[1], _.merge({
+                      style: 'margin-right: 10px'
+                    }, i[2]), i[0]);
+                  })) : void 8, state.showAddRawat && m(autoForm({
+                    collection: coll.pasien,
+                    schema: new SimpleSchema(schema.rawatRegis),
+                    type: 'update-pushArray',
+                    id: 'formJalan',
+                    scope: 'rawat',
+                    doc: that,
+                    buttonContent: 'Simpan',
+                    columns: 3,
+                    hooks: {
+                      before: function(doc, cb){
+                        var ref$;
+                        return cb(_.merge(doc, {
+                          petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
+                        }));
+                      },
+                      after: function(){
+                        state.showAddRawat = false;
+                        return m.redraw();
+                      }
+                    }
+                  })), [0, 1].map(function(){
+                    return m('br');
+                  }), state.docRawat && m('.content', m('h5', 'Rincian Rawat'), m('table.table', attr.pasien.rawatDetails(that.rawat.find(function(it){
+                    return it.idrawat === state.docRawat;
+                  })).map(function(i){
+                    return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
+                  }))), state.docRawat && m(autoForm({
+                    collection: coll.pasien,
+                    schema: new SimpleSchema(isDr()
+                      ? schema.rawatDoctor
+                      : schema.rawatNurse),
+                    type: 'update-pushArray',
+                    id: 'formNurse',
+                    scope: 'rawat',
+                    doc: that,
+                    buttonContent: 'Simpan',
+                    columns: 3,
+                    hooks: {
+                      before: function(doc, cb){
+                        var base;
+                        base = that.rawat.find(function(it){
+                          return it.idrawat === state.docRawat;
+                        });
+                        return Meteor.call('rmRawat', that._id, state.docRawat, function(err, res){
+                          var arr, ref$;
+                          return res && cb(_.merge(doc.rawat[0], base, {
+                            status_bayar: ors(arr = [base.cara_bayar !== 1, ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan])]) ? true : void 8,
+                            petugas: (ref$ = {}, ref$[(isDr() ? 'dokter' : 'perawat') + ""] = Meteor.userId(), ref$)
+                          }));
+                        });
+                      },
+                      after: function(doc){
+                        var that;
+                        if (that = doc.pindah) {
+                          coll.pasien.update({
                             _id: m.route.param('idpasien')
-                          })._id, i.idrawat, function(err, res){
-                            return res && m.redraw();
+                          }, {
+                            $push: {
+                              rawat: {
+                                klinik: that,
+                                billRegis: doc.billRegis,
+                                cara_bayar: doc.cara_bayar,
+                                idrawat: randomId(),
+                                petugas: doc.petugas,
+                                tanggal: new Date()
+                              }
+                            }
                           });
                         }
-                      }, m('span', 'Hapus')) : void 8
-                    ]
-                  ).map(function(j){
-                    return m('td', j) || '-';
-                  }));
-                }) : void 8)), state.modal ? elem.modal({
-                  title: 'Rincian rawat',
-                  content: m('div', m('h1', function(it){
-                    return it.regis.nama_lengkap;
-                  }(coll.pasien.findOne(m.route.param('idpasien')))), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
-                    return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
-                  })), (that = state.modal.fisik) ? m('div', m('br'), m('table', m('tr', m('th', 'Fisik'))), m('table.table', m('thead', m('tr', _.map(that, function(v, k){
-                    return m('th', _.startCase(k));
-                  }))), m('tbody', m('tr', _.map(that, function(v, k){
-                    return m('td', v);
-                  }))))) : void 8, (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
-                    var arr;
-                    return m('tr', tds(arr = [_.startCase(look2('tarif', i.nama).nama), rupiah(i.harga)]));
-                  }) : void 8, m('tr', m('th', 'Total'), m('td', rupiah(_.sum(that.map(function(it){
-                    return it.harga;
-                  }))))))) : void 8, (that = state.modal.obat) ? m('div', m('br'), m('table', m('tr', m('th', 'Obat'))), m('table.table', that.map(function(i){
-                    var arr, that;
-                    return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), i.aturan.kali + " kali", i.aturan.dosis + " dosis", i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
-                  }))) : void 8),
-                  confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true]) ? 'Lanjutkan' : void 8,
-                  action: function(){
-                    state.docRawat = state.modal.idrawat;
-                    state.spm = new Date();
-                    return state.modal = null;
-                  }
-                }) : void 8) : void 8)
-                : m('div'));
+                        state.docRawat = null;
+                        return m.redraw();
+                      }
+                    }
+                  })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
+                    return m('th', _.startCase(i));
+                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(that != null ? (ref1$ = that.rawat) != null ? ref1$.reverse() : void 8 : void 8)) != null ? ref$.map(function(i){
+                    var that, ref$;
+                    return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
+                      slice$.call(['billRegis', 'status_bayar'].map(function(it){
+                        if (i[it]) {
+                          return 'Sudah';
+                        } else {
+                          return 'Belum';
+                        }
+                      })), [
+                        userGroup('jalan') ? m('button.button.is-info', {
+                          onclick: function(){
+                            return state.modal = i;
+                          }
+                        }, m('span', 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
+                          ondblclick: function(){
+                            return Meteor.call('rmRawat', coll.pasien.findOne({
+                              _id: m.route.param('idpasien')
+                            })._id, i.idrawat, function(err, res){
+                              return res && m.redraw();
+                            });
+                          }
+                        }, m('span', 'Hapus')) : void 8
+                      ]
+                    ).map(function(j){
+                      return m('td', j) || '-';
+                    }));
+                  }) : void 8)), state.modal ? elem.modal({
+                    title: 'Rincian rawat',
+                    content: m('div', m('h1', function(it){
+                      return it.regis.nama_lengkap;
+                    }(coll.pasien.findOne(m.route.param('idpasien')))), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
+                      return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
+                    })), (that = state.modal.fisik) ? m('div', m('br'), m('table', m('tr', m('th', 'Fisik'))), m('table.table', m('thead', m('tr', _.map(that, function(v, k){
+                      return m('th', _.startCase(k));
+                    }))), m('tbody', m('tr', _.map(that, function(v, k){
+                      return m('td', v);
+                    }))))) : void 8, (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
+                      var arr;
+                      return m('tr', tds(arr = [_.startCase(look2('tarif', i.nama).nama), rupiah(i.harga)]));
+                    }) : void 8, m('tr', m('th', 'Total'), m('td', rupiah(_.sum(that.map(function(it){
+                      return it.harga;
+                    }))))))) : void 8, (that = state.modal.obat) ? m('div', m('br'), m('table', m('tr', m('th', 'Obat'))), m('table.table', that.map(function(i){
+                      var arr, that;
+                      return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), i.aturan.kali + " kali", i.aturan.dosis + " dosis", i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
+                    }))) : void 8),
+                    confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true]) ? 'Lanjutkan' : void 8,
+                    action: function(){
+                      state.docRawat = state.modal.idrawat;
+                      state.spm = new Date();
+                      return state.modal = null;
+                    }
+                  }) : void 8) : void 8)
+                  : m('div'));
+          }
         }
       };
     },
@@ -3069,112 +3074,114 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var that, tindakans, ref$, uraian, arr, ref1$, ref2$, params;
-          return m('.content', m('table.table', {
-            oncreate: function(){
-              Meteor.subscribe('coll', 'tarif');
-              return Meteor.subscribe('coll', 'pasien', {
-                rawat: {
-                  $elemMatch: {
-                    $or: [
-                      {
-                        billRegis: {
-                          $ne: true
+          if (attr.pageAccess(['bayar'])) {
+            return m('.content', m('table.table', {
+              oncreate: function(){
+                Meteor.subscribe('coll', 'tarif');
+                return Meteor.subscribe('coll', 'pasien', {
+                  rawat: {
+                    $elemMatch: {
+                      $or: [
+                        {
+                          billRegis: {
+                            $ne: true
+                          }
+                        }, {
+                          status_bayar: {
+                            $ne: true
+                          }
                         }
-                      }, {
-                        status_bayar: {
-                          $ne: true
-                        }
-                      }
-                    ]
+                      ]
+                    }
                   }
-                }
-              }, {
-                onReady: function(){
-                  return m.redraw();
-                }
-              });
-            }
-          }, m('thead', m('tr', attr.bayar.header.map(function(i){
-            return m('th', _.startCase(i));
-          }))), m('tbody', coll.pasien.find().fetch().map(function(i){
-            return _.compact(i.rawat.map(function(j){
-              var conds, arr;
-              conds = ors(arr = [!j.billRegis, j.tindakan ? !j.status_bayar : void 8]);
-              if (j.cara_bayar === 1) {
-                if (conds) {
-                  return m('tr', [
-                    i.no_mr, i.regis.nama_lengkap, hari(j.tanggal), look('cara_bayar', j.cara_bayar).label, look('klinik', j.klinik).label, m('a.button.is-success', {
-                      onclick: function(){
-                        return state.modal = _.merge(j, {
-                          pasienId: i._id
-                        });
-                      }
-                    }, m('span', 'Bayar'))
-                  ].map(function(k){
-                    return m('td', k);
-                  }));
-                }
-              }
-            }));
-          }))), (that = state.modal) ? (tindakans = (ref$ = state.modal.tindakan) != null ? ref$.map(function(it){
-            var arr;
-            return arr = [_.startCase(look2('tarif', it.nama).nama), it.harga];
-          }) : void 8, uraian = [ands(arr = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
-            return state.modal[it];
-          }), elem.modal({
-            title: 'Sudah bayar?',
-            content: m('table.table', uraian.map(function(i){
-              if (i) {
-                return m('tr', [m('th', i[0]), m('td', rupiah(i[1]))]);
-              }
-            }), m('tr', [
-              m('th', 'Total Biaya'), m('td', rupiah(_.sum(uraian.map(function(it){
-                return it != null ? it[1] : void 8;
-              }))))
-            ])),
-            confirm: 'Sudah',
-            action: function(){
-              Meteor.call('updateArrayElm', {
-                name: 'pasien',
-                recId: that.pasienId,
-                scope: 'rawat',
-                elmId: that.idrawat,
-                doc: _.merge(that, !that.billRegis
-                  ? {
-                    billRegis: true
-                  }
-                  : !that.status_bayar ? {
-                    status_bayar: true
-                  } : void 8)
-              });
-              if (!that.anamesa_perawat) {
-                makePdf.payRegCard.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
-              } else {
-                makePdf.payRawat.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
-              }
-              state.modal = null;
-              return m.redraw();
-            }
-          })) : void 8, userRole('admin') ? elem.report({
-            title: 'Laporan Pemasukan',
-            action: function(arg$){
-              var start, end, type;
-              start = arg$.start, end = arg$.end, type = arg$.type;
-              if (start && end) {
-                return Meteor.call('incomes', start, end, function(err, res){
-                  var that, title, obj;
-                  if (that = res) {
-                    title = "Pemasukan " + hari(start) + " - " + hari(end);
-                    obj = {
-                      Tabel: csv,
-                      Pdf: makePdf.csv
-                    };
-                    return obj[type](title, that);
+                }, {
+                  onReady: function(){
+                    return m.redraw();
                   }
                 });
               }
-            }
-          }) : void 8);
+            }, m('thead', m('tr', attr.bayar.header.map(function(i){
+              return m('th', _.startCase(i));
+            }))), m('tbody', coll.pasien.find().fetch().map(function(i){
+              return _.compact(i.rawat.map(function(j){
+                var conds, arr;
+                conds = ors(arr = [!j.billRegis, j.tindakan ? !j.status_bayar : void 8]);
+                if (j.cara_bayar === 1) {
+                  if (conds) {
+                    return m('tr', [
+                      i.no_mr, i.regis.nama_lengkap, hari(j.tanggal), look('cara_bayar', j.cara_bayar).label, look('klinik', j.klinik).label, m('a.button.is-success', {
+                        onclick: function(){
+                          return state.modal = _.merge(j, {
+                            pasienId: i._id
+                          });
+                        }
+                      }, m('span', 'Bayar'))
+                    ].map(function(k){
+                      return m('td', k);
+                    }));
+                  }
+                }
+              }));
+            }))), (that = state.modal) ? (tindakans = (ref$ = state.modal.tindakan) != null ? ref$.map(function(it){
+              var arr;
+              return arr = [_.startCase(look2('tarif', it.nama).nama), it.harga];
+            }) : void 8, uraian = [ands(arr = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
+              return state.modal[it];
+            }), elem.modal({
+              title: 'Sudah bayar?',
+              content: m('table.table', uraian.map(function(i){
+                if (i) {
+                  return m('tr', [m('th', i[0]), m('td', rupiah(i[1]))]);
+                }
+              }), m('tr', [
+                m('th', 'Total Biaya'), m('td', rupiah(_.sum(uraian.map(function(it){
+                  return it != null ? it[1] : void 8;
+                }))))
+              ])),
+              confirm: 'Sudah',
+              action: function(){
+                Meteor.call('updateArrayElm', {
+                  name: 'pasien',
+                  recId: that.pasienId,
+                  scope: 'rawat',
+                  elmId: that.idrawat,
+                  doc: _.merge(that, !that.billRegis
+                    ? {
+                      billRegis: true
+                    }
+                    : !that.status_bayar ? {
+                      status_bayar: true
+                    } : void 8)
+                });
+                if (!that.anamesa_perawat) {
+                  makePdf.payRegCard.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
+                } else {
+                  makePdf.payRawat.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
+                }
+                state.modal = null;
+                return m.redraw();
+              }
+            })) : void 8, userRole('admin') ? elem.report({
+              title: 'Laporan Pemasukan',
+              action: function(arg$){
+                var start, end, type;
+                start = arg$.start, end = arg$.end, type = arg$.type;
+                if (start && end) {
+                  return Meteor.call('incomes', start, end, function(err, res){
+                    var that, title, obj;
+                    if (that = res) {
+                      title = "Pemasukan " + hari(start) + " - " + hari(end);
+                      obj = {
+                        Tabel: csv,
+                        Pdf: makePdf.csv
+                      };
+                      return obj[type](title, that);
+                    }
+                  });
+                }
+              }
+            }) : void 8);
+          }
         }
       };
     },
@@ -3182,105 +3189,107 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var that;
-          return m('.content', m('h5', 'Apotik', m('table.table', {
-            oncreate: function(){
-              Meteor.subscribe('coll', 'gudang');
-              Meteor.subscribe('coll', 'rekap', {
-                printed: {
-                  $exists: false
-                }
-              });
-              return Meteor.subscribe('coll', 'pasien', {
-                rawat: {
-                  $elemMatch: {
-                    obat: {
-                      $elemMatch: {
-                        hasil: {
-                          $exists: false
+          if (attr.pageAccess(['obat'])) {
+            return m('.content', m('h5', 'Apotik', m('table.table', {
+              oncreate: function(){
+                Meteor.subscribe('coll', 'gudang');
+                Meteor.subscribe('coll', 'rekap', {
+                  printed: {
+                    $exists: false
+                  }
+                });
+                return Meteor.subscribe('coll', 'pasien', {
+                  rawat: {
+                    $elemMatch: {
+                      obat: {
+                        $elemMatch: {
+                          hasil: {
+                            $exists: false
+                          }
                         }
                       }
                     }
                   }
-                }
-              }, {
-                onReady: function(){
-                  return m.redraw();
-                }
-              });
-            }
-          }, m('thead', attr.apotik.header.map(function(i){
-            return m('th', _.startCase(i));
-          })), m('tbody', coll.pasien.find().fetch().map(function(i){
-            return i.rawat.map(function(j){
-              var okay, arr;
-              okay = function(){
-                if (j.cara_bayar === 1) {
-                  return j.status_bayar && !j.givenDrug;
-                } else {
-                  return !j.givenDrug;
-                }
-              };
-              return okay() && m('tr', tds(arr = [
-                i.no_mr, i.regis.nama_lengkap, hari(j.tanggal), look('cara_bayar', j.cara_bayar).label, look('klinik', j.klinik).label, m('.button.is-success', {
-                  onclick: function(){
-                    return state.modal = _.merge(j, i);
-                  }
-                }, m('span', 'Serah'))
-              ]));
-            });
-          })))), (that = state.modal) ? elem.modal({
-            title: 'Serahkan Obat?',
-            content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
-              return m('th', _.startCase(i));
-            })), that.obat.map(function(i){
-              var arr;
-              return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", i.aturan.kali + " kali", i.aturan.dosis + " unit"]));
-            })),
-            confirm: 'Serahkan',
-            action: function(){
-              return Meteor.call('serahObat', state.modal, function(err, res){
-                if (res) {
-                  coll.pasien.update(state.modal._id, {
-                    $set: {
-                      rawat: coll.pasien.findOne(state.modal._id).rawat.map(function(i){
-                        if (i.idrawat === state.modal.idrawat) {
-                          return _.assign(i, {
-                            givenDrug: true
-                          });
-                        } else {
-                          return i;
-                        }
-                      })
-                    }
-                  });
-                  res.map(function(it){
-                    return coll.rekap.insert(it);
-                  });
-                  state.modal = null;
-                  return m.redraw();
-                }
-              });
-            }
-          }) : void 8, m('.button.is-warning', {
-            onclick: function(){
-              return makePdf.rekap();
-            }
-          }, m('span', 'Cetak Rekap')), [0, 1, 2].map(function(){
-            return m('br');
-          }), userRole('admin') ? elem.report({
-            title: 'Laporan Pengeluaran Obat',
-            action: function(arg$){
-              var start, end, type;
-              start = arg$.start, end = arg$.end, type = arg$.type;
-              if (start && end) {
-                return Meteor.call('dispenses', start, end, function(err, res){
-                  if (res) {
-                    return csv("Pengeluaran Obat " + hari(start) + "-" + hari(end), res);
+                }, {
+                  onReady: function(){
+                    return m.redraw();
                   }
                 });
               }
-            }
-          }) : void 8);
+            }, m('thead', attr.apotik.header.map(function(i){
+              return m('th', _.startCase(i));
+            })), m('tbody', coll.pasien.find().fetch().map(function(i){
+              return i.rawat.map(function(j){
+                var okay, arr;
+                okay = function(){
+                  if (j.cara_bayar === 1) {
+                    return j.status_bayar && !j.givenDrug;
+                  } else {
+                    return !j.givenDrug;
+                  }
+                };
+                return okay() && m('tr', tds(arr = [
+                  i.no_mr, i.regis.nama_lengkap, hari(j.tanggal), look('cara_bayar', j.cara_bayar).label, look('klinik', j.klinik).label, m('.button.is-success', {
+                    onclick: function(){
+                      return state.modal = _.merge(j, i);
+                    }
+                  }, m('span', 'Serah'))
+                ]));
+              });
+            })))), (that = state.modal) ? elem.modal({
+              title: 'Serahkan Obat?',
+              content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
+                return m('th', _.startCase(i));
+              })), that.obat.map(function(i){
+                var arr;
+                return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", i.aturan.kali + " kali", i.aturan.dosis + " unit"]));
+              })),
+              confirm: 'Serahkan',
+              action: function(){
+                return Meteor.call('serahObat', state.modal, function(err, res){
+                  if (res) {
+                    coll.pasien.update(state.modal._id, {
+                      $set: {
+                        rawat: coll.pasien.findOne(state.modal._id).rawat.map(function(i){
+                          if (i.idrawat === state.modal.idrawat) {
+                            return _.assign(i, {
+                              givenDrug: true
+                            });
+                          } else {
+                            return i;
+                          }
+                        })
+                      }
+                    });
+                    res.map(function(it){
+                      return coll.rekap.insert(it);
+                    });
+                    state.modal = null;
+                    return m.redraw();
+                  }
+                });
+              }
+            }) : void 8, m('.button.is-warning', {
+              onclick: function(){
+                return makePdf.rekap();
+              }
+            }, m('span', 'Cetak Rekap')), [0, 1, 2].map(function(){
+              return m('br');
+            }), userRole('admin') ? elem.report({
+              title: 'Laporan Pengeluaran Obat',
+              action: function(arg$){
+                var start, end, type;
+                start = arg$.start, end = arg$.end, type = arg$.type;
+                if (start && end) {
+                  return Meteor.call('dispenses', start, end, function(err, res){
+                    if (res) {
+                      return csv("Pengeluaran Obat " + hari(start) + "-" + hari(end), res);
+                    }
+                  });
+                }
+              }
+            }) : void 8);
+          }
         }
       };
     },
@@ -3288,357 +3297,361 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var ref$, that, ref1$, ref2$;
-          return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
-            title: 'Laporan Stok Barang',
-            action: function(arg$){
-              var start, end, type;
-              start = arg$.start, end = arg$.end, type = arg$.type;
-              if (start && end) {
-                return Meteor.call('stocks', start, end, function(err, res){
-                  var that, title, obj;
-                  if (that = res) {
-                    title = "Stok Barang " + hari(start) + " - " + hari(end);
-                    obj = {
-                      Tabel: csv,
-                      Pdf: makePdf.csv
-                    };
-                    return obj[type](title, that);
-                  }
-                });
-              }
-            }
-          }) : void 8, !m.route.param('idbarang')
-            ? m('div', m('form', {
-              onsubmit: function(e){
-                e.preventDefault();
-                return state.search = _.lowerCase(e.target[0].value);
-              }
-            }, m('input.input', {
-              type: 'text',
-              placeholder: 'Pencarian'
-            })), (ref$ = roles()) != null && ref$.farmasi ? m('button.button.is-success', {
-              onclick: function(){
-                return state.showFormFarmasi = !state.showFormFarmasi;
-              }
-            }, m('span', '+Tambah Jenis Barang')) : void 8, state.showFormFarmasi ? (m('h5', 'Form Barang Farmasi'), m(autoForm({
-              collection: coll.gudang,
-              schema: new SimpleSchema(schema.farmasi),
-              type: 'insert',
-              id: 'formFarmasi',
-              buttonContent: 'Simpan',
-              columns: 3,
-              hooks: {
-                after: function(){
-                  state.showForm = null;
-                  return m.redraw();
-                }
-              }
-            }))) : void 8, m('table.table', {
-              oncreate: function(){
-                return Meteor.subscribe('coll', 'gudang', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('thead', m('tr', attr.gudang.headers.farmasi.map(function(i){
-              return m('th', _.startCase(i));
-            }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
-              return m('tr', {
-                'class': i.treshold > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8,
-                ondblclick: function(){
-                  return m.route.set("/farmasi/" + i._id);
-                }
-              }, m('td', look('barang', i.jenis).label), m('td', i.nama), m('td', i.treshold), ['diapotik', 'digudang'].map(function(j){
-                return m('td', _.sumBy(i.batch, j));
-              }));
-            }))))
-            : m('div', {
-              oncreate: function(){
-                return Meteor.subscribe('coll', 'gudang', {
-                  _id: m.route.param('idbarang')
-                }, {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('h5', 'Rincian Obat'), m('table.table', (that = coll.gudang.findOne(m.route.param('idbarang'))) ? [
-              [
-                {
-                  name: 'Nama Barang',
-                  cell: that.nama
-                }, {
-                  name: 'Jenis Barang',
-                  cell: look('barang', that.jenis).label
-                }
-              ], [
-                {
-                  name: 'Kandungan',
-                  cell: that.kandungan
-                }, {
-                  name: 'Satuan',
-                  cell: look('satuan', that.satuan).label
-                }
-              ]
-            ].map(function(i){
-              return m('tr', i.map(function(j){
-                return [m('th', j.name), m('td', j.cell)];
-              }));
-            }) : void 8, m('tr', {
-              ondblclick: function(){
-                if (userGroup('obat')) {
-                  return state.modal = coll.gudang.findOne(m.route.param('idbarang'));
-                }
-              }
-            }, m('th', 'Batas Minimum'), m('td', that != null ? that.treshold : void 8))), state.modal && elem.modal({
-              title: 'Tetapkan Treshold',
-              content: m('div', m('h5', 'Berapa batas minimum yang seharusnya ada di apotik?'), m('form', {
-                onsubmit: function(e){
-                  e.preventDefault();
-                  coll.gudang.update(state.modal._id, {
-                    $set: {
-                      treshold: +e.target[0].value
+          if (attr.pageAccess(['jalan', 'obat', 'farmasi'])) {
+            return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
+              title: 'Laporan Stok Barang',
+              action: function(arg$){
+                var start, end, type;
+                start = arg$.start, end = arg$.end, type = arg$.type;
+                if (start && end) {
+                  return Meteor.call('stocks', start, end, function(err, res){
+                    var that, title, obj;
+                    if (that = res) {
+                      title = "Stok Barang " + hari(start) + " - " + hari(end);
+                      obj = {
+                        Tabel: csv,
+                        Pdf: makePdf.csv
+                      };
+                      return obj[type](title, that);
                     }
                   });
-                  state.modal = null;
-                  return m.redraw();
-                }
-              }, m('.field', m('.control', m('input.input', {
-                type: 'number',
-                placeholder: 'Minimum'
-              }))), m('.field', m('.control', m('input.button.is-success', {
-                type: 'submit',
-                value: 'Tetapkan'
-              })))))
-            }), (ref1$ = roles()) != null && ref1$.farmasi ? m('.button.is-warning', {
-              onclick: function(){
-                return state.showForm = !state.showForm;
-              }
-            }, m('span', 'Tambahkan Batch')) : void 8, state.showForm ? m(autoForm({
-              collection: coll.gudang,
-              schema: new SimpleSchema(schema.farmasi),
-              type: 'update-pushArray',
-              scope: 'batch',
-              doc: coll.gudang.findOne(m.route.param('idbarang')),
-              id: 'formTambahObat',
-              buttonContent: 'Tambahkan',
-              columns: 3,
-              hooks: {
-                after: function(){
-                  Meteor.call('sortByDate', m.route.param('idbarang'));
-                  state.showForm = null;
-                  return m.redraw();
                 }
               }
-            })) : void 8, m('table.table', m('thead', attr.gudang.headers.rincian.map(function(i){
-              return m('th', _.startCase(i));
-            })), m('tbody', (ref2$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref2$.batch.map(function(i){
-              return m('tr', [i.nobatch, i.digudang, i.diapotik, hari(i.masuk), hari(i.kadaluarsa)].map(function(j){
-                return m('td', j);
-              }));
-            }) : void 8))));
+            }) : void 8, !m.route.param('idbarang')
+              ? m('div', m('form', {
+                onsubmit: function(e){
+                  e.preventDefault();
+                  return state.search = _.lowerCase(e.target[0].value);
+                }
+              }, m('input.input', {
+                type: 'text',
+                placeholder: 'Pencarian'
+              })), (ref$ = roles()) != null && ref$.farmasi ? m('button.button.is-success', {
+                onclick: function(){
+                  return state.showFormFarmasi = !state.showFormFarmasi;
+                }
+              }, m('span', '+Tambah Jenis Barang')) : void 8, state.showFormFarmasi ? (m('h5', 'Form Barang Farmasi'), m(autoForm({
+                collection: coll.gudang,
+                schema: new SimpleSchema(schema.farmasi),
+                type: 'insert',
+                id: 'formFarmasi',
+                buttonContent: 'Simpan',
+                columns: 3,
+                hooks: {
+                  after: function(){
+                    state.showForm = null;
+                    return m.redraw();
+                  }
+                }
+              }))) : void 8, m('table.table', {
+                oncreate: function(){
+                  return Meteor.subscribe('coll', 'gudang', {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
+                }
+              }, m('thead', m('tr', attr.gudang.headers.farmasi.map(function(i){
+                return m('th', _.startCase(i));
+              }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
+                return m('tr', {
+                  'class': i.treshold > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8,
+                  ondblclick: function(){
+                    return m.route.set("/farmasi/" + i._id);
+                  }
+                }, m('td', look('barang', i.jenis).label), m('td', i.nama), m('td', i.treshold), ['diapotik', 'digudang'].map(function(j){
+                  return m('td', _.sumBy(i.batch, j));
+                }));
+              }))))
+              : m('div', {
+                oncreate: function(){
+                  return Meteor.subscribe('coll', 'gudang', {
+                    _id: m.route.param('idbarang')
+                  }, {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
+                }
+              }, m('h5', 'Rincian Obat'), m('table.table', (that = coll.gudang.findOne(m.route.param('idbarang'))) ? [
+                [
+                  {
+                    name: 'Nama Barang',
+                    cell: that.nama
+                  }, {
+                    name: 'Jenis Barang',
+                    cell: look('barang', that.jenis).label
+                  }
+                ], [
+                  {
+                    name: 'Kandungan',
+                    cell: that.kandungan
+                  }, {
+                    name: 'Satuan',
+                    cell: look('satuan', that.satuan).label
+                  }
+                ]
+              ].map(function(i){
+                return m('tr', i.map(function(j){
+                  return [m('th', j.name), m('td', j.cell)];
+                }));
+              }) : void 8, m('tr', {
+                ondblclick: function(){
+                  if (userGroup('obat')) {
+                    return state.modal = coll.gudang.findOne(m.route.param('idbarang'));
+                  }
+                }
+              }, m('th', 'Batas Minimum'), m('td', that != null ? that.treshold : void 8))), state.modal && elem.modal({
+                title: 'Tetapkan Treshold',
+                content: m('div', m('h5', 'Berapa batas minimum yang seharusnya ada di apotik?'), m('form', {
+                  onsubmit: function(e){
+                    e.preventDefault();
+                    coll.gudang.update(state.modal._id, {
+                      $set: {
+                        treshold: +e.target[0].value
+                      }
+                    });
+                    state.modal = null;
+                    return m.redraw();
+                  }
+                }, m('.field', m('.control', m('input.input', {
+                  type: 'number',
+                  placeholder: 'Minimum'
+                }))), m('.field', m('.control', m('input.button.is-success', {
+                  type: 'submit',
+                  value: 'Tetapkan'
+                })))))
+              }), (ref1$ = roles()) != null && ref1$.farmasi ? m('.button.is-warning', {
+                onclick: function(){
+                  return state.showForm = !state.showForm;
+                }
+              }, m('span', 'Tambahkan Batch')) : void 8, state.showForm ? m(autoForm({
+                collection: coll.gudang,
+                schema: new SimpleSchema(schema.farmasi),
+                type: 'update-pushArray',
+                scope: 'batch',
+                doc: coll.gudang.findOne(m.route.param('idbarang')),
+                id: 'formTambahObat',
+                buttonContent: 'Tambahkan',
+                columns: 3,
+                hooks: {
+                  after: function(){
+                    Meteor.call('sortByDate', m.route.param('idbarang'));
+                    state.showForm = null;
+                    return m.redraw();
+                  }
+                }
+              })) : void 8, m('table.table', m('thead', attr.gudang.headers.rincian.map(function(i){
+                return m('th', _.startCase(i));
+              })), m('tbody', (ref2$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref2$.batch.map(function(i){
+                return m('tr', [i.nobatch, i.digudang, i.diapotik, hari(i.masuk), hari(i.kadaluarsa)].map(function(j){
+                  return m('td', j);
+                }));
+              }) : void 8))));
+          }
         }
       };
     },
     manajemen: function(){
       return {
         view: function(){
-          if ('users' === m.route.param('subroute')) {
-            return m('.content', {
-              oncreate: function(){
-                return Meteor.subscribe('users', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('h1', 'Manajemen Pengguna'), m('h5', 'Tambahkan pengguna baru'), m('form', {
-              onsubmit: function(e){
-                var vals;
-                e.preventDefault();
-                vals = _.initial(_.map(e.target, function(it){
-                  return it.value;
-                }));
-                if (vals[1] === vals[2]) {
-                  return Meteor.call('newUser', {
-                    username: vals[0],
-                    password: vals[1]
-                  }, function(err, res){
-                    return res && m.redraw();
+          if (attr.pageAccess(['manajemen'])) {
+            if ('users' === m.route.param('subroute')) {
+              return m('.content', {
+                oncreate: function(){
+                  return Meteor.subscribe('users', {
+                    onReady: function(){
+                      return m.redraw();
+                    }
                   });
                 }
-              }
-            }, [
-              {
+              }, m('h1', 'Manajemen Pengguna'), m('h5', 'Tambahkan pengguna baru'), m('form', {
+                onsubmit: function(e){
+                  var vals;
+                  e.preventDefault();
+                  vals = _.initial(_.map(e.target, function(it){
+                    return it.value;
+                  }));
+                  if (vals[1] === vals[2]) {
+                    return Meteor.call('newUser', {
+                      username: vals[0],
+                      password: vals[1]
+                    }, function(err, res){
+                      return res && m.redraw();
+                    });
+                  }
+                }
+              }, [
+                {
+                  type: 'text',
+                  place: 'Username'
+                }, {
+                  type: 'password',
+                  place: 'Password'
+                }, {
+                  type: 'password',
+                  place: 'Ulangi password'
+                }
+              ].map(function(i){
+                return m('.field', m('.control', m('input.input', {
+                  type: i.type,
+                  placeholder: i.place
+                })));
+              }), m('.field', m('.control', m('input.button', {
+                type: 'submit',
+                value: 'Daftarkan'
+              })))), [0, 1].map(function(){
+                return m('br');
+              }), m('h5', 'Daftar Pengguna Sistem'), m('form', {
+                onkeypress: function(e){
+                  return state.search = e.target.value;
+                }
+              }, m('input.input', {
                 type: 'text',
-                place: 'Username'
-              }, {
-                type: 'password',
-                place: 'Password'
-              }, {
-                type: 'password',
-                place: 'Ulangi password'
-              }
-            ].map(function(i){
-              return m('.field', m('.control', m('input.input', {
-                type: i.type,
-                placeholder: i.place
-              })));
-            }), m('.field', m('.control', m('input.button', {
-              type: 'submit',
-              value: 'Daftarkan'
-            })))), [0, 1].map(function(){
-              return m('br');
-            }), m('h5', 'Daftar Pengguna Sistem'), m('form', {
-              onkeypress: function(e){
-                return state.search = e.target.value;
-              }
-            }, m('input.input', {
-              type: 'text',
-              placeholder: 'Pencarian'
-            })), m('table.table', {
-              oncreate: function(){
-                return Meteor.subscribe('users', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('thead', m('tr', ['Username', 'Peran', 'Aksi'].map(function(i){
-              return m('th', i);
-            }))), m('tbody', attr.manajemen.userList().map(function(i){
-              return m('tr', {
-                ondblclick: function(){
-                  return state.modal = i;
+                placeholder: 'Pencarian'
+              })), m('table.table', {
+                oncreate: function(){
+                  return Meteor.subscribe('users', {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
                 }
-              }, m('td', i.username), m('td', JSON.stringify(i.roles)), m('td', m('.button.is-danger', {
-                onclick: function(){
-                  return Meteor.call('rmRole', i._id);
+              }, m('thead', m('tr', ['Username', 'Peran', 'Aksi'].map(function(i){
+                return m('th', i);
+              }))), m('tbody', attr.manajemen.userList().map(function(i){
+                return m('tr', {
+                  ondblclick: function(){
+                    return state.modal = i;
+                  }
+                }, m('td', i.username), m('td', JSON.stringify(i.roles)), m('td', m('.button.is-danger', {
+                  onclick: function(){
+                    return Meteor.call('rmRole', i._id);
+                  }
+                }, m('span', 'Reset'))));
+              })), state.modal ? elem.modal({
+                title: 'Berikan Peranan',
+                content: m(autoForm({
+                  schema: new SimpleSchema(schema.addRole),
+                  type: 'method',
+                  meteormethod: 'addRole',
+                  id: 'formAddRole',
+                  buttonContent: 'Beri',
+                  columns: 3,
+                  hooks: {
+                    before: function(doc, cb){
+                      return cb(_.merge(doc, {
+                        id: state.modal._id
+                      }));
+                    },
+                    after: function(){
+                      state.modal = null;
+                      return m.redraw();
+                    }
+                  }
+                }))
+              }) : void 8), elem.pagins());
+            } else if ('imports' === m.route.param('subroute')) {
+              return m('.content', m('h1', 'Importer Data'), m('h5', 'Unggah data csv'), m('.file', m('label.file-label', m('input.file-input', {
+                type: 'file',
+                name: 'csv',
+                onchange: function(e){
+                  return Papa.parse(e.target.files[0], {
+                    header: true,
+                    step: function(result){
+                      var data, sel, opt, that;
+                      data = result.data[0];
+                      if (data.no_mr) {
+                        sel = {
+                          no_mr: +data.no_mr
+                        };
+                        opt = {
+                          regis: {
+                            nama_lengkap: _.startCase(data.nama_lengkap),
+                            alamat: (that = data.alamat) ? _.startCase(that) : void 8,
+                            agama: (that = data.agama) ? +that : void 8,
+                            ayah: (that = data.ayah) ? _.startCase(that) : void 8,
+                            nikah: (that = data.nikah) ? +that : void 8,
+                            pekerjaan: (that = data.pekerjaan) ? +that : void 8,
+                            pendidikan: (that = data.pendidikan) ? +that : void 8,
+                            tgl_lahir: (that = data.tgl_lahir) ? (that = Date.parse(that)) ? new Date(that) : void 8 : void 8,
+                            tmpt_lahir: (that = data.tmpt_lahir) ? _.startCase(that) : void 8
+                          }
+                        };
+                        Meteor.call('import', 'pasien', sel, opt);
+                      }
+                      if (data.digudang) {
+                        sel = {
+                          nama: data.nama
+                        };
+                        opt = {
+                          jenis: +data.jenis,
+                          satuan: +data.satuan,
+                          nobatch: (that = data.nobatch) ? that : void 8,
+                          merek: (that = data.merek) ? that : void 8,
+                          masuk: (that = data.masuk) ? new Date(that) : void 8,
+                          kadaluarsa: (that = data.kadaluarsa) ? new Date(that) : void 8,
+                          digudang: +data.digudang,
+                          diapotik: (that = data.diapotik) ? +that : void 8,
+                          diretur: (that = data.diretur) ? +that : void 8,
+                          beli: (that = data.beli) ? +that : void 8,
+                          jual: (that = data.jual) ? +that : void 8,
+                          suplier: (that = data.suplier) ? that : void 8,
+                          returnable: (that = data.returnable) ? !!that : void 8,
+                          anggaran: (that = data.anggaran) ? +that : void 8,
+                          pengadaan: (that = data.pengadaan) ? that : void 8,
+                          no_spk: (that = data.no_spk) ? that : void 8,
+                          tanggal_spk: (that = data.tanggal_spk) ? new Date(that) : void 8
+                        };
+                        Meteor.call('import', 'gudang', sel, opt);
+                      }
+                      if (data.harga) {
+                        sel = {
+                          nama: _.snakeCase(data.nama)
+                        };
+                        opt = {
+                          harga: +data.harga,
+                          first: data.first,
+                          second: data.second,
+                          third: (that = data.third) ? that : void 8,
+                          active: true
+                        };
+                        Meteor.call('import', 'tarif', sel, opt);
+                      }
+                      if (data.password) {
+                        ['newUser', 'importRoles'].map(function(i){
+                          return Meteor.call(i, data);
+                        });
+                      }
+                      if (data.daerah) {
+                        return coll.daerah.insert({
+                          daerah: _.lowerCase(data.daerah),
+                          provinsi: (that = data.provinsi) ? +that : void 8,
+                          kabupaten: (that = data.kabupaten) ? +that : void 8,
+                          kecamatan: (that = data.kecamatan) ? +that : void 8,
+                          kelurahan: (that = data.kelurahan) ? +that : void 8
+                        });
+                      }
+                    }
+                  });
                 }
-              }, m('span', 'Reset'))));
-            })), state.modal ? elem.modal({
-              title: 'Berikan Peranan',
-              content: m(autoForm({
-                schema: new SimpleSchema(schema.addRole),
-                type: 'method',
-                meteormethod: 'addRole',
-                id: 'formAddRole',
-                buttonContent: 'Beri',
-                columns: 3,
-                hooks: {
-                  before: function(doc, cb){
-                    return cb(_.merge(doc, {
-                      id: state.modal._id
-                    }));
-                  },
-                  after: function(){
-                    state.modal = null;
-                    return m.redraw();
-                  }
+              }), m('span.file-cta', m('span.file-icon', m('i.fa.fa-upload')), m('span.file-label', 'Pilih file .csv')))), [0, 1].map(function(){
+                return m('br');
+              }), m('h5', 'Daftar Tarif Tindakan'), m('table.table', {
+                oncreate: function(){
+                  return Meteor.subscribe('coll', 'tarif', {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
                 }
-              }))
-            }) : void 8), elem.pagins());
-          } else if ('imports' === m.route.param('subroute')) {
-            return m('.content', m('h1', 'Importer Data'), m('h5', 'Unggah data csv'), m('.file', m('label.file-label', m('input.file-input', {
-              type: 'file',
-              name: 'csv',
-              onchange: function(e){
-                return Papa.parse(e.target.files[0], {
-                  header: true,
-                  step: function(result){
-                    var data, sel, opt, that;
-                    data = result.data[0];
-                    if (data.no_mr) {
-                      sel = {
-                        no_mr: +data.no_mr
-                      };
-                      opt = {
-                        regis: {
-                          nama_lengkap: _.startCase(data.nama_lengkap),
-                          alamat: (that = data.alamat) ? _.startCase(that) : void 8,
-                          agama: (that = data.agama) ? +that : void 8,
-                          ayah: (that = data.ayah) ? _.startCase(that) : void 8,
-                          nikah: (that = data.nikah) ? +that : void 8,
-                          pekerjaan: (that = data.pekerjaan) ? +that : void 8,
-                          pendidikan: (that = data.pendidikan) ? +that : void 8,
-                          tgl_lahir: (that = data.tgl_lahir) ? (that = Date.parse(that)) ? new Date(that) : void 8 : void 8,
-                          tmpt_lahir: (that = data.tmpt_lahir) ? _.startCase(that) : void 8
-                        }
-                      };
-                      Meteor.call('import', 'pasien', sel, opt);
-                    }
-                    if (data.digudang) {
-                      sel = {
-                        nama: data.nama
-                      };
-                      opt = {
-                        jenis: +data.jenis,
-                        satuan: +data.satuan,
-                        nobatch: (that = data.nobatch) ? that : void 8,
-                        merek: (that = data.merek) ? that : void 8,
-                        masuk: (that = data.masuk) ? new Date(that) : void 8,
-                        kadaluarsa: (that = data.kadaluarsa) ? new Date(that) : void 8,
-                        digudang: +data.digudang,
-                        diapotik: (that = data.diapotik) ? +that : void 8,
-                        diretur: (that = data.diretur) ? +that : void 8,
-                        beli: (that = data.beli) ? +that : void 8,
-                        jual: (that = data.jual) ? +that : void 8,
-                        suplier: (that = data.suplier) ? that : void 8,
-                        returnable: (that = data.returnable) ? !!that : void 8,
-                        anggaran: (that = data.anggaran) ? +that : void 8,
-                        pengadaan: (that = data.pengadaan) ? that : void 8,
-                        no_spk: (that = data.no_spk) ? that : void 8,
-                        tanggal_spk: (that = data.tanggal_spk) ? new Date(that) : void 8
-                      };
-                      Meteor.call('import', 'gudang', sel, opt);
-                    }
-                    if (data.harga) {
-                      sel = {
-                        nama: _.snakeCase(data.nama)
-                      };
-                      opt = {
-                        harga: +data.harga,
-                        first: data.first,
-                        second: data.second,
-                        third: (that = data.third) ? that : void 8,
-                        active: true
-                      };
-                      Meteor.call('import', 'tarif', sel, opt);
-                    }
-                    if (data.password) {
-                      ['newUser', 'importRoles'].map(function(i){
-                        return Meteor.call(i, data);
-                      });
-                    }
-                    if (data.daerah) {
-                      return coll.daerah.insert({
-                        daerah: _.lowerCase(data.daerah),
-                        provinsi: (that = data.provinsi) ? +that : void 8,
-                        kabupaten: (that = data.kabupaten) ? +that : void 8,
-                        kecamatan: (that = data.kecamatan) ? +that : void 8,
-                        kelurahan: (that = data.kelurahan) ? +that : void 8
-                      });
-                    }
-                  }
-                });
-              }
-            }), m('span.file-cta', m('span.file-icon', m('i.fa.fa-upload')), m('span.file-label', 'Pilih file .csv')))), [0, 1].map(function(){
-              return m('br');
-            }), m('h5', 'Daftar Tarif Tindakan'), m('table.table', {
-              oncreate: function(){
-                return Meteor.subscribe('coll', 'tarif', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('thead', m('tr', attr.manajemen.headers.tarif.map(function(i){
-              return m('th', _.startCase(i));
-            }))), m('tbody', pagins(coll.tarif.find().fetch()).map(function(i){
-              var arr;
-              return m('tr', tds(arr = [_.startCase(i.nama), rupiah(i.harga), _.startCase(i.first), _.startCase(i.second), _.startCase(i.third), i.active]));
-            }))), elem.pagins());
+              }, m('thead', m('tr', attr.manajemen.headers.tarif.map(function(i){
+                return m('th', _.startCase(i));
+              }))), m('tbody', pagins(coll.tarif.find().fetch()).map(function(i){
+                var arr;
+                return m('tr', tds(arr = [_.startCase(i.nama), rupiah(i.harga), _.startCase(i.first), _.startCase(i.second), _.startCase(i.third), i.active]));
+              }))), elem.pagins());
+            }
           }
         }
       };
@@ -3647,125 +3660,127 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var arr;
-          return m('.content', {
-            oncreate: function(){
-              Meteor.subscribe('users', {
-                onReady: function(){
-                  return m.redraw();
-                }
-              });
-              Meteor.subscribe('coll', 'gudang', {
-                onReady: function(){
-                  return m.redraw();
-                }
-              });
-              return state.showForm = {
-                obat: false,
-                bhp: false
-              };
-            }
-          }, _.compact(attr.amprah.reqForm()).map(function(type){
-            var ref$;
-            return m('div', [0].map(function(i){
-              return m('br');
-            }), m('.button.is-primary', {
-              onclick: function(){
-                return state.showForm[type] = !state.showForm[type];
-              }
-            }, m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h5', 'Form Amprah'), m(autoForm({
-              collection: coll.amprah,
-              schema: new SimpleSchema(schema.amprah(type)),
-              type: 'insert',
-              id: "formAmprah" + type,
-              columns: 2,
-              hooks: {
-                after: function(){
-                  state.showForm = null;
-                  return m.redraw();
-                }
-              }
-            }))) : void 8);
-          }), m('br'), m('h5', 'Daftar Amprah'), m('table.table', {
-            oncreate: function(){
-              var cond;
-              cond = function(){
-                if (userGroup('obat')) {
-                  return {
-                    penyerah: {
-                      $exists: false
-                    }
-                  };
-                } else if (userGroup('farmasi')) {
-                  return {
-                    ruangan: 'apotik'
-                  };
-                } else {
-                  return {
-                    ruangan: userGroup()
-                  };
-                }
-              };
-              return Meteor.subscribe('coll', 'amprah', cond(), {
-                onReady: function(){
-                  return m.redraw();
-                }
-              });
-            }
-          }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
-            return m('th', _.startCase(i));
-          }), userGroup('obat') ? m('th', 'Serah') : void 8)), m('tbody', attr.amprah.amprahList().map(function(i){
-            var arr, ref$, that, this$ = this;
-            return m('tr', tds(arr = [
-              hari(i.tanggal_minta), function(it){
-                return it.full;
-              }(modules.find(function(it){
-                return it.name === i.ruangan;
-              })), _.startCase(function(it){
-                return it.username;
-              }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
-                return it.username;
-              }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
-                onclick: function(){
-                  return state.modal = i;
-                }
-              }, m('span', 'Serah')) : void 8
-            ]));
-          }))), state.modal ? elem.modal({
-            title: 'Respon Amprah',
-            content: state.modal.nama
-              ? m('div', m('table.table', m('thead', m('tr', ['diminta', 'sedia'].map(function(i){
-                return m('th', _.startCase(i));
-              }))), m('tbody', m('tr', tds(arr = [
-                state.modal.jumlah, _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
-                  if (userGroup('farmasi')) {
-                    return i.digudang;
-                  } else {
-                    return i.diapotik;
+          if (attr.pageAccess(['jalan', 'obat', 'farmasi'])) {
+            return m('.content', {
+              oncreate: function(){
+                Meteor.subscribe('users', {
+                  onReady: function(){
+                    return m.redraw();
                   }
-                }))
-              ])))), m(autoForm({
-                schema: new SimpleSchema(schema.responAmprah),
-                id: 'formResponAmprah',
-                type: 'method',
-                meteormethod: 'serahAmprah',
+                });
+                Meteor.subscribe('coll', 'gudang', {
+                  onReady: function(){
+                    return m.redraw();
+                  }
+                });
+                return state.showForm = {
+                  obat: false,
+                  bhp: false
+                };
+              }
+            }, _.compact(attr.amprah.reqForm()).map(function(type){
+              var ref$;
+              return m('div', [0].map(function(i){
+                return m('br');
+              }), m('.button.is-primary', {
+                onclick: function(){
+                  return state.showForm[type] = !state.showForm[type];
+                }
+              }, m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h5', 'Form Amprah'), m(autoForm({
+                collection: coll.amprah,
+                schema: new SimpleSchema(schema.amprah(type)),
+                type: 'insert',
+                id: "formAmprah" + type,
+                columns: 2,
                 hooks: {
-                  before: function(doc, cb){
-                    return cb(_.merge(doc, state.modal));
-                  },
-                  after: function(doc){
-                    state.modal = doc;
+                  after: function(){
+                    state.showForm = null;
                     return m.redraw();
                   }
                 }
-              })))
-              : m('table.table', m('thead', m('tr', ['nama_obat', 'no_batch', 'serahkan'].map(function(i){
-                return m('th', _.startCase(i));
-              }))), m('tbody', state.modal.map(function(i){
-                return m('tr', tds(_.map(i, function(it){
-                  return it;
-                })));
-              })))
-          }) : void 8);
+              }))) : void 8);
+            }), m('br'), m('h5', 'Daftar Amprah'), m('table.table', {
+              oncreate: function(){
+                var cond;
+                cond = function(){
+                  if (userGroup('obat')) {
+                    return {
+                      penyerah: {
+                        $exists: false
+                      }
+                    };
+                  } else if (userGroup('farmasi')) {
+                    return {
+                      ruangan: 'apotik'
+                    };
+                  } else {
+                    return {
+                      ruangan: userGroup()
+                    };
+                  }
+                };
+                return Meteor.subscribe('coll', 'amprah', cond(), {
+                  onReady: function(){
+                    return m.redraw();
+                  }
+                });
+              }
+            }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
+              return m('th', _.startCase(i));
+            }), userGroup('obat') ? m('th', 'Serah') : void 8)), m('tbody', attr.amprah.amprahList().map(function(i){
+              var arr, ref$, that, this$ = this;
+              return m('tr', tds(arr = [
+                hari(i.tanggal_minta), function(it){
+                  return it.full;
+                }(modules.find(function(it){
+                  return it.name === i.ruangan;
+                })), _.startCase(function(it){
+                  return it.username;
+                }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
+                  return it.username;
+                }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
+                  onclick: function(){
+                    return state.modal = i;
+                  }
+                }, m('span', 'Serah')) : void 8
+              ]));
+            }))), state.modal ? elem.modal({
+              title: 'Respon Amprah',
+              content: state.modal.nama
+                ? m('div', m('table.table', m('thead', m('tr', ['diminta', 'sedia'].map(function(i){
+                  return m('th', _.startCase(i));
+                }))), m('tbody', m('tr', tds(arr = [
+                  state.modal.jumlah, _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
+                    if (userGroup('farmasi')) {
+                      return i.digudang;
+                    } else {
+                      return i.diapotik;
+                    }
+                  }))
+                ])))), m(autoForm({
+                  schema: new SimpleSchema(schema.responAmprah),
+                  id: 'formResponAmprah',
+                  type: 'method',
+                  meteormethod: 'serahAmprah',
+                  hooks: {
+                    before: function(doc, cb){
+                      return cb(_.merge(doc, state.modal));
+                    },
+                    after: function(doc){
+                      state.modal = doc;
+                      return m.redraw();
+                    }
+                  }
+                })))
+                : m('table.table', m('thead', m('tr', ['nama_obat', 'no_batch', 'serahkan'].map(function(i){
+                  return m('th', _.startCase(i));
+                }))), m('tbody', state.modal.map(function(i){
+                  return m('tr', tds(_.map(i, function(it){
+                    return it;
+                  })));
+                })))
+            }) : void 8);
+          }
         }
       };
     }
