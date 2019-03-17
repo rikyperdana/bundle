@@ -2321,6 +2321,9 @@ if (Meteor.isClient) {
           }
         ];
       },
+      currentPasien: function(){
+        return coll.pasien.findOne(m.route.param('idpasien'));
+      },
       poliFilter: function(arr){
         if (arr) {
           return _.compact(arr.map(function(i){
@@ -2556,7 +2559,7 @@ if (Meteor.isClient) {
     pasien: function(){
       return {
         view: function(){
-          var arr, ref$, that, doc, ref1$, this$ = this;
+          var arr, ref$, that, doc, this$ = this;
           if (attr.pageAccess(['regis', 'jalan'])) {
             return m('.content', {
               oncreate: Meteor.subscribe('coll', 'daerah', {
@@ -2956,7 +2959,7 @@ if (Meteor.isClient) {
                     type: 'update-pushArray',
                     id: 'formJalan',
                     scope: 'rawat',
-                    doc: that,
+                    doc: coll.pasien.findOne(m.route.param('idpasien')),
                     buttonContent: 'Simpan',
                     columns: 3,
                     hooks: {
@@ -3026,7 +3029,7 @@ if (Meteor.isClient) {
                     }
                   })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
                     return m('th', _.startCase(i));
-                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(that != null ? (ref1$ = that.rawat) != null ? ref1$.reverse() : void 8 : void 8)) != null ? ref$.map(function(i){
+                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(attr.pasien.currentPasien().rawat)) != null ? ref$.map(function(i){
                     var that, ref$;
                     return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
                       slice$.call(['billRegis', 'status_bayar'].map(function(it){
