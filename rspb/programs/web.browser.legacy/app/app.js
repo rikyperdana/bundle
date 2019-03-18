@@ -1250,7 +1250,7 @@ selects.namaTindakan = function(name){
           }(coll.pasien.findOne().rawat.find(function(it){
             return it.idrawat === state.docRawat;
           }));
-        }))), it.third === afState.form.formNurse[current]
+        }))), it.third === afState.form.formRawat[current]
       ]);
     }) : void 8;
     return a.map(function(it){
@@ -1549,28 +1549,33 @@ if (Meteor.isClient) {
     },
     nadi: {
       type: Number,
-      optional: true
+      optional: true,
+      decimal: true
     },
     suhu: {
       type: Number,
-      decimal: true,
-      optional: true
+      optional: true,
+      decimal: true
     },
     pernapasan: {
       type: Number,
-      optional: true
+      optional: true,
+      decimal: true
     },
     berat: {
       type: Number,
-      optional: true
+      optional: true,
+      decimal: true
     },
     tinggi: {
       type: Number,
-      optional: true
+      optional: true,
+      decimal: true
     },
     lila: {
       type: Number,
-      optional: true
+      optional: true,
+      decimal: true
     }
   };
   schema.tindakan = {
@@ -2409,11 +2414,14 @@ if (Meteor.isClient) {
       userList: function(){
         var arr, that;
         return pagins(_.reverse(ors(arr = [
-          (that = state.search) ? Meteor.users.find({
+          (that = state.search) ? _.concat(Meteor.users.find().fetch().filter(function(i){
+            var arr;
+            return ors(arr = [_.includes(_.join(_.keys(i.roles)), that), _.includes(_.join(_.values(i.roles)), that)]);
+          }), Meteor.users.find({
             username: {
               $regex: ".*" + that + ".*"
             }
-          }).fetch() : void 8, Meteor.users.find().fetch()
+          }).fetch()) : void 8, Meteor.users.find().fetch()
         ])));
       }
     },
@@ -2439,6 +2447,15 @@ if (Meteor.isClient) {
       reqForm: function(){
         var arr;
         return arr = [!userGroup('farmasi') ? 'bhp' : void 8, userGroup('obat') ? 'obat' : void 8];
+      },
+      available: function(){
+        return _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
+          if (userGroup('farmasi')) {
+            return i.digudang;
+          } else {
+            return i.diapotik;
+          }
+        }));
       }
     }
   };
@@ -2655,12 +2672,16 @@ if (Meteor.isClient) {
               },
               hooks: {
                 before: function(doc, cb){
-                  var ref$;
-                  return cb(_.merge(doc, {
-                    regis: {
-                      petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
+                  return Meteor.call('onePasien', doc.no_mr, function(err, res){
+                    var ref$;
+                    if (!res) {
+                      return cb(_.merge(doc, {
+                        regis: {
+                          petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
+                        }
+                      }));
                     }
-                  }));
+                  });
                 },
                 after: function(id){
                   state.showAddPatient = null;
@@ -2826,7 +2847,9 @@ if (Meteor.isClient) {
                   } else {
                     return rows();
                   }
-                }))), userGroup('jalan') && !isDr() ? m('div', m('h4', 'Daftar Antrian Panggilan Dokter'), m('table.table', m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
+                }))), userGroup('jalan') && !isDr() ? m('div', [0, 1].map(function(){
+                  return m('br');
+                }), m('h4', 'Daftar Antrian Panggilan Dokter'), m('table.table', m('thead', m('tr', attr.pasien.headers.patientList.map(function(i){
                   return m('th', _.startCase(i));
                 }))), m('tbody', coll.pasien.find().fetch().map(function(i){
                   var doneByNurse, arr;
@@ -2863,7 +2886,7 @@ if (Meteor.isClient) {
                     }
                   }, [0, 1].map(function(){
                     return m('br');
-                  }), m('.content', m('h4', 'Rincian Pasien')), (that = doc = coll.pasien.findOne(m.route.param('idpasien'))) ? m('div', m('table.table', _.chunk([
+                  }), m('.content', m('h4', 'Rincian Pasien')), (doc = coll.pasien.findOne(m.route.param('idpasien'))) ? m('div', m('table.table', _.chunk([
                     {
                       name: 'No. MR',
                       data: doc.no_mr
@@ -2965,9 +2988,11 @@ if (Meteor.isClient) {
                     hooks: {
                       before: function(doc, cb){
                         var ref$;
-                        return cb(_.merge(doc, {
-                          petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
-                        }));
+                        return cb({
+                          rawat: [_.merge(doc.rawat[0], {
+                            petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
+                          })]
+                        });
                       },
                       after: function(){
                         state.showAddRawat = false;
@@ -2976,7 +3001,7 @@ if (Meteor.isClient) {
                     }
                   })), [0, 1].map(function(){
                     return m('br');
-                  }), state.docRawat && m('.content', m('h4', 'Rincian Rawat'), m('table.table', attr.pasien.rawatDetails(that.rawat.find(function(it){
+                  }), state.docRawat && m('.content', m('h4', 'Rincian Rawat'), m('table.table', attr.pasien.rawatDetails(attr.pasien.currentPasien().rawat.find(function(it){
                     return it.idrawat === state.docRawat;
                   })).map(function(i){
                     return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
@@ -2986,18 +3011,18 @@ if (Meteor.isClient) {
                       ? schema.rawatDoctor
                       : schema.rawatNurse),
                     type: 'update-pushArray',
-                    id: 'formNurse',
+                    id: 'formRawat',
                     scope: 'rawat',
-                    doc: that,
+                    doc: attr.pasien.currentPasien(),
                     buttonContent: 'Simpan',
                     columns: 3,
                     hooks: {
                       before: function(doc, cb){
                         var base;
-                        base = that.rawat.find(function(it){
+                        base = attr.pasien.currentPasien().rawat.find(function(it){
                           return it.idrawat === state.docRawat;
                         });
-                        return Meteor.call('rmRawat', that._id, state.docRawat, function(err, res){
+                        return Meteor.call('rmRawat', attr.pasien.currentPasien()._id, state.docRawat, function(err, res){
                           var arr, ref$;
                           return res && cb(_.merge(doc.rawat[0], base, {
                             status_bayar: ors(arr = [base.cara_bayar !== 1, ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan])]) ? true : void 8,
@@ -3593,7 +3618,7 @@ if (Meteor.isClient) {
                             nama_lengkap: _.startCase(_.lowerCase(data.nama_lengkap)),
                             alamat: (that = data.alamat) ? _.startCase(_.lowerCase(that)) : void 8,
                             agama: (that = data.agama) ? +that : void 8,
-                            ayah: (that = data.ayah) ? _.startCase(that) : void 8,
+                            ayah: (that = data.ayah) ? _.startCase(_.lowerCase(that)) : void 8,
                             nikah: (that = data.nikah) ? +that : void 8,
                             pekerjaan: (that = data.pekerjaan) ? +that : void 8,
                             pendidikan: (that = data.pendidikan) ? +that : void 8,
@@ -3772,22 +3797,16 @@ if (Meteor.isClient) {
               content: state.modal.nama
                 ? m('div', m('table.table', m('thead', m('tr', ['diminta', 'sedia'].map(function(i){
                   return m('th', _.startCase(i));
-                }))), m('tbody', m('tr', tds(arr = [
-                  state.modal.jumlah, _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
-                    if (userGroup('farmasi')) {
-                      return i.digudang;
-                    } else {
-                      return i.diapotik;
-                    }
-                  }))
-                ])))), m(autoForm({
+                }))), m('tbody', m('tr', tds(arr = [state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
                   schema: new SimpleSchema(schema.responAmprah),
                   id: 'formResponAmprah',
                   type: 'method',
                   meteormethod: 'serahAmprah',
                   hooks: {
                     before: function(doc, cb){
-                      return cb(_.merge(doc, state.modal));
+                      if (doc.diserah <= attr.amprah.available()) {
+                        return cb(_.merge(doc, state.modal));
+                      }
                     },
                     after: function(doc){
                       state.modal = doc;
