@@ -1666,6 +1666,7 @@ if (Meteor.isClient) {
     },
     nama: {
       type: String,
+      label: 'Nama Obat',
       autoform: {
         options: selects.obat
       }
@@ -3398,7 +3399,7 @@ if (Meteor.isClient) {
     farmasi: function(){
       return {
         view: function(){
-          var ref$, that, ref1$, ref2$;
+          var ref$, that, ref1$, ref2$, ref3$, ref4$;
           if (attr.pageAccess(['jalan', 'obat', 'farmasi'])) {
             return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
               title: 'Laporan Stok Barang',
@@ -3503,7 +3504,7 @@ if (Meteor.isClient) {
                     return state.modal = coll.gudang.findOne(m.route.param('idbarang'));
                   }
                 }
-              }, m('th', 'Batas Minimum'), m('td', that != null ? that.treshold : void 8))), state.modal && elem.modal({
+              }, m('th', 'Batas Minimum'), m('td', that != null ? that.treshold : void 8))), ((ref1$ = state.modal) != null ? ref1$._id : void 8) && elem.modal({
                 title: 'Tetapkan Treshold',
                 content: m('div', m('h4', 'Berapa batas minimum yang seharusnya ada di apotik?'), m('form', {
                   onsubmit: function(e){
@@ -3523,7 +3524,7 @@ if (Meteor.isClient) {
                   type: 'submit',
                   value: 'Tetapkan'
                 })))))
-              }), (ref1$ = roles()) != null && ref1$.farmasi ? m('.button.is-warning', {
+              }), (ref2$ = roles()) != null && ref2$.farmasi ? m('.button.is-warning', {
                 onclick: function(){
                   return state.showForm = !state.showForm;
                 }
@@ -3545,11 +3546,23 @@ if (Meteor.isClient) {
                 }
               })) : void 8, m('table.table', m('thead', attr.gudang.headers.rincian.map(function(i){
                 return m('th', _.startCase(i));
-              })), m('tbody', (ref2$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref2$.batch.map(function(i){
-                return m('tr', [i.nobatch, i.digudang, i.diapotik, hari(i.masuk), hari(i.kadaluarsa)].map(function(j){
-                  return m('td', j);
-                }));
-              }) : void 8))));
+              })), m('tbody', (ref3$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref3$.batch.map(function(i){
+                return m('tr', {
+                  ondblclick: function(){
+                    state.modal = i;
+                    return m.redraw();
+                  }
+                }, tds([i.nobatch, i.digudang, i.diapotik, hari(i.masuk), hari(i.kadaluarsa)]));
+              }) : void 8)), (ref4$ = state.modal) != null && ref4$.idbatch ? elem.modal({
+                title: 'Rincian Batch',
+                content: m('table', function(){
+                  var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
+                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang], ['Harga Jual', (ref1$ = state.modal) != null ? ref1$.jual : void 8], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
+                  return contents.map(function(i){
+                    return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
+                  });
+                }())
+              }) : void 8));
           }
         }
       };
@@ -4080,7 +4093,7 @@ if (Meteor.isServer) {
           : (minim = function(){
             return min([i.jumlah, inc.diapotik]);
           }, batches.push({
-            idpasien: pasien._id,
+            idpasien: pasien != null ? pasien._id : void 8,
             nama_obat: i.nama,
             nobatch: inc.nobatch,
             jumlah: minim()
