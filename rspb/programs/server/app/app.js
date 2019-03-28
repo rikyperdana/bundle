@@ -1676,14 +1676,17 @@ if (Meteor.isClient) {
       optional: true
     },
     aturan: {
-      type: Object
+      type: Object,
+      optional: true
     },
     'aturan.kali': {
       type: Number,
-      label: 'Kali sehari'
+      label: 'Kali sehari',
+      optional: true
     },
     'aturan.dosis': {
-      type: String
+      type: String,
+      optional: true
     },
     jumlah: {
       type: Number
@@ -3287,7 +3290,52 @@ if (Meteor.isClient) {
         view: function(){
           var that;
           if (attr.pageAccess(['obat'])) {
-            return m('.content', m('h4', 'Apotik', m('table.table', {
+            return m('.content', m('h4', 'Apotik'), (that = state.bypass) ? m('b', "Nama Pasien: " + that) : void 8, m(autoForm({
+              schema: new SimpleSchema({
+                no_mr: {
+                  type: Number
+                },
+                nama: {
+                  type: String,
+                  label: 'Nama Obat',
+                  autoform: {
+                    options: selects.obat
+                  }
+                },
+                jumlah: {
+                  type: Number
+                }
+              }),
+              type: 'method',
+              meteormethod: 'serahObat',
+              id: 'bypassObat',
+              columns: 3,
+              onchange: function(doc){
+                if (doc.name === 'no_mr') {
+                  return Meteor.call('onePasien', doc.value, function(err, res){
+                    if (res) {
+                      state.bypass = res.regis.nama_lengkap;
+                      return m.redraw();
+                    }
+                  });
+                }
+              },
+              hooks: {
+                before: function(doc, cb){
+                  return Meteor.call('onePasien', doc.no_mr, function(err, res){
+                    if (res) {
+                      return cb({
+                        _id: res._id,
+                        obat: [doc]
+                      });
+                    }
+                  });
+                },
+                after: function(doc){
+                  return coll.rekap.insert(doc[0]);
+                }
+              }
+            })), m('table.table', {
               oncreate: function(){
                 Meteor.subscribe('coll', 'gudang');
                 Meteor.subscribe('coll', 'rekap', {
@@ -3333,7 +3381,7 @@ if (Meteor.isClient) {
                   }, m('span', 'Serah'))
                 ]));
               });
-            })))), (that = state.modal) ? elem.modal({
+            }))), (that = state.modal) ? elem.modal({
               title: 'Serahkan Obat?',
               content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
                 return m('th', _.startCase(i));
