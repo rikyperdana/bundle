@@ -407,6 +407,21 @@ if (Meteor.isClient) {
         return key === name;
       }));
       return {
+        disabled: function(){
+          var arr;
+          return m('div', label, m('input.input', {
+            name: name,
+            disabled: true,
+            value: ors(arr = [
+              _.get(usedDoc, name), typeof schema.autoValue == 'function' ? schema.autoValue(name, _.map(state.form[opts.id], function(val, key){
+                return {
+                  value: val,
+                  name: key
+                };
+              })) : void 8
+            ])
+          }));
+        },
         hidden: function(){
           return m('input', {
             type: 'hidden',
@@ -980,7 +995,7 @@ if (Meteor.isClient) {
     },
     rekap: function(){
       var fields, source, rows, headers;
-      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah'];
+      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan'];
       source = coll.rekap.find().fetch().map(function(i){
         return i.obat.map(function(j){
           return j.batches.map(function(k){
@@ -994,7 +1009,7 @@ if (Meteor.isClient) {
               }, {
                 text: look2('gudang', j.nama_obat).nama,
                 rowSpan: j.batches.length
-              }, k.nobatch, k.jumlah.toString()
+              }, k.nobatch, k.jumlah.toString(), '?'
             ];
           });
         });
@@ -1067,7 +1082,7 @@ if (Meteor.isClient) {
         return pdfMake.createPdf({
           pageOrientation: 'landscape',
           content: arr = [
-            kop, {
+            kop, name, {
               table: {
                 widths: (function(){
                   var i$, to$, results$ = [];
@@ -1315,17 +1330,11 @@ selects.obat = function(){
       return _.join(it, ' ');
     };
     a = _.compact(coll.gudang.find().fetch().map(function(i){
-      var ref$, arr;
+      var ref$;
       if ((ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3) {
         return {
           value: i._id,
-          label: joined(arr = [
-            i.nama, "A" + _.sum(i.batch.map(function(it){
-              return it.diapotik;
-            })), "G" + _.sum(i.batch.map(function(it){
-              return it.digudang;
-            }))
-          ])
+          label: i.nama
         };
       }
     }));
@@ -2161,7 +2170,8 @@ if (Meteor.isClient) {
       type: Date
     },
     'batch.$.digudang': {
-      type: Number
+      type: Number,
+      label: 'Jumlah Barang'
     },
     'batch.$.awal': {
       type: Number,
@@ -3302,6 +3312,31 @@ if (Meteor.isClient) {
                     options: selects.obat
                   }
                 },
+                stok: {
+                  type: String,
+                  label: 'Info Stok',
+                  optional: true,
+                  autoform: {
+                    type: 'disabled'
+                  },
+                  autoValue: function(name, doc){
+                    var that, barang, arr;
+                    if (that = function(it){
+                      return it != null ? it.value : void 8;
+                    }(doc.find(function(it){
+                      return it.name === 'nama';
+                    }))) {
+                      barang = coll.gudang.findOne(that);
+                      return _.join(arr = [
+                        "Apotik: " + _.sum(barang.batch.map(function(it){
+                          return it.diapotik;
+                        })), "Gudang: " + _.sum(barang.batch.map(function(it){
+                          return it.digudang;
+                        }))
+                      ]);
+                    }
+                  }
+                },
                 jumlah: {
                   type: Number
                 }
@@ -3312,7 +3347,7 @@ if (Meteor.isClient) {
               columns: 3,
               onchange: function(doc){
                 if (doc.name === 'no_mr') {
-                  return Meteor.call('onePasien', doc.value, function(err, res){
+                  return Meteor.call('onePasien', +doc.value, function(err, res){
                     if (res) {
                       state.bypass = res.regis.nama_lengkap;
                       return m.redraw();
@@ -3416,9 +3451,19 @@ if (Meteor.isClient) {
               }
             }) : void 8, m('.button.is-warning', {
               onclick: function(){
-                return makePdf.rekap();
+                return Meteor.subscribe('coll', 'pasien', {
+                  _id: {
+                    $in: coll.rekap.find().fetch().map(function(it){
+                      return it.idpasien;
+                    })
+                  }
+                }, {
+                  onReady: function(){
+                    return makePdf.rekap();
+                  }
+                });
               }
-            }, m('span', 'Cetak Rekap')), [0, 1, 2].map(function(){
+            }, m('span', "Cetak " + coll.rekap.find().fetch().length + " Rekap")), [0, 1, 2].map(function(){
               return m('br');
             }), userRole('admin') ? elem.report({
               title: 'Laporan Pengeluaran Obat',
@@ -3605,7 +3650,7 @@ if (Meteor.isClient) {
                 title: 'Rincian Batch',
                 content: m('table', function(){
                   var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
-                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang], ['Harga Jual', (ref1$ = state.modal) != null ? ref1$.jual : void 8], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
+                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Jual', rupiah((ref1$ = state.modal) != null ? ref1$.jual : void 8)], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
                   return contents.map(function(i){
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
@@ -4330,8 +4375,9 @@ if (Meteor.isServer) {
             'Nama Obat': obj.nama,
             'No. Batch': i.no_batch,
             'Jumlah': i.jumlah,
-            'Harga': price,
-            'Total': price * i.jumlah,
+            'Satuan': look('satuan', obj.satuan).label,
+            'Harga': rupiah(price),
+            'Total': rupiah(price * i.jumlah),
             'Stok Awal': awal,
             'Stok Akhir': awal - i.jumlah
           };
