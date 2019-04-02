@@ -1388,39 +1388,48 @@ selects.provinsi = function(){
   }
 };
 selects.kabupaten = function(){
+  var that;
   if (Meteor.isClient) {
-    return coll.daerah.find().fetch().filter(function(it){
-      return it.kabupaten && it.provinsi;
-    }).map(function(it){
-      return {
-        value: it.kabupaten,
-        label: _.startCase(it.daerah)
-      };
-    });
+    if (that = +afState.form.formRegis['regis.provinsi']) {
+      return coll.daerah.find().fetch().filter(function(it){
+        return it.provinsi === that && it.kabupaten;
+      }).map(function(it){
+        return {
+          value: it.kabupaten,
+          label: _.startCase(it.daerah)
+        };
+      });
+    }
   }
 };
 selects.kecamatan = function(){
+  var that;
   if (Meteor.isClient) {
-    return coll.daerah.find().fetch().filter(function(it){
-      return it.kecamatan && it.kabupaten;
-    }).map(function(it){
-      return {
-        value: it.kecamatan,
-        label: _.startCase(it.daerah)
-      };
-    });
+    if (that = +afState.form.formRegis['regis.kabupaten']) {
+      return coll.daerah.find().fetch().filter(function(it){
+        return it.kabupaten === that && it.kecamatan;
+      }).map(function(it){
+        return {
+          value: it.kecamatan,
+          label: _.startCase(it.daerah)
+        };
+      });
+    }
   }
 };
 selects.kelurahan = function(){
+  var that;
   if (Meteor.isClient) {
-    return coll.daerah.find().fetch().filter(function(it){
-      return it.kelurahan && it.kecamatan;
-    }).map(function(it){
-      return {
-        value: it.kelurahan,
-        label: _.startCase(it.daerah)
-      };
-    });
+    if (that = +afState.form.formRegis['regis.kecamatan']) {
+      return coll.daerah.find().fetch().filter(function(it){
+        return it.kecamatan === that && it.kelurahan;
+      }).map(function(it){
+        return {
+          value: it.kelurahan,
+          label: _.startCase(it.daerah)
+        };
+      });
+    }
   }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2296,6 +2305,46 @@ if (Meteor.isClient) {
       autoValue: function(){
         return new Date();
       }
+    }
+  };
+  schema.bypassObat = {
+    no_mr: {
+      type: Number
+    },
+    nama: {
+      type: String,
+      label: 'Nama Obat',
+      autoform: {
+        options: selects.obat
+      }
+    },
+    stok: {
+      type: String,
+      label: 'Info Stok',
+      optional: true,
+      autoform: {
+        type: 'disabled'
+      },
+      autoValue: function(name, doc){
+        var that, barang, arr;
+        if (that = function(it){
+          return it != null ? it.value : void 8;
+        }(doc.find(function(it){
+          return it.name === 'nama';
+        }))) {
+          barang = coll.gudang.findOne(that);
+          return _.join(arr = [
+            "Apotik: " + _.sum(barang.batch.map(function(it){
+              return it.diapotik;
+            })), "Gudang: " + _.sum(barang.batch.map(function(it){
+              return it.digudang;
+            }))
+          ]);
+        }
+      }
+    },
+    jumlah: {
+      type: Number
     }
   };
 }
@@ -3301,46 +3350,7 @@ if (Meteor.isClient) {
           var that;
           if (attr.pageAccess(['obat'])) {
             return m('.content', m('h4', 'Apotik'), (that = state.bypass) ? m('b', "Nama Pasien: " + that) : void 8, m(autoForm({
-              schema: new SimpleSchema({
-                no_mr: {
-                  type: Number
-                },
-                nama: {
-                  type: String,
-                  label: 'Nama Obat',
-                  autoform: {
-                    options: selects.obat
-                  }
-                },
-                stok: {
-                  type: String,
-                  label: 'Info Stok',
-                  optional: true,
-                  autoform: {
-                    type: 'disabled'
-                  },
-                  autoValue: function(name, doc){
-                    var that, barang, arr;
-                    if (that = function(it){
-                      return it != null ? it.value : void 8;
-                    }(doc.find(function(it){
-                      return it.name === 'nama';
-                    }))) {
-                      barang = coll.gudang.findOne(that);
-                      return _.join(arr = [
-                        "Apotik: " + _.sum(barang.batch.map(function(it){
-                          return it.diapotik;
-                        })), "Gudang: " + _.sum(barang.batch.map(function(it){
-                          return it.digudang;
-                        }))
-                      ]);
-                    }
-                  }
-                },
-                jumlah: {
-                  type: Number
-                }
-              }),
+              schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
               meteormethod: 'serahObat',
               id: 'bypassObat',
@@ -3522,7 +3532,7 @@ if (Meteor.isClient) {
               }, m('input.input', {
                 type: 'text',
                 placeholder: 'Pencarian'
-              })), (ref$ = roles()) != null && ref$.farmasi ? m('button.button.is-success', {
+              })), m('br'), (ref$ = roles()) != null && ref$.farmasi ? m('button.button.is-success', {
                 onclick: function(){
                   return state.showFormFarmasi = !state.showFormFarmasi;
                 }
@@ -3650,7 +3660,7 @@ if (Meteor.isClient) {
                 title: 'Rincian Batch',
                 content: m('table', function(){
                   var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
-                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Jual', rupiah((ref1$ = state.modal) != null ? ref1$.jual : void 8)], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
+                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Jual', rupiah((ref1$ = state.modal) != null ? ref1$.jual : void 8)], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', look('anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8).label], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
                   return contents.map(function(i){
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
