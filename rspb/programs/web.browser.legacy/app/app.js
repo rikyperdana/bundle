@@ -1009,7 +1009,51 @@ if (Meteor.isClient) {
               }, {
                 text: look2('gudang', j.nama_obat).nama,
                 rowSpan: j.batches.length
-              }, k.nobatch, k.jumlah.toString(), '?'
+              }, k.nobatch, k.jumlah.toString(), function(){
+                var obat;
+                obat = coll.gudang.findOne(j.nama_obat);
+                return look('satuan', obat.satuan).label;
+              }()
+            ];
+          });
+        });
+      });
+      rows = _.flattenDepth(source, 2);
+      headers = [fields.map(function(it){
+        return _.startCase(it);
+      })];
+      if (rows.length > 0) {
+        Meteor.call('doneRekap');
+        return pdfMake.createPdf({
+          content: [{
+            table: {
+              body: slice$.call(headers).concat(slice$.call(rows))
+            }
+          }]
+        }).download('cetak_rekap.pdf');
+      }
+    },
+    bypassRekap: function(){
+      var fields, source, rows, headers;
+      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan'];
+      source = coll.rekap.find().fetch().map(function(i){
+        return i.obat.map(function(j){
+          return j.batches.map(function(k){
+            var arr;
+            return arr = [
+              {
+                text: i.no_mr + "\n" + i.nama_pasien,
+                rowSpan: _.sum(i.obat.map(function(it){
+                  return it.batches.length;
+                }))
+              }, {
+                text: look2('gudang', j.nama_obat).nama,
+                rowSpan: j.batches.length
+              }, k.nobatch, k.jumlah.toString(), function(){
+                var obat;
+                obat = coll.gudang.findOne(j.nama_obat);
+                return look('satuan', obat.satuan).label;
+              }()
             ];
           });
         });
@@ -1223,7 +1267,7 @@ this.selects = {
   rujukan: ['datang_sendiri', 'rs_lain', 'puskesmas', 'faskes_lainnya'],
   keluar: ['pulang', 'rujuk'],
   barang: ['generik', 'non_generik', 'obat_narkotika', 'bhp', 'obat_keras_tertentu'],
-  satuan: ['botol', 'vial', 'ampul', 'pcs', 'sachet', 'tube', 'supp', 'tablet', 'minidose', 'pot', 'turbuhaler', 'kaplet', 'kapsul', 'bag', 'pen', 'rectal', 'flash', 'cream', 'nebu', 'galon', 'lembar', 'roll', 'liter', 'cup', 'pasang', 'bungkus'],
+  satuan: ['botol', 'vial', 'ampul', 'pcs', 'sachet', 'tube', 'supp', 'tablet', 'minidose', 'pot', 'turbuhaler', 'kaplet', 'kapsul', 'bag', 'pen', 'rectal', 'flash', 'cream', 'nebu', 'galon', 'lembar', 'roll', 'liter', 'cup', 'pasang', 'bungkus', 'box'],
   anggaran: ['blud', 'apbd'],
   alias: ['tn', 'ny', 'nn', 'an', 'by'],
   tinggal: ['orang_tua', 'keluarga', 'sendiri', 'panti_asuhan'],
@@ -2233,7 +2277,6 @@ if (Meteor.isClient) {
     },
     'batch.$.anggaran': {
       type: Number,
-      optional: true,
       autoform: {
         options: selects.anggaran
       }
@@ -2310,6 +2353,9 @@ if (Meteor.isClient) {
   schema.bypassObat = {
     no_mr: {
       type: Number
+    },
+    pasien: {
+      type: String
     },
     nama: {
       type: String,
@@ -2530,6 +2576,24 @@ if (Meteor.isClient) {
         requests: ['tanggal_minta', 'ruangan', 'peminta', 'jumlah', 'nama_barang', 'penyerah', 'diserah', 'tanggal_serah']
       },
       amprahList: function(){
+        var cond;
+        cond = function(){
+          if (userGroup('obat')) {
+            return {
+              penyerah: {
+                $exists: false
+              }
+            };
+          } else if (userGroup('farmasi')) {
+            return {
+              ruangan: 'apotik'
+            };
+          } else {
+            return {
+              ruangan: userGroup()
+            };
+          }
+        };
         return reverse(coll.amprah.find().fetch().filter(function(i){
           if (userGroup('farmasi')) {
             return i.ruangan === 'obat';
@@ -3349,31 +3413,18 @@ if (Meteor.isClient) {
         view: function(){
           var that;
           if (attr.pageAccess(['obat'])) {
-            return m('.content', m('h4', 'Apotik'), (that = state.bypass) ? m('b', "Nama Pasien: " + that) : void 8, m(autoForm({
+            return m('.content', m('h4', 'Apotik'), m(autoForm({
               schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
-              meteormethod: 'serahObat',
+              meteormethod: 'bypassSerahObat',
               id: 'bypassObat',
               columns: 3,
-              onchange: function(doc){
-                if (doc.name === 'no_mr') {
-                  return Meteor.call('onePasien', +doc.value, function(err, res){
-                    if (res) {
-                      state.bypass = res.regis.nama_lengkap;
-                      return m.redraw();
-                    }
-                  });
-                }
-              },
               hooks: {
                 before: function(doc, cb){
-                  return Meteor.call('onePasien', doc.no_mr, function(err, res){
-                    if (res) {
-                      return cb({
-                        _id: res._id,
-                        obat: [doc]
-                      });
-                    }
+                  return cb({
+                    no_mr: doc.no_mr,
+                    nama_pasien: doc.pasien,
+                    obat: [doc]
                   });
                 },
                 after: function(doc){
@@ -3469,7 +3520,7 @@ if (Meteor.isClient) {
                   }
                 }, {
                   onReady: function(){
-                    return makePdf.rekap();
+                    return makePdf.bypassRekap();
                   }
                 });
               }
@@ -3524,7 +3575,25 @@ if (Meteor.isClient) {
                 }
               }
             }) : void 8, !m.route.param('idbarang')
-              ? m('div', m('form', {
+              ? m('div', function(){
+                var jumlah;
+                jumlah = coll.gudang.find({
+                  treshold: {
+                    $exists: false
+                  }
+                }).fetch().length;
+                if (jumlah > 0) {
+                  return m('.notification.is-warning', m('button.delete'), m('b', "Terdapat " + jumlah + " barang yang belum diberi ambang batas"));
+                }
+              }(), function(){
+                var sumA;
+                sumA = coll.gudang.find().fetch().filter(function(it){
+                  return it.treshold > _.sumBy(it.batch, 'diapotik');
+                });
+                if (sumA.length > 0) {
+                  return m('.notification.is-danger', m('button.delete'), m('b', "Terdapat " + sumA.length + " barang yang stok apotiknya dibawah batas"));
+                }
+              }(), m('form', {
                 onsubmit: function(e){
                   e.preventDefault();
                   return state.search = _.lowerCase(e.target[0].value);
@@ -3919,28 +3988,12 @@ if (Meteor.isClient) {
               }))) : void 8);
             }), m('br'), m('h4', 'Daftar Amprah'), m('table.table', {
               oncreate: function(){
-                var cond;
-                cond = function(){
-                  if (userGroup('obat')) {
-                    return {
-                      penyerah: {
-                        $exists: false
-                      }
-                    };
-                  } else if (userGroup('farmasi')) {
-                    return {
-                      ruangan: 'apotik'
-                    };
-                  } else {
-                    return {
-                      ruangan: userGroup()
-                    };
-                  }
-                };
-                return Meteor.subscribe('coll', 'amprah', cond(), {
-                  onReady: function(){
-                    return m.redraw();
-                  }
+                return ['amprah', 'users'].map(function(i){
+                  return Meteor.subscribe('coll', i, {
+                    onReady: function(){
+                      return m.redraw();
+                    }
+                  });
                 });
               }
             }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
@@ -4197,6 +4250,86 @@ if (Meteor.isServer) {
             return min([i.jumlah, inc.diapotik]);
           }, batches.push({
             idpasien: pasien != null ? pasien._id : void 8,
+            nama_obat: i.nama,
+            nobatch: inc.nobatch,
+            jumlah: minim()
+          }), doc = _.assign({}, inc, {
+            diapotik: inc.diapotik - minim()
+          }), i.jumlah -= minim(), doc)]);
+      }
+    },
+    bypassSerahObat: function(arg$){
+      var no_mr, nama_pasien, obat, batches, i$, len$, i;
+      no_mr = arg$.no_mr, nama_pasien = arg$.nama_pasien, obat = arg$.obat;
+      batches = [];
+      for (i$ = 0, len$ = obat.length; i$ < len$; ++i$) {
+        i = obat[i$];
+        coll.gudang.update(i.nama, {
+          $set: {
+            batch: reduce([], coll.gudang.findOne(i.nama).batch, fn$)
+          }
+        });
+      }
+      return reduce([], batches, function(res, inc){
+        var obj;
+        obj = {
+          nama_obat: inc.nama_obat,
+          nobatch: inc.nobatch,
+          jumlah: inc.jumlah
+        };
+        if (res.find(function(i){
+          return i.no_mr === inc.no_mr;
+        })) {
+          return res.map(function(i){
+            if (i.no_mr === inc.no_mr) {
+              return {
+                no_mr: i.no_mr,
+                nama_pasien: i.nama_pasien,
+                obat: slice$.call(i.obat).concat([obj])
+              };
+            }
+          });
+        } else {
+          return slice$.call(res).concat([{
+            no_mr: inc.no_mr,
+            nama_pasien: inc.nama_pasien,
+            obat: [obj]
+          }]);
+        }
+      }).map(function(i){
+        return _.assign(i, {
+          obat: reduce([], i.obat, function(res, inc){
+            var obj;
+            obj = {
+              nobatch: inc.nobatch,
+              jumlah: inc.jumlah
+            };
+            if (res.find(function(i){
+              return i.nama_obat === inc.nama_obat;
+            })) {
+              return res.map(function(i){
+                return _.assign(i, {
+                  batches: slice$.call(i.batches).concat([obj])
+                });
+              });
+            } else {
+              return slice$.call(res).concat([{
+                nama_obat: inc.nama_obat,
+                batches: [obj]
+              }]);
+            }
+          })
+        });
+      });
+      function fn$(res, inc){
+        var arr, minim, doc;
+        return arr = slice$.call(res).concat([i.jumlah < 1
+          ? inc
+          : (minim = function(){
+            return min([i.jumlah, inc.diapotik]);
+          }, batches.push({
+            no_mr: no_mr,
+            nama_pasien: nama_pasien,
             nama_obat: i.nama,
             nobatch: inc.nobatch,
             jumlah: minim()
