@@ -660,6 +660,11 @@ this.modules = [
     full: 'Amprah',
     icon: 'rv_hookup',
     color: 'blue-grey'
+  }, {
+    name: 'depook',
+    full: 'Depo OK',
+    icon: 'people',
+    color: 'green'
   }
 ];
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -731,7 +736,7 @@ if (Meteor.isClient) {
   this.state = {
     regions: {},
     pagins: {
-      limit: 5,
+      limit: 10,
       page: 0
     }
   };
@@ -1232,6 +1237,9 @@ if (Meteor.isClient) {
     }, {
       group: 'farmasi',
       list: ['farmasi', 'amprah']
+    }, {
+      group: 'depook',
+      list: ['obat', 'farmasi', 'amprah']
     }
   ];
   _.map(rights, function(i){
@@ -2248,6 +2256,15 @@ if (Meteor.isClient) {
         return 0;
       }
     },
+    'batch.$.didepook': {
+      type: Number,
+      autoform: {
+        type: 'hidden'
+      },
+      autoValue: function(){
+        return 0;
+      }
+    },
     'batch.$.diretur': {
       type: Boolean,
       optional: true,
@@ -2322,7 +2339,11 @@ if (Meteor.isClient) {
           type: 'hidden'
         },
         autoValue: function(){
-          return userGroup();
+          if (userGroup('jalan')) {
+            return userRole();
+          } else {
+            return userGroup();
+          }
         }
       }
     };
@@ -2539,8 +2560,8 @@ if (Meteor.isClient) {
     },
     gudang: {
       headers: {
-        farmasi: ['jenis_barang', 'nama_barang', 'batas', 'stok_diapotik', 'stok_gudang'],
-        rincian: ['nobatch', 'digudang', 'diapotik', 'masuk', 'kadaluarsa']
+        farmasi: ['jenis_barang', 'nama_barang', 'batas_apotik', 'batas_gudang', 'stok_diapotik', 'stok_didepook', 'stok_gudang'],
+        rincian: ['nobatch', 'digudang', 'diapotik', 'didepook', 'masuk', 'kadaluarsa']
       }
     },
     farmasi: {
@@ -2576,29 +2597,11 @@ if (Meteor.isClient) {
         requests: ['tanggal_minta', 'ruangan', 'peminta', 'jumlah', 'nama_barang', 'penyerah', 'diserah', 'tanggal_serah']
       },
       amprahList: function(){
-        var cond;
-        cond = function(){
-          if (userGroup('obat')) {
-            return {
-              penyerah: {
-                $exists: false
-              }
-            };
-          } else if (userGroup('farmasi')) {
-            return {
-              ruangan: 'apotik'
-            };
-          } else {
-            return {
-              ruangan: userGroup()
-            };
-          }
-        };
         return reverse(coll.amprah.find().fetch().filter(function(i){
-          if (userGroup('farmasi')) {
-            return i.ruangan === 'obat';
-          } else if (userGroup('jalan')) {
-            return userGroup(i.ruangan);
+          if (userGroup('jalan')) {
+            return i.ruangan === userRole();
+          } else if (!userGroup('farmasi')) {
+            return i.ruangan === userGroup();
           } else {
             return i;
           }
@@ -2609,8 +2612,8 @@ if (Meteor.isClient) {
         return ands(arr = [!obj.diserah, (ref$ = userGroup()) === 'obat' || ref$ === 'farmasi', !same([userGroup(), obj.ruangan])]);
       },
       reqForm: function(){
-        var arr;
-        return arr = [!userGroup('farmasi') ? 'bhp' : void 8, userGroup('obat') ? 'obat' : void 8];
+        var arr, ref$;
+        return arr = [!userGroup('farmasi') ? 'bhp' : void 8, (ref$ = userGroup()) === 'obat' || ref$ === 'inap' || ref$ === 'depook' ? 'obat' : void 8];
       },
       available: function(){
         return _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
@@ -2733,7 +2736,6 @@ if (Meteor.isClient) {
     welcome: function(){
       return {
         view: function(){
-          var this$ = this;
           return m('.content', {
             oncreate: function(){
               return Meteor.subscribe('users', function(err, res){
@@ -2741,7 +2743,7 @@ if (Meteor.isClient) {
               });
             }
           }, m('h1', "Panduan bagi " + function(it){
-            return it.full;
+            return it != null ? it.full : void 8;
           }(modules.find(function(it){
             return it.name === userGroup();
           }))), m('div', guide(userGroup(), userRole())));
@@ -3412,7 +3414,7 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var that;
-          if (attr.pageAccess(['obat'])) {
+          if (attr.pageAccess(['obat', 'depook'])) {
             return m('.content', m('h4', 'Apotik'), m(autoForm({
               schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
@@ -3553,8 +3555,8 @@ if (Meteor.isClient) {
     farmasi: function(){
       return {
         view: function(){
-          var ref$, that, ref1$, ref2$, ref3$, ref4$;
-          if (attr.pageAccess(['jalan', 'obat', 'farmasi'])) {
+          var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, this$ = this;
+          if (attr.pageAccess(['jalan', 'obat', 'farmasi', 'depook'])) {
             return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
               title: 'Laporan Stok Barang',
               action: function(arg$){
@@ -3575,23 +3577,32 @@ if (Meteor.isClient) {
                 }
               }
             }) : void 8, !m.route.param('idbarang')
-              ? m('div', function(){
-                var jumlah;
-                jumlah = coll.gudang.find({
-                  treshold: {
-                    $exists: false
+              ? m('div', (ref$ = userGroup()) === 'obat' || ref$ === 'farmasi' || ref$ === 'depook' ? (jumlah = function(it){
+                return it.fetch().length;
+              }(coll.gudang.find({
+                $or: arr = [
+                  {
+                    'treshold.apotik': {
+                      $exists: false
+                    }
+                  }, {
+                    'treshold.gudang': {
+                      $exists: false
+                    }
                   }
-                }).fetch().length;
-                if (jumlah > 0) {
-                  return m('.notification.is-warning', m('button.delete'), m('b', "Terdapat " + jumlah + " barang yang belum diberi ambang batas"));
-                }
-              }(), function(){
-                var sumA;
-                sumA = coll.gudang.find().fetch().filter(function(it){
-                  return it.treshold > _.sumBy(it.batch, 'diapotik');
-                });
-                if (sumA.length > 0) {
-                  return m('.notification.is-danger', m('button.delete'), m('b', "Terdapat " + sumA.length + " barang yang stok apotiknya dibawah batas"));
+                ]
+              })), jumlah > 0 ? m('.notification.is-warning', m('button.delete'), m('b', "Terdapat " + jumlah + " barang yang belum diberi ambang batas")) : void 8) : void 8, function(){
+                var sumA, this$ = this;
+                sumA = function(it){
+                  return it.length;
+                }(coll.gudang.find().fetch().filter(function(i){
+                  var arr;
+                  if (i.treshold) {
+                    return ors(arr = [i.treshold.apotik > _.sumBy(i.batch, 'diapotik'), i.treshold.gudang > _.sumBy(i.batch, 'digudang')]);
+                  }
+                }));
+                if (sumA > 0) {
+                  return m('.notification.is-danger', m('button.delete'), m('b', "Terdapat " + sumA + " barang yang stoknya dibawah batas"));
                 }
               }(), m('form', {
                 onsubmit: function(e){
@@ -3629,12 +3640,13 @@ if (Meteor.isClient) {
               }, m('thead', m('tr', attr.gudang.headers.farmasi.map(function(i){
                 return m('th', _.startCase(i));
               }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
+                var that, ref$, ref1$;
                 return m('tr', {
-                  'class': i.treshold > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8,
+                  'class': (that = i.treshold) ? that.apotik > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8 : void 8,
                   ondblclick: function(){
                     return m.route.set("/farmasi/" + i._id);
                   }
-                }, m('td', look('barang', i.jenis).label), m('td', i.nama), m('td', i.treshold), ['diapotik', 'digudang'].map(function(j){
+                }, m('td', look('barang', i.jenis).label), m('td', i.nama), m('td', (ref$ = i.treshold) != null ? ref$.apotik : void 8), m('td', (ref1$ = i.treshold) != null ? ref1$.gudang : void 8), ['diapotik', 'didepook', 'digudang'].map(function(j){
                   return m('td', _.sumBy(i.batch, j));
                 }));
               }))))
@@ -3672,18 +3684,24 @@ if (Meteor.isClient) {
                 }));
               }) : void 8, m('tr', {
                 ondblclick: function(){
-                  if (userGroup('obat')) {
+                  var ref$;
+                  if ((ref$ = userGroup()) === 'obat' || ref$ === 'farmasi') {
                     return state.modal = coll.gudang.findOne(m.route.param('idbarang'));
                   }
                 }
-              }, m('th', 'Batas Minimum'), m('td', that != null ? that.treshold : void 8))), ((ref1$ = state.modal) != null ? ref1$._id : void 8) && elem.modal({
-                title: 'Tetapkan Treshold',
-                content: m('div', m('h4', 'Berapa batas minimum yang seharusnya ada di apotik?'), m('form', {
+              }, m('th', 'Batas min. Apotik'), m('td', that != null ? (ref1$ = that.treshold) != null ? ref1$.apotik : void 8 : void 8), m('th', 'Batas min. Gudang'), m('td', that != null ? (ref2$ = that.treshold) != null ? ref2$.gudang : void 8 : void 8))), ((ref3$ = state.modal) != null ? ref3$._id : void 8) && elem.modal({
+                title: 'Tetapkan Batas min.',
+                content: m('div', m('h4', 'Berapa batas minimum yang seharusnya tersedia?'), m('form', {
                   onsubmit: function(e){
+                    var opts, ref$;
                     e.preventDefault();
+                    opts = {
+                      obat: 'apotik',
+                      farmasi: 'gudang'
+                    };
                     coll.gudang.update(state.modal._id, {
                       $set: {
-                        treshold: +e.target[0].value
+                        treshold: _.merge(coll.gudang.findOne(state.modal._id).treshold, (ref$ = {}, ref$[opts[userGroup()] + ""] = +e.target[0].value, ref$))
                       }
                     });
                     state.modal = null;
@@ -3696,7 +3714,7 @@ if (Meteor.isClient) {
                   type: 'submit',
                   value: 'Tetapkan'
                 })))))
-              }), (ref2$ = roles()) != null && ref2$.farmasi ? m('.button.is-warning', {
+              }), (ref4$ = roles()) != null && ref4$.farmasi ? m('.button.is-warning', {
                 onclick: function(){
                   return state.showForm = !state.showForm;
                 }
@@ -3718,14 +3736,14 @@ if (Meteor.isClient) {
                 }
               })) : void 8, m('table.table', m('thead', attr.gudang.headers.rincian.map(function(i){
                 return m('th', _.startCase(i));
-              })), m('tbody', (ref3$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref3$.batch.map(function(i){
+              })), m('tbody', (ref5$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref5$.batch.map(function(i){
                 return m('tr', {
                   ondblclick: function(){
                     state.modal = i;
                     return m.redraw();
                   }
-                }, tds([i.nobatch, i.digudang, i.diapotik, hari(i.masuk), hari(i.kadaluarsa)]));
-              }) : void 8)), (ref4$ = state.modal) != null && ref4$.idbatch ? elem.modal({
+                }, tds([i.nobatch, i.digudang, i.diapotik, i.didepook, hari(i.masuk), hari(i.kadaluarsa)]));
+              }) : void 8)), (ref6$ = state.modal) != null && ref6$.idbatch ? elem.modal({
                 title: 'Rincian Batch',
                 content: m('table', function(){
                   var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
@@ -3947,7 +3965,7 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var arr;
-          if (attr.pageAccess(['jalan', 'obat', 'farmasi'])) {
+          if (attr.pageAccess(['jalan', 'inap', 'obat', 'farmasi', 'depook'])) {
             return m('.content', {
               oncreate: function(){
                 Meteor.subscribe('users', {
@@ -3971,7 +3989,7 @@ if (Meteor.isClient) {
                 return m('br');
               }), m('.button.is-primary', {
                 onclick: function(){
-                  return state.showForm[type] = !state.showForm[type];
+                  return typeof state != 'undefined' && state !== null ? state.showForm[type] = !((typeof state != 'undefined' && state !== null) && state.showForm[type]) : void 8;
                 }
               }, m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h4', 'Form Amprah'), m(autoForm({
                 collection: coll.amprah,
@@ -3981,28 +3999,34 @@ if (Meteor.isClient) {
                 columns: 2,
                 hooks: {
                   after: function(){
-                    state.showForm = null;
+                    state.showForm = {
+                      obat: false,
+                      bhp: false
+                    };
                     return m.redraw();
                   }
                 }
               }))) : void 8);
             }), m('br'), m('h4', 'Daftar Amprah'), m('table.table', {
               oncreate: function(){
-                return ['amprah', 'users'].map(function(i){
-                  return Meteor.subscribe('coll', i, {
-                    onReady: function(){
-                      return m.redraw();
-                    }
-                  });
+                Meteor.subscribe('users', {
+                  onReady: function(){
+                    return m.redraw();
+                  }
+                });
+                return Meteor.subscribe('coll', 'amprah', {
+                  onReady: function(){
+                    return m.redraw();
+                  }
                 });
               }
             }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
               return m('th', _.startCase(i));
-            }), userGroup('obat') ? m('th', 'Serah') : void 8)), m('tbody', attr.amprah.amprahList().map(function(i){
+            }))), m('tbody', pagins(attr.amprah.amprahList()).map(function(i){
               var arr, ref$, that, this$ = this;
               return m('tr', tds(arr = [
                 hari(i.tanggal_minta), function(it){
-                  return it.full;
+                  return (it != null ? it.full : void 8) || _.startCase(i.ruangan);
                 }(modules.find(function(it){
                   return it.name === i.ruangan;
                 })), _.startCase(function(it){
@@ -4015,12 +4039,12 @@ if (Meteor.isClient) {
                   }
                 }, m('span', 'Serah')) : void 8
               ]));
-            }))), state.modal ? elem.modal({
+            })), m('br'), elem.pagins()), state.modal ? elem.modal({
               title: 'Respon Amprah',
               content: state.modal.nama
-                ? m('div', m('table.table', m('thead', m('tr', ['diminta', 'sedia'].map(function(i){
+                ? m('div', m('table.table', m('thead', m('tr', ['nama_barang', 'diminta', 'sedia'].map(function(i){
                   return m('th', _.startCase(i));
-                }))), m('tbody', m('tr', tds(arr = [state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
+                }))), m('tbody', m('tr', tds(arr = [look2('gudang', state.modal.nama).nama, state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
                   schema: new SimpleSchema(schema.responAmprah),
                   id: 'formResponAmprah',
                   type: 'method',
@@ -4342,7 +4366,7 @@ if (Meteor.isServer) {
       var batches, stock;
       coll.amprah.update(doc._id, doc);
       batches = [];
-      stock = doc.ruangan === 'obat' ? 'digudang' : 'diapotik';
+      stock = 'digudang';
       coll.gudang.update(doc.nama, {
         $set: {
           batch: reduce([], coll.gudang.findOne(doc.nama).batch, function(res, inc){
@@ -4355,9 +4379,13 @@ if (Meteor.isServer) {
                 nama_obat: coll.gudang.findOne(doc.nama).nama,
                 no_batch: inc.nobatch,
                 serah: minim()
-              }), obj = _.assign({}, inc, (ref$ = {}, ref$[stock + ""] = inc[stock] - minim(), ref$), stock === 'digudang' ? {
-                diapotik: inc['diapotik'] + minim()
-              } : void 8), doc.diserah -= minim(), obj)]);
+              }), obj = _.assign({}, inc, (ref$ = {}, ref$[stock + ""] = inc[stock] - minim(), ref$), doc.ruangan === 'obat'
+                ? {
+                  diapotik: inc['diapotik'] + minim()
+                }
+                : doc.ruangan === 'depook' ? {
+                  didepook: inc['didepook'] + minim()
+                } : void 8), doc.diserah -= minim(), obj)]);
           })
         }
       });
