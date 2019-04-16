@@ -1239,10 +1239,9 @@ if (Meteor.isClient) {
       list: ['farmasi', 'amprah']
     }, {
       group: 'depook',
-      list: ['obat', 'farmasi', 'amprah']
+      list: ['depook', 'farmasi', 'amprah']
     }
-  ];
-  _.map(rights, function(i){
+  ].map(function(i){
     return _.assign(i, {
       list: slice$.call(i.list).concat(['panduan'])
     });
@@ -2445,8 +2444,8 @@ if (Meteor.isClient) {
         });
       }
     },
-    pageAccess: function(list){
-      return in$(userGroup(), list);
+    pageAccess: function(it){
+      return in$(userGroup(), it);
     },
     pasien: {
       showForm: {
@@ -2494,7 +2493,7 @@ if (Meteor.isClient) {
         ];
       },
       currentPasien: function(){
-        return coll.pasien.findOne(m.route.param('idpasien'));
+        return look2('pasien', m.route.param('idpasien'));
       },
       poliFilter: function(arr){
         if (arr) {
@@ -2558,13 +2557,14 @@ if (Meteor.isClient) {
     apotik: {
       header: ['no_mr', 'nama', 'tanggal', 'cara_bayar', 'klinik', 'aksi']
     },
-    gudang: {
+    farmasi: {
       headers: {
         farmasi: ['jenis_barang', 'nama_barang', 'batas_apotik', 'batas_gudang', 'stok_diapotik', 'stok_didepook', 'stok_gudang'],
         rincian: ['nobatch', 'digudang', 'diapotik', 'didepook', 'masuk', 'kadaluarsa']
-      }
-    },
-    farmasi: {
+      },
+      currentBarang: function(){
+        return look2('gudang', m.route.param('idbarang'));
+      },
       fieldSerah: ['nama_obat', 'jumlah_obat', 'aturan_kali', 'aturan_dosis'],
       search: function(it){
         return it.filter(function(i){
@@ -2582,8 +2582,9 @@ if (Meteor.isClient) {
         var arr, that;
         return pagins(_.reverse(ors(arr = [
           (that = state.search) ? _.concat(Meteor.users.find().fetch().filter(function(i){
-            var arr;
-            return ors(arr = [_.includes(_.join(_.keys(i.roles)), that), _.includes(_.join(_.values(i.roles)), that)]);
+            return ors(['keys', 'values'].map(function(j){
+              return _.includes(_.join(_[j](i.roles)), that);
+            }));
           }), Meteor.users.find({
             username: {
               $regex: ".*" + that + ".*"
@@ -2753,7 +2754,7 @@ if (Meteor.isClient) {
     pasien: function(){
       return {
         view: function(){
-          var arr, ref$, that, doc, this$ = this;
+          var arr, ref$, that, doc;
           if (attr.pageAccess(['regis', 'jalan'])) {
             return m('.content', {
               oncreate: Meteor.subscribe('coll', 'daerah', {
@@ -2793,7 +2794,7 @@ if (Meteor.isClient) {
               schema: new SimpleSchema(schema.regis),
               type: m.route.param('idpasien') ? 'update' : 'insert',
               id: 'formRegis',
-              doc: coll.pasien.findOne(m.route.param('idpasien')),
+              doc: attr.pasien.currentPasien(),
               buttonContent: 'Simpan',
               columns: 3,
               onchange: function(doc){
@@ -3053,7 +3054,7 @@ if (Meteor.isClient) {
                         _id: m.route.param('idpasien')
                       }, {
                         onReady: function(){
-                          Meteor.call('regions', coll.pasien.findOne(m.route.param('idpasien')).regis, function(err, res){
+                          Meteor.call('regions', attr.pasien.currentPasien().regis, function(err, res){
                             state.regions = res;
                             return m.redraw();
                           });
@@ -3063,7 +3064,7 @@ if (Meteor.isClient) {
                     }
                   }, [0, 1].map(function(){
                     return m('br');
-                  }), m('.content', m('h4', 'Rincian Pasien')), (doc = coll.pasien.findOne(m.route.param('idpasien'))) ? m('div', m('table.table', _.chunk([
+                  }), m('.content', m('h4', 'Rincian Pasien')), (doc = attr.pasien.currentPasien()) ? m('div', m('table.table', _.chunk([
                     {
                       name: 'No. MR',
                       data: doc.no_mr
@@ -3159,7 +3160,7 @@ if (Meteor.isClient) {
                     type: 'update-pushArray',
                     id: 'formJalan',
                     scope: 'rawat',
-                    doc: coll.pasien.findOne(m.route.param('idpasien')),
+                    doc: attr.pasien.currentPasien(),
                     buttonContent: 'Simpan',
                     columns: 3,
                     hooks: {
@@ -3247,9 +3248,7 @@ if (Meteor.isClient) {
                           }
                         }, m('span', 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
                           ondblclick: function(){
-                            return Meteor.call('rmRawat', coll.pasien.findOne({
-                              _id: m.route.param('idpasien')
-                            })._id, i.idrawat, function(err, res){
+                            return Meteor.call('rmRawat', m.route.param('idpasien'), i.idrawat, function(err, res){
                               return res && m.redraw();
                             });
                           }
@@ -3260,9 +3259,7 @@ if (Meteor.isClient) {
                     }));
                   }) : void 8)), state.modal ? elem.modal({
                     title: 'Rincian rawat',
-                    content: m('div', m('h1', function(it){
-                      return it.regis.nama_lengkap;
-                    }(coll.pasien.findOne(m.route.param('idpasien')))), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
+                    content: m('div', m('h1', attr.pasien.currentPasien().regis.nama_lengkap), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
                       return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
                     })), (that = state.modal.fisik) ? m('div', m('br'), m('table', m('tr', m('th', 'Fisik'))), m('table.table', m('thead', m('tr', _.map(that, function(v, k){
                       return m('th', _.startCase(k));
@@ -3350,7 +3347,7 @@ if (Meteor.isClient) {
             }))), (that = state.modal) ? (tindakans = (ref$ = state.modal.tindakan) != null ? ref$.map(function(it){
               var arr;
               return arr = [_.startCase(look2('tarif', it.nama).nama), it.harga];
-            }) : void 8, uraian = [ands(arr = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
+            }) : void 8, uraian = [ands(arr = [!((ref1$ = attr.pasien.currentPasien().rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), attr.pasien.currentPasien().regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
               return state.modal[it];
             }), elem.modal({
               title: 'Sudah bayar?',
@@ -3493,7 +3490,7 @@ if (Meteor.isClient) {
                   if (res) {
                     coll.pasien.update(state.modal._id, {
                       $set: {
-                        rawat: coll.pasien.findOne(state.modal._id).rawat.map(function(i){
+                        rawat: attr.pasien.currentPasien().rawat.map(function(i){
                           if (i.idrawat === state.modal.idrawat) {
                             return _.assign(i, {
                               givenDrug: true
@@ -3552,11 +3549,14 @@ if (Meteor.isClient) {
         }
       };
     },
+    depook: function(){
+      return this.obat;
+    },
     farmasi: function(){
       return {
         view: function(){
           var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, this$ = this;
-          if (attr.pageAccess(['jalan', 'obat', 'farmasi', 'depook'])) {
+          if (attr.pageAccess(['jalan', 'inap', 'obat', 'farmasi', 'depook'])) {
             return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
               title: 'Laporan Stok Barang',
               action: function(arg$){
@@ -3637,7 +3637,7 @@ if (Meteor.isClient) {
                     }
                   });
                 }
-              }, m('thead', m('tr', attr.gudang.headers.farmasi.map(function(i){
+              }, m('thead', m('tr', attr.farmasi.headers.farmasi.map(function(i){
                 return m('th', _.startCase(i));
               }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
                 var that, ref$, ref1$;
@@ -3660,25 +3660,21 @@ if (Meteor.isClient) {
                     }
                   });
                 }
-              }, m('h4', 'Rincian Obat'), m('table.table', (that = coll.gudang.findOne(m.route.param('idbarang'))) ? [
-                [
-                  {
-                    name: 'Nama Barang',
-                    cell: that.nama
-                  }, {
-                    name: 'Jenis Barang',
-                    cell: look('barang', that.jenis).label
-                  }
-                ], [
-                  {
-                    name: 'Kandungan',
-                    cell: that.kandungan
-                  }, {
-                    name: 'Satuan',
-                    cell: look('satuan', that.satuan).label
-                  }
-                ]
-              ].map(function(i){
+              }, m('h4', 'Rincian Obat'), m('table.table', (that = attr.farmasi.currentBarang()) ? _.chunk([
+                {
+                  name: 'Nama Barang',
+                  cell: that.nama
+                }, {
+                  name: 'Jenis Barang',
+                  cell: look('barang', that.jenis).label
+                }, {
+                  name: 'Kandungan',
+                  cell: that.kandungan
+                }, {
+                  name: 'Satuan',
+                  cell: look('satuan', that.satuan).label
+                }
+              ], 2).map(function(i){
                 return m('tr', i.map(function(j){
                   return [m('th', j.name), m('td', j.cell)];
                 }));
@@ -3686,7 +3682,7 @@ if (Meteor.isClient) {
                 ondblclick: function(){
                   var ref$;
                   if ((ref$ = userGroup()) === 'obat' || ref$ === 'farmasi') {
-                    return state.modal = coll.gudang.findOne(m.route.param('idbarang'));
+                    return state.modal = attr.farmasi.currentBarang();
                   }
                 }
               }, m('th', 'Batas min. Apotik'), m('td', that != null ? (ref1$ = that.treshold) != null ? ref1$.apotik : void 8 : void 8), m('th', 'Batas min. Gudang'), m('td', that != null ? (ref2$ = that.treshold) != null ? ref2$.gudang : void 8 : void 8))), ((ref3$ = state.modal) != null ? ref3$._id : void 8) && elem.modal({
@@ -3701,7 +3697,7 @@ if (Meteor.isClient) {
                     };
                     coll.gudang.update(state.modal._id, {
                       $set: {
-                        treshold: _.merge(coll.gudang.findOne(state.modal._id).treshold, (ref$ = {}, ref$[opts[userGroup()] + ""] = +e.target[0].value, ref$))
+                        treshold: _.merge(attr.farmasi.currentBarang().treshold, (ref$ = {}, ref$[opts[userGroup()] + ""] = +e.target[0].value, ref$))
                       }
                     });
                     state.modal = null;
@@ -3723,7 +3719,7 @@ if (Meteor.isClient) {
                 schema: new SimpleSchema(schema.farmasi),
                 type: 'update-pushArray',
                 scope: 'batch',
-                doc: coll.gudang.findOne(m.route.param('idbarang')),
+                doc: attr.farmasi.currentBarang(),
                 id: 'formTambahObat',
                 buttonContent: 'Tambahkan',
                 columns: 3,
@@ -3734,9 +3730,9 @@ if (Meteor.isClient) {
                     return m.redraw();
                   }
                 }
-              })) : void 8, m('table.table', m('thead', attr.gudang.headers.rincian.map(function(i){
+              })) : void 8, m('table.table', m('thead', attr.farmasi.headers.rincian.map(function(i){
                 return m('th', _.startCase(i));
-              })), m('tbody', (ref5$ = coll.gudang.findOne(m.route.param('idbarang'))) != null ? ref5$.batch.map(function(i){
+              })), m('tbody', (ref5$ = attr.farmasi.currentBarang()) != null ? ref5$.batch.map(function(i){
                 return m('tr', {
                   ondblclick: function(){
                     state.modal = i;
@@ -4363,23 +4359,24 @@ if (Meteor.isServer) {
       }
     },
     serahAmprah: function(doc){
-      var batches, stock;
+      var batches;
       coll.amprah.update(doc._id, doc);
       batches = [];
-      stock = 'digudang';
       coll.gudang.update(doc.nama, {
         $set: {
           batch: reduce([], coll.gudang.findOne(doc.nama).batch, function(res, inc){
-            var arr, minim, obj, ref$;
-            return arr = slice$.call(res).concat([doc.diserah < 1 || inc[stock] < 1
+            var arr, minim, obj;
+            return arr = slice$.call(res).concat([doc.diserah < 1 || inc.digudang < 1
               ? inc
               : (minim = function(){
-                return min([doc.diserah, inc[stock]]);
+                return min([doc.diserah, inc.digudang]);
               }, batches.push({
                 nama_obat: coll.gudang.findOne(doc.nama).nama,
                 no_batch: inc.nobatch,
                 serah: minim()
-              }), obj = _.assign({}, inc, (ref$ = {}, ref$[stock + ""] = inc[stock] - minim(), ref$), doc.ruangan === 'obat'
+              }), obj = _.assign({}, inc, {
+                digudang: inc.digudang - minim()
+              }, doc.ruangan === 'obat'
                 ? {
                   diapotik: inc['diapotik'] + minim()
                 }
