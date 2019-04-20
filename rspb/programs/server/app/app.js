@@ -623,12 +623,12 @@ this.modules = [
   {
     name: 'regis',
     full: 'Pendaftaran',
-    icon: 'people',
+    icon: 'users',
     color: 'orange'
   }, {
     name: 'bayar',
     full: 'Pembayaran',
-    icon: 'monetization_on',
+    icon: 'cash-register',
     color: 'green'
   }, {
     name: 'jalan',
@@ -638,32 +638,32 @@ this.modules = [
   }, {
     name: 'inap',
     full: 'Rawat Inap',
-    icon: 'directions',
+    icon: 'procedures',
     color: 'red'
   }, {
     name: 'obat',
     full: 'Apotek',
-    icon: 'enhanced_encryption',
+    icon: 'mortar-pestle',
     color: 'light-green'
   }, {
     name: 'farmasi',
     full: 'Gudang Farmasi',
-    icon: 'local_pharmacy',
+    icon: 'book-medical',
     color: 'orange'
   }, {
     name: 'manajemen',
     full: 'Manajemen',
-    icon: 'people',
+    icon: 'tasks',
     color: 'orange'
   }, {
     name: 'amprah',
     full: 'Amprah',
-    icon: 'rv_hookup',
+    icon: 'shopping-basket',
     color: 'blue-grey'
   }, {
     name: 'depook',
     full: 'Depo OK',
-    icon: 'people',
+    icon: 'mortar-pestle',
     color: 'green'
   }
 ];
@@ -725,7 +725,7 @@ this.hari = function(it){
   return moment(it).format('D MMM YYYY');
 };
 this.rupiah = function(it){
-  return "Rp " + numeral(+it || 0).format('0,0');
+  return "Rp " + numeral(+it || 0).format('0,0') + ",-";
 };
 this.ols = function(it){
   return m('ol', it.map(function(it){
@@ -1040,7 +1040,7 @@ if (Meteor.isClient) {
     },
     bypassRekap: function(){
       var fields, source, rows, headers;
-      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan'];
+      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan', 'harga'];
       source = coll.rekap.find().fetch().map(function(i){
         return i.obat.map(function(j){
           return j.batches.map(function(k){
@@ -1058,7 +1058,14 @@ if (Meteor.isClient) {
                 var obat;
                 obat = coll.gudang.findOne(j.nama_obat);
                 return look('satuan', obat.satuan).label;
-              }()
+              }(), rupiah(k.jumlah * function(){
+                var obat, batch;
+                obat = coll.gudang.findOne(j.nama_obat);
+                batch = obat.batch.find(function(i){
+                  return i.nobatch === k.nobatch;
+                });
+                return batch.jual;
+              }())
             ];
           });
         });
@@ -1186,6 +1193,54 @@ if (Meteor.isClient) {
             }
           };
         })))
+      }).download(title);
+    },
+    ebiling: function(doc){
+      var title, profile, x, list, obats;
+      title = "Billing Obat - " + doc.no_mr + " - " + doc.nama_pasien + " - " + hari(new Date()) + ".pdf";
+      profile = {
+        layout: 'noBorders',
+        table: {
+          widths: [0, 1, 2, 3].map(function(){
+            return '*';
+          }),
+          body: x = [['Nama Lengkap', ": " + doc.nama_pasien, 'No. MR', ": " + doc.no_mr], ['Alamat', ': ', 'Tanggal', ": " + hari(new Date())], ['Poliklinik', ": " + doc.poli, 'Dokter', ": " + doc.dokter]]
+        }
+      };
+      list = doc.obat.map(function(i){
+        var harga, jumlah;
+        harga = look2('gudang', i.nama_obat).batch[0].jual;
+        jumlah = _.sumBy(i.batches, 'jumlah');
+        return [look2('gudang', i.nama_obat).nama, jumlah, harga, jumlah * harga];
+      });
+      obats = {
+        table: {
+          widths: [0, 1, 2, 3].map(function(){
+            return '*';
+          }),
+          body: x = [['Nama Obat', 'Jumlah', 'Harga', 'Total'].map(function(it){
+            return {
+              text: it,
+              bold: true
+            };
+          })].concat(
+            slice$.call(list.map(function(i){
+              return [i[0], i[1] + " unit", rupiah(i[2]), rupiah(i[3])];
+            })), [[
+              '', '', {
+                text: 'Total',
+                bold: true
+              }, rupiah(_.sum(list.map(function(it){
+                return it[3];
+              })))
+            ]]
+          )
+        }
+      };
+      return pdfMake.createPdf({
+        pageOrientation: 'landscape',
+        content: [kop, profile, '\n', obats],
+        pageSize: 'A5'
       }).download(title);
     }
   };
@@ -2374,17 +2429,29 @@ if (Meteor.isClient) {
     no_mr: {
       type: Number
     },
-    pasien: {
+    nama_pasien: {
       type: String
     },
-    nama: {
+    poli: {
+      type: String
+    },
+    dokter: {
+      type: String
+    },
+    obat: {
+      type: Array
+    },
+    'obat.$': {
+      type: Object
+    },
+    'obat.$.nama': {
       type: String,
       label: 'Nama Obat',
       autoform: {
         options: selects.obat
       }
     },
-    stok: {
+    'obat.$.stok': {
       type: String,
       label: 'Info Stok',
       optional: true,
@@ -2392,11 +2459,14 @@ if (Meteor.isClient) {
         type: 'disabled'
       },
       autoValue: function(name, doc){
-        var that, barang, arr;
+        var num, that, barang, arr, this$ = this;
+        num = function(it){
+          return it[1];
+        }(name.split('.'));
         if (that = function(it){
           return it != null ? it.value : void 8;
         }(doc.find(function(it){
-          return it.name === 'nama';
+          return it.name === "obat." + num + ".nama";
         }))) {
           barang = coll.gudang.findOne(that);
           return _.join(arr = [
@@ -2409,7 +2479,7 @@ if (Meteor.isClient) {
         }
       }
     },
-    jumlah: {
+    'obat.$.jumlah': {
       type: Number
     }
   };
@@ -2669,7 +2739,7 @@ if (Meteor.isClient) {
           var ref$, that;
           return m('div', m('link', {
             rel: 'stylesheet',
-            href: 'https:/maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'
+            href: 'https://use.fontawesome.com/releases/v5.8.1/css/all.css'
           }), m('nav.navbar.is-info', {
             role: 'navigation',
             'aria-label': 'main navigation'
@@ -2685,7 +2755,9 @@ if (Meteor.isClient) {
             onclick: function(){
               return state.userMenu = !state.userMenu;
             }
-          }, m('span', (ref$ = Meteor.user()) != null ? ref$.username : void 8)), m('.navbar-dropdown.is-right', function(){
+          }, m('span', m('i.fa.fa-user', {
+            style: "padding-right: 5px"
+          })), m('span', (ref$ = Meteor.user()) != null ? ref$.username : void 8)), m('.navbar-dropdown.is-right', function(){
             var logout, arr, ref$;
             logout = function(){
               var arr;
@@ -2693,30 +2765,32 @@ if (Meteor.isClient) {
             };
             arr = [
               (ref$ = Meteor.user()) != null && ref$.roles
-                ? ["Grup: " + userGroup() + ", Peran: " + userRole()]
+                ? ["Grup: " + userGroup() + ", Peran: " + userRole(), 'user-tag']
                 : [''], !Meteor.userId()
                 ? [
-                  'Login', function(){
+                  'Login', 'sign-in-alt\'', function(){
                     return m.route.set('/login');
                   }
                 ]
                 : [
-                  'Logout', function(){
+                  'Logout', 'sign-out-alt', function(){
                     return logout();
                   }
                 ]
             ];
             return arr.map(function(i){
               return m('a.navbar-item', {
-                onclick: i != null ? i[1] : void 8
-              }, i[0]);
+                onclick: i != null ? i[2] : void 8
+              }, m('span.icon.is-small', m("i.fa.fa-" + (i != null ? i[1] : void 8), {
+                style: "padding-right: 5px"
+              })), m('span', i != null ? i[0] : void 8));
             });
           }())))), m('.columns', Meteor.userId() && m('.column.is-2', m('aside.menu.box', m('p.menu-label', 'Admin Menu'), m('ul.menu-list', attr.layout.rights().map(function(i){
             return m('li', m('a', {
               href: "/" + i.name,
               oncreate: m.route.link,
               'class': state.activeMenu === i.name ? 'is-active' : void 8
-            }, i.full), attr.pageAccess(['regis', 'jalan']) ? 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
+            }, m('span.icon.is-small', m("i.fa.fa-" + i.icon)), m('span', "    " + i.full)), attr.pageAccess(['regis', 'jalan']) ? 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
               return m('li', m('a', {
                 href: "/regis/" + i[0],
                 oncreate: m.route.link
@@ -3417,17 +3491,11 @@ if (Meteor.isClient) {
               type: 'method',
               meteormethod: 'bypassSerahObat',
               id: 'bypassObat',
-              columns: 3,
+              columns: 2,
               hooks: {
-                before: function(doc, cb){
-                  return cb({
-                    no_mr: doc.no_mr,
-                    nama_pasien: doc.pasien,
-                    obat: [doc]
-                  });
-                },
                 after: function(doc){
-                  return coll.rekap.insert(doc[0]);
+                  coll.rekap.insert(doc[0]);
+                  return makePdf.ebiling(doc[0]);
                 }
               }
             })), m('table.table', {
@@ -3987,7 +4055,7 @@ if (Meteor.isClient) {
                 onclick: function(){
                   return typeof state != 'undefined' && state !== null ? state.showForm[type] = !((typeof state != 'undefined' && state !== null) && state.showForm[type]) : void 8;
                 }
-              }, m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h4', 'Form Amprah'), m(autoForm({
+              }, m('span', m('i.fa.fa-shopping-basket')), m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h4', 'Form Amprah'), m(autoForm({
                 collection: coll.amprah,
                 schema: new SimpleSchema(schema.amprah(type)),
                 type: 'insert',
@@ -4278,12 +4346,11 @@ if (Meteor.isServer) {
           }), i.jumlah -= minim(), doc)]);
       }
     },
-    bypassSerahObat: function(arg$){
-      var no_mr, nama_pasien, obat, batches, i$, len$, i;
-      no_mr = arg$.no_mr, nama_pasien = arg$.nama_pasien, obat = arg$.obat;
+    bypassSerahObat: function(doc){
+      var batches, i$, ref$, len$, i;
       batches = [];
-      for (i$ = 0, len$ = obat.length; i$ < len$; ++i$) {
-        i = obat[i$];
+      for (i$ = 0, len$ = (ref$ = doc.obat).length; i$ < len$; ++i$) {
+        i = ref$[i$];
         coll.gudang.update(i.nama, {
           $set: {
             batch: reduce([], coll.gudang.findOne(i.nama).batch, fn$)
@@ -4303,21 +4370,17 @@ if (Meteor.isServer) {
           return res.map(function(i){
             if (i.no_mr === inc.no_mr) {
               return {
-                no_mr: i.no_mr,
-                nama_pasien: i.nama_pasien,
                 obat: slice$.call(i.obat).concat([obj])
               };
             }
           });
         } else {
           return slice$.call(res).concat([{
-            no_mr: inc.no_mr,
-            nama_pasien: inc.nama_pasien,
             obat: [obj]
           }]);
         }
       }).map(function(i){
-        return _.assign(i, {
+        return _.assign(doc, {
           obat: reduce([], i.obat, function(res, inc){
             var obj;
             obj = {
@@ -4348,8 +4411,6 @@ if (Meteor.isServer) {
           : (minim = function(){
             return min([i.jumlah, inc.diapotik]);
           }, batches.push({
-            no_mr: no_mr,
-            nama_pasien: nama_pasien,
             nama_obat: i.nama,
             nobatch: inc.nobatch,
             jumlah: minim()
