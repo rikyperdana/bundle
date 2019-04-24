@@ -60,7 +60,7 @@ if (regeneratorRuntime &&
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// ../../.1.0.1.1d1fnvo++os+web.browser+web.cordova/npm/node_modules/meteor-b //
+// ../../.1.0.1.1s8hd91++os+web.browser+web.cordova/npm/node_modules/meteor-b //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
                                                                               //

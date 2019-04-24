@@ -31,7 +31,7 @@ this.cards = [{                                                                 
 }];                                                                                                               // 51
 this.headings = {                                                                                                 // 58
   pendidikan: ['Nama', 'Alamat', 'Bentuk', 'Kondisi', 'Jumlah Siswa', 'Jumlah Guru', 'Jumlah Kelas'],             // 59
-  pariwisata: ['Nama', 'Kondisi', 'Alamat', 'Bentuk', 'Jumlah Kunjungan'],                                        // 60
+  pariwisata: ['Nama', 'Kondisi', 'Alamat', 'Bentuk', 'Jumlah Kunjungan', 'Jarak Pekanbaru'],                     // 60
   kesehatan: ['Nama', 'Kondisi', 'Alamat', 'Bentuk', 'Jumlah Pasien', 'Jumlah Dokter', 'Jumlah Kapasitas'],       // 61
   industri: ['Nama', 'Kondisi', 'Alamat', 'Bentuk', 'Jumlah Produksi'],                                           // 62
   kominfo: ['Nama', 'Kondisi', 'Alamat', 'Bentuk', 'Luas Coverage'],                                              // 63
@@ -8351,7 +8351,7 @@ if (Meteor.isClient) {                                                          
           selector = {                                                                                            // 496
             kab: data.kab,                                                                                        // 497
             grup: data.grup,                                                                                      // 498
-            item: data.item                                                                                       // 499
+            item: _.snakeCase(data.item)                                                                          // 499
           };                                                                                                      // 497
           modifier = {};                                                                                          // 500
                                                                                                                   //
