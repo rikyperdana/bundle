@@ -884,10 +884,10 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/app/app.js?hash=b96a3e600d128df7214ab36a32b2fd1fc7590b44",
-      "size": 180346,
-      "hash": "b96a3e600d128df7214ab36a32b2fd1fc7590b44",
-      "sri": "FMXUU9egHIkCuDNh2hK4wvrsKvZCK/zPpBhX71ITZ2NyHCnVfZZQptaBSnt0TL1wBaCLH88TKGqvGa75HMLPEw=="
+      "url": "/app/app.js?hash=2ae3acb6db90c14b4e4b9e905d5cee188447f408",
+      "size": 184182,
+      "hash": "2ae3acb6db90c14b4e4b9e905d5cee188447f408",
+      "sri": "ysG5O4UXIoe+Imukzjdy70Cul/Gjz1pRz0xhpgO62Ii5YOQIcQj0gsRPc+948spO4keTMu7a/ID+wv3RTagUrw=="
     },
     {
       "path": "packages/service-configuration.js",
