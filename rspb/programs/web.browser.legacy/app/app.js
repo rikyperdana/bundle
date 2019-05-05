@@ -90,7 +90,7 @@ if (Meteor.isClient) {
     return obj;
   };
   this.autoForm = function(opts){
-    var state, normed, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, optionList, ref$, key$, stateTempGet, clonedDoc, usedDoc, attr, columnize, inputTypes;
+    var state, normed, scope, that, usedSchema, theSchema, omitFields, usedFields, arr, alphabetically, optionList, ref$, key$, stateTempGet, clonedDoc, usedDoc, attr, columnize, inputTypes;
     state = afState;
     normed = function(it){
       return it.replace(/\d/g, '$');
@@ -113,9 +113,12 @@ if (Meteor.isClient) {
     };
     omitFields = opts.omitFields ? _.pull.apply(_, [_.values(usedSchema._firstLevelSchemaKeys)].concat(slice$.call(opts.omitFields))) : void 8;
     usedFields = ors(arr = [omitFields, opts.fields, usedSchema._firstLevelSchemaKeys]);
+    alphabetically = function(it){
+      return _.sortBy(it, 'label');
+    };
     optionList = function(name){
       var arr, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$;
-      return ors(arr = [
+      return alphabetically(ors(arr = [
         (ref$ = theSchema(normed(name))) != null ? (ref1$ = ref$.allowedValues) != null ? ref1$.map(function(i){
           return {
             value: i,
@@ -129,7 +132,7 @@ if (Meteor.isClient) {
             label: _.startCase(i)
           };
         })
-      ]);
+      ]));
     };
     state.arrLen == null && (state.arrLen = {});
     state.form == null && (state.form = {});
@@ -152,7 +155,6 @@ if (Meteor.isClient) {
         onchange: function(arg$){
           var target, that, arr, ref$, ref1$;
           target = arg$.target;
-          state.submitted = false;
           if (that = opts.onchange) {
             that(target);
           }
@@ -165,7 +167,6 @@ if (Meteor.isClient) {
         onsubmit: function(e){
           var temp, formValues, obj, context, after, formTypes, that, ref$;
           e.preventDefault();
-          state.submitted = true;
           temp = state.temp[opts.id].map(function(it){
             var ref$;
             return ref$ = {}, ref$[it.name + ""] = it.value, ref$;
@@ -226,9 +227,7 @@ if (Meteor.isClient) {
                 return opts.collection.insert(doc || obj, after);
               },
               update: function(){
-                return opts.collection.update({
-                  _id: usedDoc._id
-                }, {
+                return opts.collection.update(usedDoc._id, {
                   $set: doc || obj
                 }, after);
               },
@@ -1047,7 +1046,9 @@ if (Meteor.isClient) {
             var arr;
             return arr = [
               {
-                text: i.no_mr + "\n" + i.nama_pasien,
+                text: i.idpasien
+                  ? "" + coll.pasien.findOne(i.idpasien).no_mr.toString() + "\n" + coll.pasien.findOne(i.idpasien).regis.nama_lengkap + ""
+                  : i.no_mr + "\n" + i.nama_pasien,
                 rowSpan: _.sum(i.obat.map(function(it){
                   return it.batches.length;
                 }))
@@ -1090,17 +1091,19 @@ if (Meteor.isClient) {
       headers = ['tanggal', 'klinik', 'dokter', 'diagnosa', 'terapi', 'perawat', 'icd10'];
       rows = pasien.rawat.map(function(i){
         var arr;
-        return arr = [
-          hari(i.tanggal), look('klinik', i.klinik).label, Meteor.users.findOne(i.petugas.dokter).username, {
-            ol: i.diagnosa
-          }, {
-            ul: i.tindakan.map(function(j){
-              return _.startCase(look2('tarif', j.nama).nama);
-            })
-          }, Meteor.users.findOne(i.petugas.perawat).username, {
-            ol: i.icdx
-          }
-        ];
+        if (i.tindakan) {
+          return arr = [
+            hari(i.tanggal), look('klinik', i.klinik).label, _.startCase(Meteor.users.findOne(i.petugas.dokter).username), {
+              ol: i.diagnosa
+            }, {
+              ul: i.tindakan.map(function(j){
+                return _.startCase(look2('tarif', j.nama).nama);
+              })
+            }, _.startCase(Meteor.users.findOne(i.petugas.perawat).username), {
+              ol: i.icdx
+            }
+          ];
+        }
       });
       columns = [['NO. MR', 'NAMA LENGKAP', 'TANGGAL LAHIR', 'JENIS KELAMIN'], arr = [pasien.no_mr.toString(), pasien.regis.nama_lengkap, hari(pasien.regis.tgl_lahir), look('kelamin', pasien.regis.kelamin).label]];
       return pdfMake.createPdf({
@@ -1383,7 +1386,7 @@ selects.grupTindakan = function(){
           var this$ = this;
           return it.value === function(it){
             return it.klinik;
-          }(coll.pasien.findOne().rawat.find(function(it){
+          }(coll.pasien.findOne(m.route.param('idpasien')).rawat.find(function(it){
             return it.idrawat === state.docRawat;
           }));
         })))
@@ -1410,7 +1413,7 @@ selects.namaTindakan = function(name){
           var this$ = this;
           return it.value === function(it){
             return it.klinik;
-          }(coll.pasien.findOne().rawat.find(function(it){
+          }(coll.pasien.findOne(m.route.param('idpasien')).rawat.find(function(it){
             return it.idrawat === state.docRawat;
           }));
         }))), it.third === afState.form.formRawat[current]
@@ -1575,7 +1578,7 @@ if (Meteor.isClient) {
   schema.regis = {
     no_mr: {
       type: Number,
-      min: 100000,
+      min: 1,
       max: 999999
     },
     regis: {
@@ -1597,7 +1600,8 @@ if (Meteor.isClient) {
       optional: true
     },
     'regis.tgl_lahir': {
-      type: Date
+      type: Date,
+      optional: true
     },
     'regis.tmpt_lahir': {
       type: String,
@@ -2564,11 +2568,11 @@ if (Meteor.isClient) {
         icdFields: ['nama_pasien', 'tanggal', 'klinik', 'dokter', 'diagnosis', 'nama_perawat', 'cek']
       },
       rawatDetails: function(doc){
-        var arr, ref$;
+        var arr, that, ref$;
         return arr = [
           {
             head: 'Tanggal',
-            cell: hari(doc.tanggal)
+            cell: (that = doc.tanggal) ? hari(that) : void 8
           }, {
             head: 'Klinik',
             cell: look('klinik', doc.klinik).label
@@ -2772,6 +2776,8 @@ if (Meteor.isClient) {
             role: 'navigation',
             'aria-label': 'main navigation'
           }, m('.navbar-brand', m('a.navbar-item', {
+            href: '/dashboard',
+            oncreate: m.route.link,
             style: "margin-left: 600px"
           }, _.upperCase(function(it){
             return (it != null ? it.full : void 8) || attr.layout.hospital;
@@ -2951,27 +2957,20 @@ if (Meteor.isClient) {
                 }
               },
               hooks: {
-                before: function(doc, cb){
-                  return Meteor.call('onePasien', doc.no_mr, function(err, res){
-                    var ref$;
-                    if (!res) {
-                      return cb(_.merge(doc, {
-                        regis: {
-                          petugas: (ref$ = {}, ref$[userGroup() + ""] = Meteor.userId(), ref$)
-                        }
-                      }));
-                    }
-                  });
-                },
                 after: function(id){
                   state.showAddPatient = null;
-                  return m.route.set("/regis/lama/" + id);
+                  if (id === 1) {
+                    return m.route.set("/regis/lama/" + m.route.param('idpasien'));
+                  } else {
+                    return m.route.set("/regis/lama/" + id);
+                  }
                 }
               }
             })) : void 8, userRole('mr')
               ? m('div', m('br', {
                 oncreate: function(){
-                  return Meteor.subscribe('coll', 'tarif');
+                  Meteor.subscribe('coll', 'tarif');
+                  return Meteor.subscribe('users');
                 }
               }), m('form.columns', {
                 onsubmit: function(e){
@@ -3019,7 +3018,7 @@ if (Meteor.isClient) {
                   var arr, ref$;
                   if (j.anamesa_dokter && !j.icdx) {
                     return m('tr', tds(arr = [
-                      i.regis.nama_lengkap, hari(j.tanggal), look('klinik', j.klinik).label, '-', (ref$ = j.diagnosa) != null ? ref$[0] : void 8, '-', m('.button.is-info', {
+                      i.regis.nama_lengkap, hari(j.tanggal), look('klinik', j.klinik).label, _.startCase(Meteor.users.findOne(j.petugas.dokter).username), (ref$ = j.diagnosa) != null ? ref$[0] : void 8, _.startCase(Meteor.users.findOne(j.petugas.perawat).username), m('.button.is-info', {
                         onclick: function(){
                           return state.modal = _.merge({
                             rawat: j,
@@ -3373,8 +3372,8 @@ if (Meteor.isClient) {
                     }) : void 8, m('tr', m('th', 'Total'), m('td', rupiah(_.sum(that.map(function(it){
                       return it.harga;
                     }))))))) : void 8, (that = state.modal.obat) ? m('div', m('br'), m('table', m('tr', m('th', 'Obat'))), m('table.table', that.map(function(i){
-                      var arr, that;
-                      return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), i.aturan.kali + " kali", i.aturan.dosis + " dosis", i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
+                      var arr, that, ref$, ref1$;
+                      return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " dosis" : void 8, i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
                     }))) : void 8),
                     confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true]) ? 'Lanjutkan' : void 8,
                     action: function(){
@@ -3514,7 +3513,11 @@ if (Meteor.isClient) {
         view: function(){
           var that;
           if (attr.pageAccess(['obat', 'depook'])) {
-            return m('.content', m('h4', 'Apotik'), m(autoForm({
+            return m('.content', m('h4', 'Apotik'), m('button.button.is-success', {
+              onclick: function(){
+                return state.showForm = !state.showForm;
+              }
+            }, m('span', '+ByPass')), state.showForm ? m(autoForm({
               schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
               meteormethod: 'bypassSerahObat',
@@ -3534,7 +3537,7 @@ if (Meteor.isClient) {
                   return m.redraw();
                 }
               }
-            })), m('table.table', {
+            })) : void 8, m('table.table', {
               oncreate: function(){
                 Meteor.subscribe('coll', 'gudang');
                 Meteor.subscribe('coll', 'rekap', {
@@ -3585,16 +3588,16 @@ if (Meteor.isClient) {
               content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
                 return m('th', _.startCase(i));
               })), that.obat.map(function(i){
-                var arr;
-                return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", i.aturan.kali + " kali", i.aturan.dosis + " unit"]));
+                var arr, that, ref$, ref1$;
+                return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " unit" : void 8]));
               })),
               confirm: 'Serahkan',
               action: function(){
-                return Meteor.call('serahObat', state.modal, function(err, res){
+                return Meteor.call('bypassSerahObat', state.modal, function(err, res){
                   if (res) {
                     coll.pasien.update(state.modal._id, {
                       $set: {
-                        rawat: attr.pasien.currentPasien().rawat.map(function(i){
+                        rawat: state.modal.rawat.map(function(i){
                           if (i.idrawat === state.modal.idrawat) {
                             return _.assign(i, {
                               givenDrug: true
@@ -3613,7 +3616,9 @@ if (Meteor.isClient) {
                   }
                 });
               }
-            }) : void 8, m('.button.is-warning', {
+            }) : void 8, [0, 1].map(function(){
+              return m('br');
+            }), m('.button.is-warning', {
               onclick: function(){
                 return Meteor.subscribe('coll', 'pasien', {
                   _id: {
@@ -4424,12 +4429,13 @@ if (Meteor.isServer) {
       }
     },
     bypassSerahObat: function(doc){
-      var batches, opts, stock, i$, ref$, len$, i;
+      var batches, opts, pasien, stock, i$, ref$, len$, i, either;
       batches = [];
       opts = {
         obat: 'diapotik',
         depook: 'didepook'
       };
+      pasien = coll.pasien.findOne(doc._id);
       stock = opts[doc.source];
       for (i$ = 0, len$ = (ref$ = doc.obat).length; i$ < len$; ++i$) {
         i = ref$[i$];
@@ -4439,6 +4445,9 @@ if (Meteor.isServer) {
           }
         });
       }
+      either = doc._id ? {
+        idpasien: doc._id
+      } : doc;
       return reduce([], batches, function(res, inc){
         var obj;
         obj = {
@@ -4463,7 +4472,7 @@ if (Meteor.isServer) {
           }]);
         }
       }).map(function(i){
-        return _.assign(doc, {
+        return _.assign(either, {
           obat: reduce([], i.obat, function(res, inc){
             var obj;
             obj = {
@@ -4489,12 +4498,13 @@ if (Meteor.isServer) {
         });
       });
       function fn$(res, inc){
-        var arr, minim, doc, ref$;
+        var arr, minim, that, doc, ref$;
         return arr = slice$.call(res).concat([i.jumlah < 1
           ? inc
           : (minim = function(){
             return min([i.jumlah, inc[stock]]);
           }, batches.push({
+            idpasien: (that = pasien) ? that._id : void 8,
             nama_obat: i.nama,
             idbatch: inc.idbatch,
             nobatch: inc.nobatch,
