@@ -999,46 +999,6 @@ if (Meteor.isClient) {
     },
     rekap: function(){
       var fields, source, rows, headers;
-      fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan'];
-      source = coll.rekap.find().fetch().map(function(i){
-        return i.obat.map(function(j){
-          return j.batches.map(function(k){
-            var arr;
-            return arr = [
-              {
-                text: "" + coll.pasien.findOne(i.idpasien).no_mr.toString() + "\n" + coll.pasien.findOne(i.idpasien).regis.nama_lengkap + "",
-                rowSpan: _.sum(i.obat.map(function(it){
-                  return it.batches.length;
-                }))
-              }, {
-                text: look2('gudang', j.nama_obat).nama,
-                rowSpan: j.batches.length
-              }, k.nobatch, k.jumlah.toString(), function(){
-                var obat;
-                obat = coll.gudang.findOne(j.nama_obat);
-                return look('satuan', obat.satuan).label;
-              }()
-            ];
-          });
-        });
-      });
-      rows = _.flattenDepth(source, 2);
-      headers = [fields.map(function(it){
-        return _.startCase(it);
-      })];
-      if (rows.length > 0) {
-        Meteor.call('doneRekap');
-        return pdfMake.createPdf({
-          content: [{
-            table: {
-              body: slice$.call(headers).concat(slice$.call(rows))
-            }
-          }]
-        }).download('cetak_rekap.pdf');
-      }
-    },
-    bypassRekap: function(){
-      var fields, source, rows, headers;
       fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan', 'harga'];
       source = coll.rekap.find().fetch().map(function(i){
         return i.obat.map(function(j){
@@ -1089,7 +1049,7 @@ if (Meteor.isClient) {
     icdx: function(pasien){
       var headers, rows, columns, arr;
       headers = ['tanggal', 'klinik', 'dokter', 'diagnosa', 'terapi', 'perawat', 'icd10'];
-      rows = pasien.rawat.map(function(i){
+      rows = _.compact(pasien.rawat.map(function(i){
         var arr;
         if (i.tindakan) {
           return arr = [
@@ -1104,8 +1064,9 @@ if (Meteor.isClient) {
             }
           ];
         }
-      });
+      }));
       columns = [['NO. MR', 'NAMA LENGKAP', 'TANGGAL LAHIR', 'JENIS KELAMIN'], arr = [pasien.no_mr.toString(), pasien.regis.nama_lengkap, hari(pasien.regis.tgl_lahir), look('kelamin', pasien.regis.kelamin).label]];
+      console.log(rows, columns);
       return pdfMake.createPdf({
         content: arr = [
           kop, {
@@ -1202,15 +1163,20 @@ if (Meteor.isClient) {
       }).download(title);
     },
     ebiling: function(doc){
-      var title, profile, x, that, list, obats;
-      title = "Billing Obat - " + doc.no_mr + " - " + doc.nama_pasien + " - " + hari(new Date()) + ".pdf";
+      var pasien, that, rawat, dokter, title, profile, x, list, obats, petugas;
+      pasien = coll.pasien.findOne(doc.idpasien);
+      if (that = pasien) {
+        rawat = _.last(that.rawat);
+      }
+      dokter = Meteor.users.findOne(rawat.dokter).username;
+      title = "Billing Obat - " + (pasien.no_mr || doc.no_mr) + " - " + (pasien.regis.nama_lengkap || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
       profile = {
         layout: 'noBorders',
         table: {
           widths: [0, 1, 2, 3].map(function(){
             return '*';
           }),
-          body: x = [['Nama Lengkap', ": " + doc.nama_pasien, 'No. MR', ": " + doc.no_mr], ['Cara Bayar', ": " + look('cara_bayar', doc.cara_bayar).label, 'Tanggal', ": " + hari(new Date())], ['Poliklinik', ": " + look('klinik', doc.poli).label, 'Dokter', ": " + doc.dokter], ['No. SEP', ": " + ((that = doc.no_sep) ? that : '-'), 'Jenis Pasien', ": " + look('rawat', doc.rawat).label]]
+          body: x = [['Nama Lengkap', ": " + (pasien.regis.nama_lengkap || doc.nama_pasien), 'No. MR', ": " + (pasien.no_mr || doc.no_mr)], ['Cara Bayar', ": " + look('cara_bayar', rawat.cara_bayar || doc.cara_bayar).label, 'Tanggal', ": " + hari(new Date())], ['Poliklinik', ": " + look('klinik', rawat.klinik || doc.poli).label, 'Dokter', ": " + (dokter || doc.dokter)], ['No. SEP', ": " + ((that = doc.no_sep) ? that : '-'), 'Jenis Pasien', ": " + look('rawat', doc.rawat || 1).label]]
         }
       };
       list = doc.obat.map(function(i){
@@ -1245,9 +1211,13 @@ if (Meteor.isClient) {
           )
         }
       };
+      petugas = {
+        text: '\nPEKANBARU, ' + moment().format('D/MM/YYYY') + '\n\n\n\n\n' + _.startCase(Meteor.user().username),
+        alignment: 'right'
+      };
       return pdfMake.createPdf({
         pageOrientation: 'landscape',
-        content: [kop, profile, '\n', obats],
+        content: [kop, profile, '\n', obats, petugas],
         pageSize: 'A5'
       }).download(title);
     }
@@ -1883,6 +1853,11 @@ if (Meteor.isClient) {
       autoform: {
         options: selects.cara_bayar
       }
+    },
+    'rawat.$.no_sep': {
+      type: String,
+      optional: true,
+      label: 'No. SEP'
     },
     'rawat.$.klinik': {
       type: Number,
@@ -3517,10 +3492,10 @@ if (Meteor.isClient) {
               onclick: function(){
                 return state.showForm = !state.showForm;
               }
-            }, m('span', '+ByPass')), state.showForm ? m(autoForm({
+            }, m('span', 'Billing Obat')), state.showForm ? m(autoForm({
               schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
-              meteormethod: 'bypassSerahObat',
+              meteormethod: 'serahObat',
               id: 'bypassObat',
               columns: 4,
               hooks: {
@@ -3593,7 +3568,7 @@ if (Meteor.isClient) {
               })),
               confirm: 'Serahkan',
               action: function(){
-                return Meteor.call('bypassSerahObat', state.modal, function(err, res){
+                return Meteor.call('serahObat', state.modal, function(err, res){
                   if (res) {
                     coll.pasien.update(state.modal._id, {
                       $set: {
@@ -3609,7 +3584,8 @@ if (Meteor.isClient) {
                       }
                     });
                     res.map(function(it){
-                      return coll.rekap.insert(it);
+                      coll.rekap.insert(it);
+                      return makePdf.ebiling(it);
                     });
                     state.modal = null;
                     return m.redraw();
@@ -3628,7 +3604,7 @@ if (Meteor.isClient) {
                   }
                 }, {
                   onReady: function(){
-                    return makePdf.bypassRekap();
+                    return makePdf.rekap();
                   }
                 });
               }
@@ -4256,18 +4232,12 @@ function in$(x, xs){
 // Generated by LiveScript 1.5.0
 var backup, slice$ = [].slice;
 if (Meteor.isServer) {
-  backup = function(){
+  backup = function(db_port, location){
     return ['pasien', 'gudang', 'users', 'rekap', 'amprah'].map(function(i){
-      return shell.exec("mongoexport -h localhost:3001 -d meteor -c " + i + " -o ~/backup/" + _.kebabCase(hari(new Date)) + "-" + i + ".json");
+      return shell.exec("mongoexport -h localhost:" + db_port + " -d meteor -c " + i + " -o " + location + "/" + _.kebabCase(hari(new Date)) + "-" + i + ".json");
     });
   };
-  Meteor.startup(function(){
-    return new Meteor.Cron({
-      events: {
-        "0 0 * * *": backup
-      }
-    });
-  });
+  Meteor.startup(function(){});
   Meteor.publish('coll', function(name, sel, opt){
     sel == null && (sel = {});
     opt == null && (opt = {});
@@ -4350,85 +4320,7 @@ if (Meteor.isServer) {
         }), ref$)
       });
     },
-    serahObat: function(arg$){
-      var _id, obat, batches, pasien, i$, len$, i;
-      _id = arg$._id, obat = arg$.obat;
-      batches = [];
-      pasien = coll.pasien.findOne(_id);
-      for (i$ = 0, len$ = obat.length; i$ < len$; ++i$) {
-        i = obat[i$];
-        coll.gudang.update(i.nama, {
-          $set: {
-            batch: reduce([], coll.gudang.findOne(i.nama).batch, fn$)
-          }
-        });
-      }
-      return reduce([], batches, function(res, inc){
-        var obj;
-        obj = {
-          nama_obat: inc.nama_obat,
-          nobatch: inc.nobatch,
-          jumlah: inc.jumlah
-        };
-        if (res.find(function(i){
-          return i.idpasien === inc.idpasien;
-        })) {
-          return res.map(function(i){
-            if (i.idpasien === inc.idpasien) {
-              return {
-                idpasien: i.idpasien,
-                obat: slice$.call(i.obat).concat([obj])
-              };
-            }
-          });
-        } else {
-          return slice$.call(res).concat([{
-            idpasien: inc.idpasien,
-            obat: [obj]
-          }]);
-        }
-      }).map(function(i){
-        return _.assign(i, {
-          obat: reduce([], i.obat, function(res, inc){
-            var obj;
-            obj = {
-              nobatch: inc.nobatch,
-              jumlah: inc.jumlah
-            };
-            if (res.find(function(i){
-              return i.nama_obat === inc.nama_obat;
-            })) {
-              return res.map(function(i){
-                return _.assign(i, {
-                  batches: slice$.call(i.batches).concat([obj])
-                });
-              });
-            } else {
-              return slice$.call(res).concat([{
-                nama_obat: inc.nama_obat,
-                batches: [obj]
-              }]);
-            }
-          })
-        });
-      });
-      function fn$(res, inc){
-        var arr, minim, doc;
-        return arr = slice$.call(res).concat([i.jumlah < 1
-          ? inc
-          : (minim = function(){
-            return min([i.jumlah, inc.diapotik]);
-          }, batches.push({
-            idpasien: pasien != null ? pasien._id : void 8,
-            nama_obat: i.nama,
-            nobatch: inc.nobatch,
-            jumlah: minim()
-          }), doc = _.assign({}, inc, {
-            diapotik: inc.diapotik - minim()
-          }), i.jumlah -= minim(), doc)]);
-      }
-    },
-    bypassSerahObat: function(doc){
+    serahObat: function(doc){
       var batches, opts, pasien, stock, i$, ref$, len$, i, either;
       batches = [];
       opts = {
