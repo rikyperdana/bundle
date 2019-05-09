@@ -1123,45 +1123,6 @@ if (Meteor.isClient) {
         }).download(name + ".pdf");
       }
     },
-    visits: function(docs){
-      var headers, rows, range, title, arr;
-      headers = _.merge.apply(_, ['poli', 'bayar', 'status'].map(function(i){
-        var ref$;
-        return ref$ = {}, ref$[i + ""] = _.keys(docs[0][i]), ref$;
-      }));
-      rows = _.merge.apply(_, ['poli', 'bayar', 'status'].map(function(i){
-        var ref$;
-        return ref$ = {}, ref$[i + ""] = docs.map(function(j){
-          return [j.hari].concat(_.values(j[i]).map(function(it){
-            return it.toString();
-          }));
-        }), ref$;
-      }));
-      range = ['first', 'last'].map(function(i){
-        var this$ = this;
-        return function(it){
-          return it.hari;
-        }(_[i](docs));
-      });
-      title = "Laporan Kunjungan " + range[0] + " - " + range[1] + ".pdf";
-      return pdfMake.createPdf({
-        pageOrientation: 'landscape',
-        content: arr = [
-          kop, {
-            text: title + " \n\n",
-            alignment: 'center',
-            bold: true
-          }
-        ].concat(slice$.call(['poli', 'bayar', 'status'].map(function(i){
-          var x;
-          return {
-            table: {
-              body: x = [['Tanggal'].concat(slice$.call(headers[i]))].concat(slice$.call(rows[i]))
-            }
-          };
-        })))
-      }).download(title);
-    },
     ebiling: function(doc){
       var pasien, that, rawat, dokter, title, profile, x, list, obats, petugas;
       pasien = coll.pasien.findOne(doc.idpasien);
@@ -2316,8 +2277,16 @@ if (Meteor.isClient) {
     },
     'batch.$.jual': {
       type: Number,
-      decimal: true,
-      optional: true
+      autoform: {
+        type: 'hidden'
+      },
+      autoValue: function(name, docs){
+        return 1.25 * function(it){
+          return it != null ? it.value : void 8;
+        }(docs.find(function(it){
+          return 'beli' === _.last(it.name.split('.'));
+        }));
+      }
     },
     'batch.$.suplier': {
       type: String,
@@ -2932,6 +2901,17 @@ if (Meteor.isClient) {
                 }
               },
               hooks: {
+                before: function(doc, cb){
+                  if ('edit' === m.route.param('jenis')) {
+                    return cb(doc);
+                  } else {
+                    return Meteor.call('onePasien', doc.no_mr, function(err, res){
+                      if (!res) {
+                        return cb(doc);
+                      }
+                    });
+                  }
+                },
                 after: function(id){
                   state.showAddPatient = null;
                   if (id === 1) {
@@ -3488,7 +3468,11 @@ if (Meteor.isClient) {
         view: function(){
           var that;
           if (attr.pageAccess(['obat', 'depook'])) {
-            return m('.content', m('h4', 'Apotik'), m('button.button.is-success', {
+            return m('.content', {
+              oncreate: function(){
+                return Meteor.subscribe('users');
+              }
+            }, m('h4', 'Apotik'), m('button.button.is-success', {
               onclick: function(){
                 return state.showForm = !state.showForm;
               }
@@ -3828,8 +3812,8 @@ if (Meteor.isClient) {
               }) : void 8)), (ref6$ = state.modal) != null && ref6$.idbatch ? elem.modal({
                 title: 'Rincian Batch',
                 content: m('table', function(){
-                  var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
-                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Jual', rupiah((ref1$ = state.modal) != null ? ref1$.jual : void 8)], ['Nama Supplier', (ref2$ = state.modal) != null ? ref2$.suplier : void 8], ['Bisa diretur', ((ref3$ = state.modal) != null ? ref3$.returnable : void 8) || 'Tidak'], ['Sumber Anggaran', look('anggaran', (ref4$ = state.modal) != null ? ref4$.anggaran : void 8).label], ['Tahun Pengadaan', (ref5$ = state.modal) != null ? ref5$.pengadaan : void 8]];
+                  var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$;
+                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Beli', rupiah((ref1$ = state.modal) != null ? ref1$.beli : void 8)], ['Harga Jual', rupiah((ref2$ = state.modal) != null ? ref2$.jual : void 8)], ['Nama Supplier', (ref3$ = state.modal) != null ? ref3$.suplier : void 8], ['Bisa diretur', (ref4$ = state.modal) != null && ref4$.returnable ? 'Bisa' : 'Tidak'], ['Sumber Anggaran', look('anggaran', (ref5$ = state.modal) != null ? ref5$.anggaran : void 8).label], ['Tahun Pengadaan', (ref6$ = state.modal) != null ? ref6$.pengadaan : void 8]];
                   return contents.map(function(i){
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
@@ -4607,7 +4591,7 @@ if (Meteor.isServer) {
       }
     },
     visits: function(start, end){
-      var docs, pipe, a, list, b, c, x, maped, grouped, result;
+      var docs, pipe, a, list, b, c, x;
       docs = coll.pasien.aggregate(pipe = [
         a = {
           $match: {
@@ -4645,54 +4629,18 @@ if (Meteor.isServer) {
           }
         }
       ]);
-      maped = docs.map(function(i){
-        return _.merge.apply(_, [
-          {}, {
-            hari: moment(i.rawat.tanggal).format('D MMM YYYY')
-          }
-        ].concat(slice$.call(['tanggal', 'klinik', 'cara_bayar'].map(function(j){
-          var ref$;
-          return ref$ = {}, ref$[j + ""] = i.rawat[j], ref$;
-        }))));
-      });
-      grouped = _.groupBy(maped, 'hari');
-      result = _.map(grouped, function(val, key){
-        var this$ = this;
+      return docs.map(function(i){
+        var ref$, ref1$, ref2$;
         return {
-          hari: key,
-          tanggal: new Date(key),
-          poli: _.merge.apply(_, selects.klinik.map(function(v, k){
-            var ref$, this$ = this;
-            return ref$ = {}, ref$[v.label + ""] = function(it){
-              return it.length;
-            }(val.filter(function(it){
-              return it.klinik === k + 1;
-            })), ref$;
-          })),
-          bayar: _.merge.apply(_, selects.cara_bayar.map(function(v, k){
-            var ref$, this$ = this;
-            return ref$ = {}, ref$[v.label + ""] = function(it){
-              return it.length;
-            }(val.filter(function(it){
-              return it.cara_bayar === k + 1;
-            })), ref$;
-          })),
-          status: _.merge({
-            Baru: function(it){
-              return it.length;
-            }(val.filter(function(it){
-              return it.baru;
-            }))
-          }, {
-            Lama: val.length - function(it){
-              return it.length;
-            }(val.filter(function(it){
-              return it.baru;
-            }))
-          })
+          hari: moment(i.rawat.tanggal).format('D MMM YYYY'),
+          klinik: look('klinik', i.rawat.klinik).label,
+          cara_bayar: look('cara_bayar', i.rawat.cara_bayar).label,
+          baru_lama: 'Lama',
+          pendaftar: _.startCase((ref$ = Meteor.users.findOne(i.rawat.petugas.regis)) != null ? ref$.username : void 8),
+          perawat: _.startCase((ref1$ = Meteor.users.findOne(i.rawat.petugas.perawat)) != null ? ref1$.username : void 8),
+          dokter: _.startCase((ref2$ = Meteor.users.findOne(i.rawat.petugas.dokter)) != null ? ref2$.username : void 8)
         };
       });
-      return _.sortBy(result, 'tanggal');
     },
     stocks: function(start, end){
       var pipe, a, arr, b, c;
