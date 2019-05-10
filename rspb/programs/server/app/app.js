@@ -4129,16 +4129,16 @@ if (Meteor.isClient) {
             }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
               return m('th', _.startCase(i));
             }))), m('tbody', pagins(attr.amprah.amprahList()).map(function(i){
-              var arr, ref$, that, this$ = this;
+              var arr, ref$, that;
               return m('tr', tds(arr = [
                 hari(i.tanggal_minta), function(it){
                   return (it != null ? it.full : void 8) || _.startCase(i.ruangan);
                 }(modules.find(function(it){
                   return it.name === i.ruangan;
                 })), _.startCase(function(it){
-                  return it.username;
+                  return it != null ? it.username : void 8;
                 }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
-                  return it.username;
+                  return it != null ? it.username : void 8;
                 }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
                   onclick: function(){
                     return state.modal = i;
