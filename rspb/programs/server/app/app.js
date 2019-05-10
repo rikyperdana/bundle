@@ -3710,13 +3710,13 @@ if (Meteor.isClient) {
               }, m('thead', m('tr', attr.farmasi.headers.farmasi.map(function(i){
                 return m('th', _.startCase(i));
               }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
-                var that, ref$, ref1$;
+                var that, ref$, ref1$, ref2$;
                 return m('tr', {
                   'class': (that = i.treshold) ? that.apotik > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8 : void 8,
                   ondblclick: function(){
                     return m.route.set("/farmasi/" + i._id);
                   }
-                }, m('td', look('barang', i.jenis).label), m('td', i.nama), m('td', (ref$ = i.treshold) != null ? ref$.apotik : void 8), m('td', (ref1$ = i.treshold) != null ? ref1$.gudang : void 8), ['diapotik', 'didepook', 'digudang'].map(function(j){
+                }, m('td', (ref$ = look('barang', i.jenis)) != null ? ref$.label : void 8), m('td', i.nama), m('td', (ref1$ = i.treshold) != null ? ref1$.apotik : void 8), m('td', (ref2$ = i.treshold) != null ? ref2$.gudang : void 8), ['diapotik', 'didepook', 'digudang'].map(function(j){
                   return m('td', _.sumBy(i.batch, j));
                 }));
               }))))
@@ -4060,7 +4060,7 @@ if (Meteor.isClient) {
                 return m('th', _.startCase(i));
               }))), m('tbody', pagins(coll.tarif.find().fetch()).map(function(i){
                 var arr;
-                return m('tr', tds(arr = [_.startCase(i.nama), rupiah(i.harga), _.startCase(i.first), _.startCase(i.second), _.startCase(i.third), i.active]));
+                return m('tr', tds(arr = [_.startCase(i.nama), rupiah(i.harga), _.startCase(i.first), _.startCase(i.second), _.startCase(i.third), i.active ? 'Aktif' : 'Non-aktif']));
               }))), elem.pagins());
             }
           }
