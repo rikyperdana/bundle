@@ -1633,6 +1633,19 @@ if (Meteor.isClient) {
       optional: true,
       label: 'Suami/Istri'
     },
+    'regis.petugas': {
+      type: Object,
+      optional: true
+    },
+    'regis.petugas.regis': {
+      type: String,
+      autoform: {
+        type: 'hidden'
+      },
+      autoValue: function(){
+        return Meteor.userId();
+      }
+    },
     'regis.tanggal': {
       type: Date,
       autoform: {
@@ -3351,11 +3364,12 @@ if (Meteor.isClient) {
     bayar: function(){
       return {
         view: function(){
-          var that, tindakans, ref$, uraian, arr, ref1$, ref2$, params;
+          var that, tindakans, ref$, obats, ref1$, uraian, arr, ref2$, ref3$, params;
           if (attr.pageAccess(['bayar'])) {
             return m('.content', m('table.table', {
               oncreate: function(){
                 Meteor.subscribe('coll', 'tarif');
+                Meteor.subscribe('coll', 'gudang');
                 return Meteor.subscribe('coll', 'pasien', {
                   rawat: {
                     $elemMatch: {
@@ -3383,7 +3397,7 @@ if (Meteor.isClient) {
             }))), m('tbody', coll.pasien.find().fetch().map(function(i){
               return _.compact(i.rawat.map(function(j){
                 var conds, arr;
-                conds = ors(arr = [!j.billRegis, j.tindakan ? !j.status_bayar : void 8]);
+                conds = ors(arr = [!j.billRegis, j.tindakan ? !j.status_bayar : void 8, j.obat && j.givenDrug && !j.paidDrug]);
                 if (j.cara_bayar === 1) {
                   if (conds) {
                     return m('tr', [
@@ -3403,7 +3417,16 @@ if (Meteor.isClient) {
             }))), (that = state.modal) ? (tindakans = (ref$ = state.modal.tindakan) != null ? ref$.map(function(it){
               var arr;
               return arr = [_.startCase(look2('tarif', it.nama).nama), it.harga];
-            }) : void 8, uraian = [ands(arr = [!((ref1$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref2$ = ref1$[0]) != null && ref2$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
+            }) : void 8, obats = (ref1$ = state.modal.obat) != null ? ref1$.map(function(it){
+              var arr;
+              return arr = [
+                _.startCase(look2('gudang', it.nama).nama) + " x " + it.jumlah, 1.25 * _.max(look2('gudang', it.nama).batch.map(function(it){
+                  return it.beli;
+                }))
+              ];
+            }) : void 8, uraian = state.modal.givenDrug
+              ? obats || []
+              : arr = [ands(arr = [!((ref2$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref3$ = ref2$[0]) != null && ref3$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
               return state.modal[it];
             }), elem.modal({
               title: 'Sudah bayar?',
@@ -3427,9 +3450,13 @@ if (Meteor.isClient) {
                     ? {
                       billRegis: true
                     }
-                    : !that.status_bayar ? {
-                      status_bayar: true
-                    } : void 8)
+                    : !that.status_bayar
+                      ? {
+                        status_bayar: true
+                      }
+                      : that.givenDrug ? {
+                        paidDrug: true
+                      } : void 8)
                 });
                 if (!that.anamesa_perawat) {
                   makePdf.payRegCard.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
