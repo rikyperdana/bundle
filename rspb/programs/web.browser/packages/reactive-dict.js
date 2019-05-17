@@ -117,6 +117,15 @@ function changed(v) {
   v && v.changed();
 } // XXX COMPAT WITH 0.9.1 : accept migrationData instead of dictName
 
+/**
+ * @class
+ * @instanceName ReactiveDict
+ * @summary Constructor for a ReactiveDict, which represents a reactive dictionary of key/value pairs.
+ * @locus Client
+ * @param {String} [name] Optional.  When a name is passed, preserves contents across Hot Code Pushes
+ * @param {Object} [initialValue] Optional.  The default values for the dictionary
+ */
+
 
 class ReactiveDict {
   constructor(dictName, dictData) {
@@ -162,6 +171,16 @@ class ReactiveDict {
   // to take an object of key/value pairs, similar to backbone
   // http://backbonejs.org/#Model-set
 
+  /**
+   * @summary Set a value for a key in the ReactiveDict. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   * @param {String} key The key to set, eg, `selectedItem`
+   * @param {EJSONable | undefined} value The new value for `key`
+   */
+
 
   set(keyOrObject, value) {
     if (typeof keyOrObject === 'object' && value === undefined) {
@@ -197,6 +216,14 @@ class ReactiveDict {
       }
     }
   }
+  /**
+   * @summary Set a value for a key if it hasn't been set before.
+   * Otherwise works exactly the same as [`ReactiveDict.set`](#ReactiveDict-set).
+   * @locus Client
+   * @param {String} key The key to set, eg, `selectedItem`
+   * @param {EJSONable | undefined} value The new value for `key`
+   */
+
 
   setDefault(keyOrObject, value) {
     if (typeof keyOrObject === 'object' && value === undefined) {
@@ -214,6 +241,18 @@ class ReactiveDict {
       this.set(key, value);
     }
   }
+  /**
+   * @summary Get the value assiciated with a key. If inside a [reactive
+   * computation](#reactivity), invalidate the computation the next time the
+   * value associated with this key is changed by
+   * [`ReactiveDict.set`](#ReactiveDict-set).
+   * This returns a clone of the value, so if it's an object or an array,
+   * mutating the returned value has no effect on the value stored in the
+   * ReactiveDict.
+   * @locus Client
+   * @param {String} key The key of the element to return
+   */
+
 
   get(key) {
     this._ensureKey(key);
@@ -221,6 +260,16 @@ class ReactiveDict {
     this.keyDeps[key].depend();
     return parse(this.keys[key]);
   }
+  /**
+   * @summary Test if the stored entry for a key is equal to a value. If inside a
+   * [reactive computation](#reactivity), invalidate the computation the next
+   * time the variable changes to or from the value.
+   * @locus Client
+   * @param {String} key The name of the session variable to test
+   * @param {String | Number | Boolean | null | undefined} value The value to
+   * test against
+   */
+
 
   equals(key, value) {
     // Mongo.ObjectID is in the 'mongo' package
@@ -273,6 +322,17 @@ class ReactiveDict {
 
     return EJSON.equals(oldValue, value);
   }
+  /**
+   * @summary Get all key-value pairs as a plain object. If inside a [reactive
+   * computation](#reactivity), invalidate the computation the next time the
+   * value associated with any key is changed by
+   * [`ReactiveDict.set`](#ReactiveDict-set).
+   * This returns a clone of each value, so if it's an object or an array,
+   * mutating the returned value has no effect on the value stored in the
+   * ReactiveDict.
+   * @locus Client
+   */
+
 
   all() {
     this.allDeps.depend();
@@ -282,6 +342,14 @@ class ReactiveDict {
     });
     return ret;
   }
+  /**
+   * @summary remove all key-value pairs from the ReactiveDict. Notify any
+   * listeners that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   */
+
 
   clear() {
     const oldKeys = this.keys;
@@ -296,6 +364,15 @@ class ReactiveDict {
       }
     });
   }
+  /**
+   * @summary remove a key-value pair from the ReactiveDict. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   * @param {String} key The key to delete, eg, `selectedItem`
+   */
+
 
   delete(key) {
     let didRemove = false;
@@ -316,6 +393,15 @@ class ReactiveDict {
 
     return didRemove;
   }
+  /**
+   * @summary Clear all values from the reactiveDict and prevent it from being
+   * migrated on a Hot Code Pushes. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   */
+
 
   destroy() {
     this.clear();

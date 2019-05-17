@@ -18,7 +18,6 @@ var Tracker = Package.tracker.Tracker;
 var Deps = Package.tracker.Deps;
 var Retry = Package.retry.Retry;
 var DDP = Package['ddp-client'].DDP;
-var Mongo = Package.mongo.Mongo;
 var meteorInstall = Package.modules.meteorInstall;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
@@ -42,31 +41,12 @@ module.export({
     return Autoupdate;
   }
 });
-// Subscribe to the `meteor_autoupdate_clientVersions` collection,
-// which contains the set of acceptable client versions.
-//
-// A "hard code push" occurs when the running client version is not in
-// the set of acceptable client versions (or the server updates the
-// collection, there is a published client version marked `current` and
-// the running client version is no longer in the set).
-//
-// When the `reload` package is loaded, a hard code push causes
-// the browser to reload, so that it will load the latest client
-// version from the server.
-//
-// A "soft code push" represents the situation when the running client
-// version is in the set of acceptable versions, but there is a newer
-// version available on the server.
-//
-// `Autoupdate.newClientAvailable` is a reactive data source which
-// becomes `true` if there is a new version of the client is available on
-// the server.
-//
-// This package doesn't implement a soft code reload process itself,
-// but `newClientAvailable` could be used for example to display a
-// "click to reload" link to the user.
-// The client version of the client code currently running in the
-// browser.
+var ClientVersions;
+module.link("./client_versions.js", {
+  ClientVersions: function (v) {
+    ClientVersions = v;
+  }
+}, 0);
 var clientArch = Meteor.isCordova ? "web.cordova" : Meteor.isModern ? "web.browser" : "web.browser.legacy";
 var autoupdateVersions = ((__meteor_runtime_config__.autoupdate || {}).versions || {})[clientArch] || {
   version: "unknown",
@@ -75,22 +55,13 @@ var autoupdateVersions = ((__meteor_runtime_config__.autoupdate || {}).versions 
   assets: []
 };
 var Autoupdate = {};
-// The collection of acceptable client versions.
-var ClientVersions = Autoupdate._ClientVersions = // Used by a self-test.
-new Mongo.Collection("meteor_autoupdate_clientVersions");
+// Stores acceptable client versions.
+var clientVersions = Autoupdate._clientVersions = // Used by a self-test.
+new ClientVersions();
+Meteor.connection.registerStore("meteor_autoupdate_clientVersions", clientVersions.createStore());
 
 Autoupdate.newClientAvailable = function () {
-  return !!(ClientVersions.findOne({
-    _id: clientArch,
-    versionNonRefreshable: {
-      $ne: autoupdateVersions.versionNonRefreshable
-    }
-  }) || ClientVersions.findOne({
-    _id: clientArch,
-    versionRefreshable: {
-      $ne: autoupdateVersions.versionRefreshable
-    }
-  }));
+  return clientVersions.newClientAvailable(clientArch, ["versionRefreshable", "versionNonRefreshable"], autoupdateVersions);
 }; // Set to true if the link.onload callback ever fires for any <link> node.
 
 
@@ -140,10 +111,7 @@ Autoupdate._retrySubscription = function () {
         });
       }
 
-      var handle = ClientVersions.find().observe({
-        added: check,
-        changed: check
-      });
+      var stop = clientVersions.watch(check);
 
       function checkNewVersionDocument(doc) {
         if (doc._id !== clientArch) {
@@ -153,7 +121,7 @@ Autoupdate._retrySubscription = function () {
         if (doc.versionNonRefreshable !== autoupdateVersions.versionNonRefreshable) {
           // Non-refreshable assets have changed, so we have to reload the
           // whole page rather than just replacing <link> tags.
-          if (handle) handle.stop();
+          if (stop) stop();
 
           if (Package.reload) {
             // The reload package should be provided by ddp-client, which
@@ -234,6 +202,182 @@ Autoupdate._retrySubscription = function () {
 };
 
 Autoupdate._retrySubscription();
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"client_versions.js":function(require,exports,module){
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                          //
+// packages/autoupdate/client_versions.js                                                                   //
+//                                                                                                          //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                            //
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread"));
+
+module.export({
+  ClientVersions: function () {
+    return ClientVersions;
+  }
+});
+var Tracker;
+module.link("meteor/tracker", {
+  Tracker: function (v) {
+    Tracker = v;
+  }
+}, 0);
+
+var ClientVersions =
+/*#__PURE__*/
+function () {
+  function ClientVersions() {
+    this._versions = new Map();
+    this._watchCallbacks = new Set();
+  } // Creates a Livedata store for use with `Meteor.connection.registerStore`.
+  // After the store is registered, document updates reported by Livedata are
+  // merged with the documents in this `ClientVersions` instance.
+
+
+  var _proto = ClientVersions.prototype;
+
+  _proto.createStore = function () {
+    function createStore() {
+      var _this = this;
+
+      return {
+        update: function (_ref) {
+          var id = _ref.id,
+              msg = _ref.msg,
+              fields = _ref.fields;
+
+          if (msg === "added" || msg === "changed") {
+            _this.set(id, fields);
+          }
+        }
+      };
+    }
+
+    return createStore;
+  }();
+
+  _proto.hasVersions = function () {
+    function hasVersions() {
+      return this._versions.size > 0;
+    }
+
+    return hasVersions;
+  }();
+
+  _proto.get = function () {
+    function get(id) {
+      return this._versions.get(id);
+    }
+
+    return get;
+  }(); // Adds or updates a version document and invokes registered callbacks for the
+  // added/updated document. If a document with the given ID already exists, its
+  // fields are merged with `fields`.
+
+
+  _proto.set = function () {
+    function set(id, fields) {
+      var version = this._versions.get(id);
+
+      var isNew = false;
+
+      if (version) {
+        Object.assign(version, fields);
+      } else {
+        version = (0, _objectSpread2.default)({
+          _id: id
+        }, fields);
+        isNew = true;
+
+        this._versions.set(id, version);
+      }
+
+      this._watchCallbacks.forEach(function (_ref2) {
+        var fn = _ref2.fn,
+            filter = _ref2.filter;
+
+        if (!filter || filter === version._id) {
+          fn(version, isNew);
+        }
+      });
+    }
+
+    return set;
+  }(); // Registers a callback that will be invoked when a version document is added
+  // or changed. Calling the function returned by `watch` removes the callback.
+  // If `skipInitial` is true, the callback isn't be invoked for existing
+  // documents. If `filter` is set, the callback is only invoked for documents
+  // with ID `filter`.
+
+
+  _proto.watch = function () {
+    function watch(fn) {
+      var _this2 = this;
+
+      var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          skipInitial = _ref3.skipInitial,
+          filter = _ref3.filter;
+
+      if (!skipInitial) {
+        var resolved = Promise.resolve();
+
+        this._versions.forEach(function (version) {
+          if (!filter || filter === version._id) {
+            resolved.then(function () {
+              return fn(version, true);
+            });
+          }
+        });
+      }
+
+      var callback = {
+        fn: fn,
+        filter: filter
+      };
+
+      this._watchCallbacks.add(callback);
+
+      return function () {
+        return _this2._watchCallbacks.delete(callback);
+      };
+    }
+
+    return watch;
+  }(); // A reactive data source for `Autoupdate.newClientAvailable`.
+
+
+  _proto.newClientAvailable = function () {
+    function newClientAvailable(id, fields, currentVersion) {
+      function isNewVersion(version) {
+        return version._id === id && fields.some(function (field) {
+          return version[field] !== currentVersion[field];
+        });
+      }
+
+      var dependency = new Tracker.Dependency();
+      var version = this.get(id);
+      dependency.depend();
+      var stop = this.watch(function (version) {
+        if (isNewVersion(version)) {
+          dependency.changed();
+          stop();
+        }
+      }, {
+        skipInitial: true
+      });
+      return !!version && isNewVersion(version);
+    }
+
+    return newClientAvailable;
+  }();
+
+  return ClientVersions;
+}();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}},{

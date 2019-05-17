@@ -6,10 +6,10 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/meteor.js?hash=33066830ab46d87e2b249d2780805545e40ce9ba",
-      "size": 45648,
-      "hash": "33066830ab46d87e2b249d2780805545e40ce9ba",
-      "sri": "mi8NpkS6DUedccw2JM+oa61ar+3NnECOpGzxQBjW1++Ujlqmfu0ibyEB0UQ0Xp9C/PTa3mVMyRrfYNfO4DDSqg=="
+      "url": "/packages/meteor.js?hash=857dafb4b9dff17e29ed8498a22ea5b1a3d6b41d",
+      "size": 45923,
+      "hash": "857dafb4b9dff17e29ed8498a22ea5b1a3d6b41d",
+      "sri": "l7R8PnEYUPg712JJTeSdWG4zzIUe9aWmLSLDiI6uH5LMvbefFRY+44SKSz+D7zJ2UwtlP3S5n96IRuRPaqiYJw=="
     },
     {
       "path": "packages/meteor-base.js",
@@ -322,12 +322,12 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/reload.js?hash=827d2fbe0b0125bdad9d23892644c39ace00ec48",
+      "url": "/packages/reload.js?hash=1c6acddab6f2f4a86ad303b0b75e361b2c5adf50",
       "sourceMap": "packages/reload.js.map",
-      "sourceMapUrl": "/packages/827d2fbe0b0125bdad9d23892644c39ace00ec48.map",
-      "size": 8856,
-      "hash": "827d2fbe0b0125bdad9d23892644c39ace00ec48",
-      "sri": "5/9j4W8P9KTZg6wziu4Qdp3VcOH6LnRmMxSO/AzqXFbU4BN2rw3mb2LVhERWP19MKDg2yub81O3bYWxiZcchRg=="
+      "sourceMapUrl": "/packages/1c6acddab6f2f4a86ad303b0b75e361b2c5adf50.map",
+      "size": 9065,
+      "hash": "1c6acddab6f2f4a86ad303b0b75e361b2c5adf50",
+      "sri": "+BeGh0Nd/KtkoOS4EQKKtkpCT1+LavFZjmDTV4rGyDJwtOj1WxKVU6Z/FjoWQHmQ/AGhRRN055Vm5br7gvaH9Q=="
     },
     {
       "path": "packages/socket-stream-client.js",
@@ -652,12 +652,12 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/reactive-dict.js?hash=2fad19fafeaf070704f89b4a9903df0de2ad77fb",
+      "url": "/packages/reactive-dict.js?hash=2b2aa9d30d837201269d25a16caf879c34cc7ddc",
       "sourceMap": "packages/reactive-dict.js.map",
-      "sourceMapUrl": "/packages/2fad19fafeaf070704f89b4a9903df0de2ad77fb.map",
-      "size": 13817,
-      "hash": "2fad19fafeaf070704f89b4a9903df0de2ad77fb",
-      "sri": "XJBqMYVi81pA7+Bypmkl+b/DCERWI7v9n7y9CAS+yiYDIGnZf2VIrTpxHadz5vepKw7FC7Vv2h2zCaQx+5pbUg=="
+      "sourceMapUrl": "/packages/2b2aa9d30d837201269d25a16caf879c34cc7ddc.map",
+      "size": 17472,
+      "hash": "2b2aa9d30d837201269d25a16caf879c34cc7ddc",
+      "sri": "Z5X0hGPrJwwYEFBHdmvPvKkDkq4u9h8KnhOu5Gnh/LlLnERprD1pPXcT7y2+BcgiqszznGZjxSMZvUZ/tKO6KQ=="
     },
     {
       "path": "packages/momentjs_moment.js",
@@ -862,12 +862,12 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/packages/autoupdate.js?hash=c78a67929ee439b7d6c8792695f721ca8fc6df54",
+      "url": "/packages/autoupdate.js?hash=165f0be2ff9c2b365d7ed3de9ba732f69531819c",
       "sourceMap": "packages/autoupdate.js.map",
-      "sourceMapUrl": "/packages/c78a67929ee439b7d6c8792695f721ca8fc6df54.map",
-      "size": 9490,
-      "hash": "c78a67929ee439b7d6c8792695f721ca8fc6df54",
-      "sri": "ZWAH7MIzTpnBof9bWyp41XX3rdWRVZVWsFbBoTWtnxN9n8A0BiXAnnxy002TJgVL5ni2Bjnb2gREozM9bE8/Ug=="
+      "sourceMapUrl": "/packages/165f0be2ff9c2b365d7ed3de9ba732f69531819c.map",
+      "size": 13251,
+      "hash": "165f0be2ff9c2b365d7ed3de9ba732f69531819c",
+      "sri": "iyhyFCQQnlXVDc7HIRW1yG66rANPTBluVPA1yF48AFq7gtP9SU7J0LpOAT6ryUAiIm1ofQHqTwP3gfMd8+zp2A=="
     },
     {
       "path": "app/global-imports.js",
@@ -884,10 +884,10 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/app/app.js?hash=3684acc0b180b3d3b5d449d78d1f04bd7348be38",
-      "size": 181631,
-      "hash": "3684acc0b180b3d3b5d449d78d1f04bd7348be38",
-      "sri": "6oAlYKvmjFbpnkdBahKw+EXHovJ6G9qC48CogL02ge2IVxo0B7a1qTEygRp7vcNR0Xp/RURw8Q6LuXPQbbkV3w=="
+      "url": "/app/app.js?hash=c9add4ab549be463d72fd296e2192ab33a2fd10d",
+      "size": 184140,
+      "hash": "c9add4ab549be463d72fd296e2192ab33a2fd10d",
+      "sri": "yvqROP4Y+oh7ZiDIoKDpwH81Q9F4z077P9+XanFdEg71f3v0AZ7J4NQ94huuu9FnvTGIE1ZywvzKSklozBg6vw=="
     },
     {
       "path": "packages/service-configuration.js",

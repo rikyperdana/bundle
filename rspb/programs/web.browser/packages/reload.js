@@ -220,17 +220,27 @@ Reload._reload = function (options) {
     setTimeout(reload, 1);
   }
 
+  function forceBrowserReload() {
+    // We'd like to make the browser reload the page using location.replace()
+    // instead of location.reload(), because this avoids validating assets
+    // with the server if we still have a valid cached copy. This doesn't work
+    // when the location contains a hash however, because that wouldn't reload
+    // the page and just scroll to the hash location instead.
+    if (window.location.hash || window.location.href.endsWith("#")) {
+      window.location.reload();
+    } else {
+      window.location.replace(window.location.href);
+    }
+  }
+
   function reload() {
     if (Reload._migrate(tryReload, options)) {
-      // We'd like to make the browser reload the page using location.replace()
-      // instead of location.reload(), because this avoids validating assets
-      // with the server if we still have a valid cached copy. This doesn't work
-      // when the location contains a hash however, because that wouldn't reload
-      // the page and just scroll to the hash location instead.
-      if (window.location.hash || window.location.href.endsWith("#")) {
-        window.location.reload();
+      if (Meteor.isCordova) {
+        WebAppLocalServer.switchToPendingVersion(() => {
+          forceBrowserReload();
+        });
       } else {
-        window.location.replace(window.location.href);
+        forceBrowserReload();
       }
     }
   }

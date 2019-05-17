@@ -1124,12 +1124,12 @@ if (Meteor.isClient) {
       }
     },
     ebiling: function(doc){
-      var pasien, that, rawat, dokter, title, profile, x, list, obats, petugas;
+      var pasien, that, rawat, dokter, ref$, title, profile, x, list, obats, petugas;
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
       }
-      dokter = Meteor.users.findOne(rawat.dokter).username;
+      dokter = (ref$ = Meteor.users.findOne(rawat.dokter)) != null ? ref$.username : void 8;
       title = "Billing Obat - " + (pasien.no_mr || doc.no_mr) + " - " + (pasien.regis.nama_lengkap || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
       profile = {
         layout: 'noBorders',
@@ -2668,8 +2668,8 @@ if (Meteor.isClient) {
         }));
       },
       buttonConds: function(obj){
-        var arr, ref$;
-        return ands(arr = [!obj.diserah, (ref$ = userGroup()) === 'obat' || ref$ === 'farmasi', !same([userGroup(), obj.ruangan])]);
+        var arr;
+        return ands(arr = [!obj.diserah, userGroup() === 'farmasi', !same([userGroup(), obj.ruangan])]);
       },
       reqForm: function(){
         var arr, ref$;
@@ -3111,14 +3111,9 @@ if (Meteor.isClient) {
                 : m.route.param('idpasien')
                   ? m('div', {
                     oncreate: function(){
+                      Meteor.subscribe('users');
                       Meteor.subscribe('coll', 'tarif');
                       Meteor.subscribe('coll', 'gudang');
-                      isDr() && Meteor.subscribe('users', {
-                        username: {
-                          $options: '-i',
-                          $regex: '^dr'
-                        }
-                      });
                       return Meteor.subscribe('coll', 'pasien', {
                         _id: m.route.param('idpasien')
                       }, {
@@ -3273,6 +3268,7 @@ if (Meteor.isClient) {
                           var ref$, arr;
                           return res && cb(_.merge(doc.rawat[0], base, {
                             petugas: (ref$ = {}, ref$[(isDr() ? 'dokter' : 'perawat') + ""] = Meteor.userId(), ref$),
+                            first: attr.pasien.currentPasien().rawat.length === 0 ? true : void 8,
                             status_bayar: ors(arr = [base.cara_bayar !== 1, ands(arr = [doc.rawat[0].obat, !doc.rawat[0].tindakan])]) ? true : void 8
                           }));
                         });
@@ -3420,7 +3416,7 @@ if (Meteor.isClient) {
             }) : void 8, obats = (ref1$ = state.modal.obat) != null ? ref1$.map(function(it){
               var arr;
               return arr = [
-                _.startCase(look2('gudang', it.nama).nama) + " x " + it.jumlah, 1.25 * _.max(look2('gudang', it.nama).batch.map(function(it){
+                _.startCase(look2('gudang', it.nama).nama) + " x " + it.jumlah, 1.25 * it.jumlah * _.max(look2('gudang', it.nama).batch.map(function(it){
                   return it.beli;
                 }))
               ];
@@ -3507,7 +3503,7 @@ if (Meteor.isClient) {
               schema: new SimpleSchema(schema.bypassObat),
               type: 'method',
               meteormethod: 'serahObat',
-              id: 'bypassObat',
+              id: 'formSerahObat',
               columns: 4,
               hooks: {
                 before: function(doc, cb){
@@ -3579,23 +3575,30 @@ if (Meteor.isClient) {
               })),
               confirm: 'Serahkan',
               action: function(){
-                return Meteor.call('serahObat', state.modal, function(err, res){
+                var doc;
+                doc = _.assign(state.modal, {
+                  source: userGroup()
+                });
+                return Meteor.call('serahObat', doc, function(err, res){
                   if (res) {
                     coll.pasien.update(state.modal._id, {
                       $set: {
                         rawat: state.modal.rawat.map(function(i){
-                          if (i.idrawat === state.modal.idrawat) {
-                            return _.assign(i, {
-                              givenDrug: true
-                            });
-                          } else {
+                          if (i.idrawat !== state.modal.idrawat) {
                             return i;
+                          } else {
+                            return _.assign({
+                              givenDrug: true
+                            }, _.omit(i, ['_id', 'no_mr', 'regis']));
                           }
                         })
                       }
                     });
                     res.map(function(it){
-                      coll.rekap.insert(it);
+                      coll.rekap.insert(_.merge(it, {
+                        idrawat: state.modal.idrawat,
+                        tanggal: new Date()
+                      }));
                       return makePdf.ebiling(it);
                     });
                     state.modal = null;
@@ -3627,7 +3630,7 @@ if (Meteor.isClient) {
                 var start, end, type;
                 start = arg$.start, end = arg$.end, type = arg$.type;
                 if (start && end) {
-                  return Meteor.call('dispenses', start, end, function(err, res){
+                  return Meteor.call('dispenses', start, end, userGroup(), function(err, res){
                     var opts, title;
                     if (res) {
                       opts = {
@@ -4416,9 +4419,9 @@ if (Meteor.isServer) {
       }
     },
     serahAmprah: function(doc){
-      var batches;
-      coll.amprah.update(doc._id, doc);
+      var batches, cloned;
       batches = [];
+      cloned = _.merge({}, doc);
       coll.gudang.update(doc.nama, {
         $set: {
           batch: reduce([], coll.gudang.findOne(doc.nama).batch, function(res, inc){
@@ -4430,6 +4433,7 @@ if (Meteor.isServer) {
               }, batches.push({
                 nama_obat: coll.gudang.findOne(doc.nama).nama,
                 no_batch: inc.nobatch,
+                idbatch: inc.idbatch,
                 serah: minim()
               }), obj = _.assign({}, inc, {
                 digudang: inc.digudang - minim()
@@ -4443,6 +4447,10 @@ if (Meteor.isServer) {
           })
         }
       });
+      coll.amprah.update(doc._id, _.assign(doc, {
+        batch: batches,
+        diserah: cloned.diserah
+      }));
       return batches;
     },
     doneRekap: function(){
@@ -4516,34 +4524,99 @@ if (Meteor.isServer) {
       });
     },
     incomes: function(start, end){
+      var a, pipe, b, jumlah, c, currencied, d;
       if (start < end) {
-        return _.compact(_.flattenDeep(coll.pasien.find().fetch().map(function(i){
-          var ref$;
-          return (ref$ = i.rawat) != null ? ref$.map(function(j){
-            var conds, arr, ref$, card, this$ = this;
-            conds = ands(arr = [start < (ref$ = j.tanggal) && ref$ < end, j.status_bayar || j.billRegis]);
-            card = i.rawat.length > 1 ? 10000 : false;
-            return {
-              'NO. MR': i.no_mr,
-              'NAMA PASIEN': i.regis.nama_lengkap,
-              'TANGGAL': hari(j.tanggal),
-              'JENIS PEMBAYARAN': function(it){
-                return it.join(' + ');
-              }(_.compact(arr = ['Regis', card ? 'Kartu' : void 8, j.tindakan ? 'Tindakan' : void 8])),
-              'KLINIK': look('klinik', j.klinik).label,
-              'NO.KARCIS': j.nobill,
-              'JUMLAH (Rp)': _.sum(arr = [
-                card, look('karcis', j.klinik).label * 1000, _.sum((ref$ = j.tindakan) != null ? ref$.map(function(k){
-                  return look2('tarif', k.nama).harga;
-                }) : void 8)
-              ])
-            };
-          }) : void 8;
-        })));
+        a = coll.pasien.aggregate(pipe = [
+          a = {
+            $match: {
+              rawat: {
+                $elemMatch: {
+                  $and: [
+                    {
+                      tanggal: {
+                        $gt: start
+                      }
+                    }, {
+                      tanggal: {
+                        $lt: end
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }, b = {
+            $unwind: '$rawat'
+          }, b = {
+            $match: {
+              $and: [
+                {
+                  'rawat.tanggal': {
+                    $gt: start
+                  }
+                }, {
+                  'rawat.tanggal': {
+                    $lt: end
+                  }
+                }, {
+                  'rawat.cara_bayar': {
+                    $eq: 1
+                  }
+                }
+              ]
+            }
+          }
+        ]);
+        b = a.map(function(i){
+          var that, ref$;
+          return {
+            no_mr: zeros(i.no_mr),
+            nama_pasien: i.regis.nama_lengkap,
+            tanggal: hari(i.rawat.tanggal),
+            klinik: look('klinik', i.rawat.klinik).label,
+            tp_kartu: i.rawat.first ? 10000 : '-',
+            tp_karcis: look('karcis', i.rawat.klinik).label * 1000,
+            tp_tindakan: (that = i.rawat.tindakan) ? _.sum(that.map(function(it){
+              return it.harga;
+            })) : '-',
+            tp_obat: !i.rawat.obat
+              ? '-'
+              : _.sum((ref$ = coll.rekap.findOne({
+                idrawat: i.rawat.idrawat
+              })) != null ? ref$.obat.map(function(j){
+                var obat;
+                obat = coll.gudang.findOne(j.nama_obat);
+                return _.sum(j.batches.map(function(k){
+                  var this$ = this;
+                  return function(it){
+                    return it.jual * k.jumlah;
+                  }(obat.batch.find(function(l){
+                    return l.idbatch === k.idbatch;
+                  }));
+                }));
+              }) : void 8),
+            no_karcis: i.rawat.nobill.toString()
+          };
+        });
+        jumlah = function(type){
+          return rupiah(_.sum(b.map(function(it){
+            return it[type];
+          })));
+        };
+        c = ['', '', '', 'Total', jumlah('tp_kartu'), jumlah('tp_karcis'), jumlah('tp_tindakan'), jumlah('tp_obat'), ''];
+        currencied = b.map(function(it){
+          return _.assign(it, {
+            tp_kartu: rupiah(it.tp_kartu),
+            tp_karcis: rupiah(it.tp_karcis),
+            tp_tindakan: rupiah(it.tp_tindakan),
+            tp_obat: rupiah(it.tp_obat)
+          });
+        });
+        return d = slice$.call(currencied).concat([c]);
       }
     },
-    dispenses: function(start, end){
-      var a, b, c, d;
+    dispenses: function(start, end, source){
+      var a, b, c, stokAwal, d;
       if (start < end) {
         a = coll.rekap.find().fetch().filter(function(it){
           var ref$;
@@ -4582,37 +4655,54 @@ if (Meteor.isServer) {
             });
           }
         });
-        return d = c.map(function(i){
-          var obj, price, awal, batch, ref$, this$ = this;
-          obj = coll.gudang.findOne(i.nama_obat);
-          price = function(it){
-            return it.beli;
-          }(obj.batch.find(function(it){
-            return it.idbatch === i.idbatch;
-          }));
-          awal = _.sum(obj.batch.map(function(it){
-            if (it.idbatch === i.idbatch) {
-              return it.awal;
-            }
-          }));
-          batch = function(idbatch){
-            return obj.batch.find(function(it){
-              return it.idbatch === idbatch;
+        stokAwal = function(i, source){
+          var pipe, a, b, this$ = this;
+          return _.sum(function(it){
+            return it.map(function(it){
+              return it.batch.serah;
             });
-          };
+          }(coll.amprah.aggregate(pipe = [
+            a = {
+              $unwind: '$batch'
+            }, b = {
+              $match: {
+                $and: [
+                  {
+                    nama: i.nama_obat
+                  }, {
+                    ruangan: 'obat'
+                  }, {
+                    'batch.idbatch': i.idbatch
+                  }
+                ]
+              }
+            }
+          ])));
+        };
+        d = c.map(function(i){
+          return _.merge(i, {
+            awal: stokAwal(i, source)
+          });
+        });
+        return d.map(function(i){
+          var obj, batch, ref$;
+          obj = coll.gudang.findOne(i.nama_obat);
+          batch = obj.batch.find(function(it){
+            return it.idbatch === i.idbatch;
+          });
           return {
             'Nama Obat': obj.nama,
             'Satuan': look('satuan', obj.satuan).label,
             'Jenis': look('barang', obj.jenis).label,
-            'No. Batch': i.no_batch,
-            'ED': hari(batch(i.idbatch).kadaluarsa),
-            'Harga': rupiah(price),
-            'Barang Masuk': start < (ref$ = batch(i.idbatch).masuk) && ref$ < end ? awal : '',
-            'Qty Awal': batch(i.idbatch).masuk < start ? awal : '',
+            'No. Batch': batch.nobatch,
+            'ED': hari(batch.kadaluarsa),
+            'Harga': rupiah(batch.jual),
+            'Barang Masuk': start < (ref$ = batch.masuk) && ref$ < end ? i.awal : '-',
+            'Qty Awal': batch.masuk < start ? i.awal : '-',
             'Keluar': i.jumlah,
-            'Sisa Stok': awal - i.jumlah,
-            'Total Keluar': rupiah(price * i.jumlah),
-            'Total Persediaan': rupiah(price * (awal - i.jumlah))
+            'Sisa Stok': i.awal - i.jumlah,
+            'Total Keluar': rupiah(batch.jual * i.jumlah),
+            'Total Persediaan': rupiah(batch.jual * (i.awal - i.jumlah))
           };
         });
       }

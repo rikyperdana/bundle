@@ -52,8 +52,8 @@ setMinimumBrowserVersions({
                                                                                  //
 module.exports = {
   "name": "node-fetch",
-  "version": "2.1.2",
-  "main": "lib/index.js"
+  "version": "2.3.0",
+  "main": "lib/index"
 };
 
 ///////////////////////////////////////////////////////////////////////////////////

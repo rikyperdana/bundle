@@ -29,12 +29,12 @@ var ReactiveDict;
 
 var require = meteorInstall({"node_modules":{"meteor":{"reactive-dict":{"migration.js":function(require,exports,module){
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                           //
-// packages/reactive-dict/migration.js                                                       //
-//                                                                                           //
-///////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                             //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                     //
+// packages/reactive-dict/migration.js                                                                 //
+//                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                       //
 module.export({
   ReactiveDict: function () {
     return ReactiveDict;
@@ -87,16 +87,16 @@ if (Meteor.isClient && Package.reload) {
     }];
   });
 }
-///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"reactive-dict.js":function(require,exports,module){
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                           //
-// packages/reactive-dict/reactive-dict.js                                                   //
-//                                                                                           //
-///////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                             //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                     //
+// packages/reactive-dict/reactive-dict.js                                                             //
+//                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                       //
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
@@ -128,6 +128,15 @@ function parse(serialized) {
 function changed(v) {
   v && v.changed();
 } // XXX COMPAT WITH 0.9.1 : accept migrationData instead of dictName
+
+/**
+ * @class
+ * @instanceName ReactiveDict
+ * @summary Constructor for a ReactiveDict, which represents a reactive dictionary of key/value pairs.
+ * @locus Client
+ * @param {String} [name] Optional.  When a name is passed, preserves contents across Hot Code Pushes
+ * @param {Object} [initialValue] Optional.  The default values for the dictionary
+ */
 
 
 var ReactiveDict =
@@ -176,6 +185,16 @@ function () {
   // to take an object of key/value pairs, similar to backbone
   // http://backbonejs.org/#Model-set
 
+  /**
+   * @summary Set a value for a key in the ReactiveDict. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   * @param {String} key The key to set, eg, `selectedItem`
+   * @param {EJSONable | undefined} value The new value for `key`
+   */
+
 
   var _proto = ReactiveDict.prototype;
 
@@ -217,6 +236,14 @@ function () {
 
     return set;
   }();
+  /**
+   * @summary Set a value for a key if it hasn't been set before.
+   * Otherwise works exactly the same as [`ReactiveDict.set`](#ReactiveDict-set).
+   * @locus Client
+   * @param {String} key The key to set, eg, `selectedItem`
+   * @param {EJSONable | undefined} value The new value for `key`
+   */
+
 
   _proto.setDefault = function () {
     function setDefault(keyOrObject, value) {
@@ -238,6 +265,18 @@ function () {
 
     return setDefault;
   }();
+  /**
+   * @summary Get the value assiciated with a key. If inside a [reactive
+   * computation](#reactivity), invalidate the computation the next time the
+   * value associated with this key is changed by
+   * [`ReactiveDict.set`](#ReactiveDict-set).
+   * This returns a clone of the value, so if it's an object or an array,
+   * mutating the returned value has no effect on the value stored in the
+   * ReactiveDict.
+   * @locus Client
+   * @param {String} key The key of the element to return
+   */
+
 
   _proto.get = function () {
     function get(key) {
@@ -249,6 +288,16 @@ function () {
 
     return get;
   }();
+  /**
+   * @summary Test if the stored entry for a key is equal to a value. If inside a
+   * [reactive computation](#reactivity), invalidate the computation the next
+   * time the variable changes to or from the value.
+   * @locus Client
+   * @param {String} key The name of the session variable to test
+   * @param {String | Number | Boolean | null | undefined} value The value to
+   * test against
+   */
+
 
   _proto.equals = function () {
     function equals(key, value) {
@@ -307,6 +356,17 @@ function () {
 
     return equals;
   }();
+  /**
+   * @summary Get all key-value pairs as a plain object. If inside a [reactive
+   * computation](#reactivity), invalidate the computation the next time the
+   * value associated with any key is changed by
+   * [`ReactiveDict.set`](#ReactiveDict-set).
+   * This returns a clone of each value, so if it's an object or an array,
+   * mutating the returned value has no effect on the value stored in the
+   * ReactiveDict.
+   * @locus Client
+   */
+
 
   _proto.all = function () {
     function all() {
@@ -322,6 +382,14 @@ function () {
 
     return all;
   }();
+  /**
+   * @summary remove all key-value pairs from the ReactiveDict. Notify any
+   * listeners that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   */
+
 
   _proto.clear = function () {
     function clear() {
@@ -342,6 +410,15 @@ function () {
 
     return clear;
   }();
+  /**
+   * @summary remove a key-value pair from the ReactiveDict. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   * @param {String} key The key to delete, eg, `selectedItem`
+   */
+
 
   _proto.delete = function () {
     function _delete(key) {
@@ -366,6 +443,15 @@ function () {
 
     return _delete;
   }();
+  /**
+   * @summary Clear all values from the reactiveDict and prevent it from being
+   * migrated on a Hot Code Pushes. Notify any listeners
+   * that the value has changed (eg: redraw templates, and rerun any
+   * [`Tracker.autorun`](#tracker_autorun) computations, that called
+   * [`ReactiveDict.get`](#ReactiveDict_get) on this `key`.)
+   * @locus Client
+   */
+
 
   _proto.destroy = function () {
     function destroy() {
@@ -427,7 +513,7 @@ function () {
 
   return ReactiveDict;
 }();
-///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}},{
   "extensions": [
