@@ -253,13 +253,15 @@ if (Meteor.isClient) {
           };
           if (_.values(state.errors[opts.id]).length === 0) {
             if (that = (ref$ = opts.hooks) != null ? ref$.before : void 8) {
-              return that(obj, function(moded){
+              that(obj, function(moded){
                 return formTypes(moded)[opts.type]();
               });
             } else {
-              return formTypes()[opts.type]();
+              formTypes()[opts.type]();
             }
           }
+          afState.form = null;
+          return afState.temp = null;
         }
       },
       radio: function(name, value){
@@ -592,7 +594,9 @@ function in$(x, xs){
 if (Meteor.isClient) {
   this.guide = function(group, role){
     var arr;
-    if (group === 'regis') {
+    if (role === 'mr') {
+      return m('div', m('h5', 'Tabel Antrian Kodifikasi'), ols(arr = ['Klik tombol cek pada baris data yang ingin dikerjakan', 'Sebuah modal akan muncul berikut informasi diagnosa dokter saat rawat', 'Klik tombol +Add untuk menambahkan ICD-X seperlunya', 'Jika telah yakin dengan data yang diisikan, klik Submit']));
+    } else if (group === 'regis') {
       return m('div', m('p', 'Untuk setiap pasien yang datang, mohon gunakan menu "Cari Pasien" terlebih dahulu untuk memastikan keberadaannya di dalam sistem.'), m('h5', 'Menu Cari Pasien'), ols(arr = ['Klik pada field pencarian', 'Ketikkan pencarian berdasarkan nama atau NoMR', 'Tekan tombol Enter pada Keyboard untuk mulai mencari', 'Untuk mengulangi pencarian, kosongkan field dan ulangi langkah 2', 'Bila hasil pencarian telah muncul, klik ganda pada salah satu nama']), m('h5', 'Menu Pasien Baru'), ols(arr = ['Jika bisa dipastikan bahwa pasien belum pernah terdaftar pada sistem, klik menu "Pasien Baru"', 'Silahkan isikan informasi pasien. Semakin lengkap semakin baik.', 'Bila NoMR yang diisikan telah terpakai, silahkan coba kembali dengan angka yg lain', 'Bila sudah yakin data yang diisikan benar, klik tombol "Simpan"', 'Anda akan langsung diarahkan ke halaman rincian pasien tersebut']), m('h5', 'Menu Rincian Pasien'), m('p', 'Pada menu ini Anda dapat melakukan berbagai aktifitas seperti cetak kartu, General Consent, Edit data pasien, dan menambahkan request berobat'), ols(arr = ['Klik pada tombol "+Rawat Jalan"', 'Isikan pilihan cara bayar, apakah umum atau asuransi', 'Isikan pilihan poli spesialis yang dituju pasien', 'Isikan pilihan dokter yang diinginkan, bila perlu', 'Isikan informasi lainnya dan klik tombol "Simpan"', 'Bila pasien memilih cara bayar umum, arahkan ke kasir. Bila jaminan, arahkan langsung ke Poli']));
     } else if (group === 'bayar') {
       return m('div', m('h5', 'Daftar Pembayaran'), m('p', 'Pada halaman ini Anda dapat melihat daftar pasien yang sedang mengantri untuk membayar tagihan, baik untuk registrasi atau pembayaran tindakan'), ols(arr = ['Klik tombol "Bayar" pada salah satu baris', 'Anda akan melihat rincian tagihan yang harus dibayarkan pasien', 'Bila dana telah diterima, klik tombol "Sudah"', 'Sebuah file pdf bill pembayaran siap untuk diunduh dan dicetak']));
@@ -824,7 +828,7 @@ if (Meteor.isClient) {
               return e.target[it].value;
             }), action({
               start: (that = vals[0]) ? new Date(that) : void 8,
-              end: (that = vals[1]) ? new Date(that) : void 8,
+              end: (that = vals[1]) ? new Date(moment(that).add(1, 'days')) : void 8,
               type: vals[2]
             })
           ];
@@ -835,7 +839,7 @@ if (Meteor.isClient) {
       })), m('.column', m('input.input', {
         type: 'date',
         placeholder: 'Akhir'
-      })), m('.column.is-2', m('.field', m('.control', m('.select', m('select', ['Tabel', 'Pdf'].map(function(i){
+      })), m('.column.is-2', m('.field', m('.control', m('.select', m('select', ['Pdf', 'Excel'].map(function(i){
         return m('option', i);
       })))))), m('.column.is-1', m('input.button.is-info', {
         type: 'submit',
@@ -1047,7 +1051,7 @@ if (Meteor.isClient) {
       }
     },
     icdx: function(pasien){
-      var headers, rows, columns, arr;
+      var headers, rows, columns, arr, ref$;
       headers = ['tanggal', 'klinik', 'dokter', 'diagnosa', 'terapi', 'perawat', 'icd10'];
       rows = _.compact(pasien.rawat.map(function(i){
         var arr;
@@ -1065,8 +1069,7 @@ if (Meteor.isClient) {
           ];
         }
       }));
-      columns = [['NO. MR', 'NAMA LENGKAP', 'TANGGAL LAHIR', 'JENIS KELAMIN'], arr = [pasien.no_mr.toString(), pasien.regis.nama_lengkap, hari(pasien.regis.tgl_lahir), look('kelamin', pasien.regis.kelamin).label]];
-      console.log(rows, columns);
+      columns = [['NO. MR', 'NAMA LENGKAP', 'TANGGAL LAHIR', 'JENIS KELAMIN'], arr = [pasien.no_mr.toString(), pasien.regis.nama_lengkap, hari(pasien.regis.tgl_lahir), ((ref$ = look('kelamin', pasien.regis.kelamin)) != null ? ref$.label : void 8) || '-']];
       return pdfMake.createPdf({
         content: arr = [
           kop, {
@@ -1124,20 +1127,23 @@ if (Meteor.isClient) {
       }
     },
     ebiling: function(doc){
-      var pasien, that, rawat, dokter, ref$, title, profile, x, list, obats, petugas;
+      var pasien, that, rawat, dokter, ref$, title, sumber, profile, x, list, obats, petugas;
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
       }
-      dokter = (ref$ = Meteor.users.findOne(rawat.dokter)) != null ? ref$.username : void 8;
-      title = "Billing Obat - " + (pasien.no_mr || doc.no_mr) + " - " + (pasien.regis.nama_lengkap || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
+      dokter = (ref$ = Meteor.users.findOne(rawat != null ? rawat.dokter : void 8)) != null ? ref$.username : void 8;
+      title = "Billing Obat - " + ((pasien != null ? pasien.no_mr : void 8) || doc.no_mr) + " - " + ((pasien != null ? pasien.regis.nama_lengkap : void 8) || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
+      sumber = (that = (rawat != null ? rawat.klinik : void 8) || doc.poli)
+        ? ['Poliklinik', ": " + look('klinik', that).label]
+        : doc.ruangan ? ['Ruangan', ": " + doc.ruangan] : void 8;
       profile = {
         layout: 'noBorders',
         table: {
           widths: [0, 1, 2, 3].map(function(){
             return '*';
           }),
-          body: x = [['Nama Lengkap', ": " + (pasien.regis.nama_lengkap || doc.nama_pasien), 'No. MR', ": " + (pasien.no_mr || doc.no_mr)], ['Cara Bayar', ": " + look('cara_bayar', rawat.cara_bayar || doc.cara_bayar).label, 'Tanggal', ": " + hari(new Date())], ['Poliklinik', ": " + look('klinik', rawat.klinik || doc.poli).label, 'Dokter', ": " + (dokter || doc.dokter)], ['No. SEP', ": " + ((that = doc.no_sep) ? that : '-'), 'Jenis Pasien', ": " + look('rawat', doc.rawat || 1).label]]
+          body: x = [['Nama Lengkap', ": " + ((pasien != null ? pasien.regis.nama_lengkap : void 8) || doc.nama_pasien), 'No. MR', ": " + ((pasien != null ? pasien.no_mr : void 8) || doc.no_mr)], ['Cara Bayar', ": " + look('cara_bayar', (rawat != null ? rawat.cara_bayar : void 8) || doc.cara_bayar).label, 'Tanggal', ": " + hari(new Date())], slice$.call(sumber).concat(['Dokter', ": " + (dokter || doc.dokter)]), ['No. SEP', ": " + ((that = doc.no_sep) ? that : '-'), 'Jenis Pasien', ": " + look('rawat', doc.rawat || 1).label]]
         }
       };
       list = doc.obat.map(function(i){
@@ -2413,9 +2419,15 @@ if (Meteor.isClient) {
     },
     poli: {
       type: Number,
+      optional: true,
+      label: 'Poliklinik',
       autoform: {
         options: selects.klinik
       }
+    },
+    ruangan: {
+      type: String,
+      optional: true
     },
     dokter: {
       type: String
@@ -2846,7 +2858,7 @@ if (Meteor.isClient) {
                     if (that = res) {
                       title = "Kunjungan " + hari(start) + " - " + hari(end);
                       obj = {
-                        Tabel: csv,
+                        Excel: csv,
                         Pdf: makePdf.csv
                       };
                       return obj[type](title, that);
@@ -3473,7 +3485,7 @@ if (Meteor.isClient) {
                     if (that = res) {
                       title = "Pemasukan " + hari(start) + " - " + hari(end);
                       obj = {
-                        Tabel: csv,
+                        Excel: csv,
                         Pdf: makePdf.csv
                       };
                       return obj[type](title, that);
@@ -3668,7 +3680,7 @@ if (Meteor.isClient) {
                     if (that = res) {
                       title = "Stok Barang " + hari(start) + " - " + hari(end);
                       obj = {
-                        Tabel: csv,
+                        Excel: csv,
                         Pdf: makePdf.csv
                       };
                       return obj[type](title, that);
@@ -4200,9 +4212,7 @@ if (Meteor.isClient) {
                 : m('table.table', m('thead', m('tr', ['nama_obat', 'no_batch', 'serahkan'].map(function(i){
                   return m('th', _.startCase(i));
                 }))), m('tbody', state.modal.map(function(i){
-                  return m('tr', tds(_.map(i, function(it){
-                    return it;
-                  })));
+                  return m('tr', tds([i.nama_obat, i.no_batch, i.serah]));
                 })))
             }) : void 8);
           }
@@ -4524,7 +4534,7 @@ if (Meteor.isServer) {
       });
     },
     incomes: function(start, end){
-      var a, pipe, b, jumlah, c, currencied, d;
+      var a, pipe, b, jumlah, c, currencied;
       if (start < end) {
         a = coll.pasien.aggregate(pipe = [
           a = {
@@ -4574,6 +4584,7 @@ if (Meteor.isServer) {
             nama_pasien: i.regis.nama_lengkap,
             tanggal: hari(i.rawat.tanggal),
             klinik: look('klinik', i.rawat.klinik).label,
+            no_karcis: i.rawat.nobill.toString(),
             tp_kartu: i.rawat.first ? 10000 : '-',
             tp_karcis: look('karcis', i.rawat.klinik).label * 1000,
             tp_tindakan: (that = i.rawat.tindakan) ? _.sum(that.map(function(it){
@@ -4594,25 +4605,29 @@ if (Meteor.isServer) {
                     return l.idbatch === k.idbatch;
                   }));
                 }));
-              }) : void 8),
-            no_karcis: i.rawat.nobill.toString()
+              }) : void 8)
           };
+        }).map(function(i){
+          return _.assign(i, {
+            total: i.tp_karcis + i.tp_tindakan + i.tp_obat
+          });
         });
         jumlah = function(type){
           return rupiah(_.sum(b.map(function(it){
             return it[type];
           })));
         };
-        c = ['', '', '', 'Total', jumlah('tp_kartu'), jumlah('tp_karcis'), jumlah('tp_tindakan'), jumlah('tp_obat'), ''];
-        currencied = b.map(function(it){
-          return _.assign(it, {
-            tp_kartu: rupiah(it.tp_kartu),
-            tp_karcis: rupiah(it.tp_karcis),
-            tp_tindakan: rupiah(it.tp_tindakan),
-            tp_obat: rupiah(it.tp_obat)
+        c = ['', '', '', '', 'Total', jumlah('tp_kartu'), jumlah('tp_karcis'), jumlah('tp_tindakan'), jumlah('tp_obat'), ''];
+        currencied = b.map(function(i){
+          return _.assign(i, {
+            tp_kartu: rupiah(i.tp_kartu),
+            tp_karcis: rupiah(i.tp_karcis),
+            tp_tindakan: rupiah(i.tp_tindakan),
+            tp_obat: rupiah(i.tp_obat),
+            total: rupiah(i.total)
           });
         });
-        return d = slice$.call(currencied).concat([c]);
+        return slice$.call(currencied).concat([c]);
       }
     },
     dispenses: function(start, end, source){
@@ -4670,7 +4685,7 @@ if (Meteor.isServer) {
                   {
                     nama: i.nama_obat
                   }, {
-                    ruangan: 'obat'
+                    ruangan: source
                   }, {
                     'batch.idbatch': i.idbatch
                   }
@@ -4760,55 +4775,60 @@ if (Meteor.isServer) {
       });
     },
     stocks: function(start, end){
-      var pipe, a, arr, b, c;
-      return coll.gudang.aggregate(pipe = [
+      var a, pipe, b;
+      a = coll.amprah.aggregate(pipe = [
         a = {
           $match: {
-            batch: {
-              $elemMatch: {
-                $and: arr = [
-                  {
-                    masuk: {
-                      $gt: start
-                    }
-                  }, {
-                    masuk: {
-                      $lt: end
-                    }
-                  }
-                ]
-              }
+            tanggal_serah: {
+              $lt: end
             }
           }
         }, b = {
           $unwind: '$batch'
-        }, c = {
-          $match: {
-            $and: arr = [
-              {
-                'batch.masuk': {
-                  $gt: start
-                }
-              }, {
-                'batch.masuk': {
-                  $lt: end
-                }
-              }
-            ]
-          }
         }
-      ]).map(function(i){
+      ]);
+      return b = reduce([], a, function(res, inc){
+        var matched;
+        matched = function(it){
+          var arr;
+          return _.every(arr = [it.nama === inc.nama, it.batch.idbatch === inc.batch.idbatch]);
+        };
+        if (!res.find(function(it){
+          return matched(it);
+        })) {
+          return slice$.call(res).concat([inc]);
+        } else {
+          return res.map(function(it){
+            if (!matched(it)) {
+              return it;
+            } else {
+              return _.assign(it, {
+                batch: _.assign(it.batch, {
+                  serah: it.batch.serah + inc.batch.serah
+                })
+              });
+            }
+          });
+        }
+      }).map(function(i){
+        var obat, batch, ref$;
+        obat = coll.gudang.findOne(i.nama);
+        batch = obat.batch.find(function(it){
+          return it.idbatch === i.batch.idbatch;
+        });
         return {
-          'Nama Obat': i.nama,
-          'Kemasan': look('satuan', i.satuan).label,
-          'Satuan': look('satuan', i.satuan).label,
-          'Jenis': look('barang', i.jenis).label,
-          'Batch': i.batch.nobatch,
-          'ED': hari(i.batch.kadaluarsa),
-          'Harga Satuan': rupiah(i.batch.beli),
-          'Stok Awal': i.batch.awal.toString(),
-          'Sisa Stock': i.batch.digudang.toString(),
-          'Total Nilai': rupiah(i.batch.digudang * i.batch.beli)
+          'Nama Obat': obat.nama,
+          'Satuan': look('satuan', obat.satuan).label,
+          'Jenis': look('barang', obat.jenis).label,
+          'No. Batch': batch.nobatch,
+          'ED': hari(batch.kadaluarsa),
+          'Harga': rupiah(batch.jual),
+          'Barang Masuk': start < (ref$ = batch.masuk) && ref$ < end ? batch.awal : '-',
+          'Stok Awal': batch.masuk < start ? batch.awal : '-',
+          'Keluar': i.batch.serah,
+          'Sisa Stok': batch.awal - i.batch.serah,
+          'Total Keluar': rupiah(batch.jual * i.batch.serah),
+          'Total Persediaan': rupiah(batch.jual * (batch.awal - i.batch.serah))
         };
       });
     },
