@@ -259,9 +259,9 @@ if (Meteor.isClient) {
             } else {
               formTypes()[opts.type]();
             }
+            afState.form = null;
+            return afState.temp = null;
           }
-          afState.form = null;
-          return afState.temp = null;
         }
       },
       radio: function(name, value){
@@ -1290,7 +1290,7 @@ this.selects = {
   bicara: ['normal', 'gangguan_bicara', 'lainnya'],
   hambatan: ['tidak_ada', 'pendengaran', 'cemas', 'motivasi_memburuk', 'bahasa', 'lainnya'],
   potensial: ['proses_penyakit', 'pengobatan', 'nutrisi', 'tindakan', 'lainnya'],
-  returnable: ['bisa', 'tidak']
+  yatidak: ['ya', 'tidak']
 };
 _.map(selects, function(i, j){
   return selects[j] = _.map(selects[j], function(m, n){
@@ -1917,15 +1917,20 @@ if (Meteor.isClient) {
       optional: true,
       autoform: {
         options: selects.cara_masuk,
-        firstLabel: 'Pilih Satu'
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.rujukan': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.rujukan
+        options: selects.rujukan,
+        firstLabel: 'Pilih satu'
       }
+    },
+    'rawat.$.sumber_rujukan': {
+      type: String,
+      optional: true
     },
     'rawat.$.riwayat': {
       type: Object,
@@ -1960,36 +1965,58 @@ if (Meteor.isClient) {
       optional: true
     },
     'rawat.$.riwayat.kesehatan.merokok': {
-      type: String,
-      optional: true
-    },
-    'rawat.$.riwayat.kesehatan.minuman_keras': {
-      type: String,
-      optional: true
-    },
-    'rawat.$.riwayat.kesehatan.obat_terlarang': {
-      type: String,
-      optional: true
-    },
-    'rawat.$.riwayat.kesehatan.imunisasi': {
-      type: String,
-      optional: true,
-      autoform: {
-        options: selects.imunisasi
-      }
-    },
-    'rawat.$.riwayat.keluarga': {
-      type: Object,
-      optional: true
-    },
-    'rawat.$.riwayat.keluarga.penyakit': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.penyakit
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
       }
     },
-    'rawat.$.riwayat.keluarga.hubungan': {
+    'rawat.$.riwayat.kesehatan.minuman_keras': {
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
+      }
+    },
+    'rawat.$.riwayat.kesehatan.obat_terlarang': {
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
+      }
+    },
+    'rawat.$.riwayat.kesehatan.imunisasi': {
+      type: Array,
+      optional: true
+    },
+    'rawat.$.riwayat.kesehatan.imunisasi.$': {
+      type: String,
+      optional: true,
+      autoform: {
+        options: selects.imunisasi,
+        firstLabel: 'Pilih satu'
+      }
+    },
+    'rawat.$.riwayat.keluarga': {
+      type: Array,
+      optional: true,
+      label: 'Riwayat penyakit keluarga'
+    },
+    'rawat.$.riwayat.keluarga.$': {
+      type: Object
+    },
+    'rawat.$.riwayat.keluarga.$.penyakit': {
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.penyakit,
+        firstLabel: 'Pilih satu'
+      }
+    },
+    'rawat.$.riwayat.keluarga.$.hubungan': {
       type: String,
       optional: true
     },
@@ -1998,18 +2025,25 @@ if (Meteor.isClient) {
       optional: true
     },
     'rawat.$.riwayat.reproduksi.wanita_hamil': {
-      type: Boolean,
-      optional: true
+      type: Number,
+      autoform: {
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
+      }
     },
     'rawat.$.riwayat.reproduksi.pria_prostat': {
-      type: Boolean,
-      optional: true
+      type: Number,
+      autoform: {
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
+      }
     },
     'rawat.$.riwayat.reproduksi.keikutsertaan_kb': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.kb
+        options: selects.kb,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.kenyamanan': {
@@ -2017,8 +2051,11 @@ if (Meteor.isClient) {
       optional: true
     },
     'rawat.$.kenyamanan.nyeri': {
-      type: Boolean,
-      optional: true
+      type: Number,
+      autoform: {
+        options: selects.yatidak,
+        firstLabel: 'Pilih satu'
+      }
     },
     'rawat.$.kenyamanan.lokasi': {
       type: String,
@@ -2035,14 +2072,16 @@ if (Meteor.isClient) {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.nyeri
+        options: selects.nyeri,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.status_psikologi': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.psikologi
+        options: selects.psikologi,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.eliminasi': {
@@ -2053,14 +2092,16 @@ if (Meteor.isClient) {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.bab
+        options: selects.bab,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.eliminasi.bak': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.bak
+        options: selects.bak,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.komunikasi': {
@@ -2071,21 +2112,24 @@ if (Meteor.isClient) {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.bicara
+        options: selects.bicara,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.komunikasi.hambatan': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.hambatan
+        options: selects.hambatan,
+        firstLabel: 'Pilih satu'
       }
     },
     'rawat.$.komunikasi.potensial': {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.potensial
+        options: selects.potensial,
+        firstLabel: 'Pilih satu'
       }
     }
   };
@@ -2315,7 +2359,7 @@ if (Meteor.isClient) {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.returnable
+        options: selects.yatidak
       }
     },
     'batch.$.anggaran': {
@@ -2482,6 +2526,53 @@ if (Meteor.isClient) {
     },
     'obat.$.jumlah': {
       type: Number
+    },
+    bhp: {
+      type: Array,
+      optional: true
+    },
+    'bhp.$': {
+      type: Object
+    },
+    'bhp.$.nama': {
+      type: String,
+      label: 'Nama bhp',
+      autoform: {
+        options: selects.bhp
+      }
+    },
+    'bhp.$.stok': {
+      type: String,
+      label: 'Info Stok',
+      optional: true,
+      autoform: {
+        type: 'disabled'
+      },
+      autoValue: function(name, doc){
+        var num, that, barang, arr, this$ = this;
+        num = function(it){
+          return it[1];
+        }(name.split('.'));
+        if (that = function(it){
+          return it != null ? it.value : void 8;
+        }(doc.find(function(it){
+          return it.name === "bhp." + num + ".nama";
+        }))) {
+          barang = coll.gudang.findOne(that);
+          return _.join(arr = [
+            "Apotik: " + _.sum(barang.batch.map(function(it){
+              return it.diapotik;
+            })), "Gudang: " + _.sum(barang.batch.map(function(it){
+              return it.digudang;
+            })), "OK: " + _.sum(barang.batch.map(function(it){
+              return it.didepook;
+            }))
+          ]);
+        }
+      }
+    },
+    'bhp.$.jumlah': {
+      type: Number
     }
   };
 }
@@ -2566,17 +2657,6 @@ if (Meteor.isClient) {
       currentPasien: function(){
         return look2('pasien', m.route.param('idpasien'));
       },
-      poliFilter: function(arr){
-        if (arr) {
-          return _.compact(arr.map(function(i){
-            if (userRole() === _.snakeCase(look('klinik', i.klinik).label)) {
-              return i;
-            } else if (userGroup('regis')) {
-              return i;
-            }
-          }));
-        }
-      },
       ownKliniks: function(){
         var ref$, ref1$;
         return (ref$ = roles()) != null ? (ref1$ = ref$.jalan) != null ? ref1$.map(function(i){
@@ -2612,7 +2692,7 @@ if (Meteor.isClient) {
         } else if (isDr()) {
           return arr.filter(function(it){
             var list;
-            return ands(list = [_.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter]);
+            return ands(list = [_.last(it.rawat).dokter === Meteor.userId(), _.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter]);
           });
         } else {
           return arr.filter(function(it){
@@ -3309,7 +3389,7 @@ if (Meteor.isClient) {
                     }
                   })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
                     return m('th', _.startCase(i));
-                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', (ref$ = attr.pasien.poliFilter(attr.pasien.currentPasien().rawat)) != null ? ref$.map(function(i){
+                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', pagins((ref$ = attr.pasien.currentPasien().rawat) != null ? ref$.map(function(i){
                     var that, ref$;
                     return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
                       slice$.call(['billRegis', 'status_bayar'].map(function(it){
@@ -3334,7 +3414,7 @@ if (Meteor.isClient) {
                     ).map(function(j){
                       return m('td', j) || '-';
                     }));
-                  }) : void 8)), state.modal ? elem.modal({
+                  }) : void 8)), elem.pagins()), state.modal ? elem.modal({
                     title: 'Rincian rawat',
                     content: m('div', m('h1', attr.pasien.currentPasien().regis.nama_lengkap), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
                       return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
@@ -3351,7 +3431,7 @@ if (Meteor.isClient) {
                       var arr, that, ref$, ref1$;
                       return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " dosis" : void 8, i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
                     }))) : void 8),
-                    confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true]) ? 'Lanjutkan' : void 8,
+                    confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true, userRole() === _.snakeCase(look('klinik', state.modal.klinik).label)]) ? 'Lanjutkan' : void 8,
                     action: function(){
                       state.docRawat = state.modal.idrawat;
                       state.spm = new Date();
@@ -4353,7 +4433,7 @@ if (Meteor.isServer) {
       };
       pasien = coll.pasien.findOne(doc._id);
       stock = opts[doc.source];
-      for (i$ = 0, len$ = (ref$ = doc.obat).length; i$ < len$; ++i$) {
+      for (i$ = 0, len$ = (ref$ = slice$.call(doc.obat).concat(slice$.call(doc.bhp))).length; i$ < len$; ++i$) {
         i = ref$[i$];
         coll.gudang.update(i.nama, {
           $set: {
