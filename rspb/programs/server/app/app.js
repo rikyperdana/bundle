@@ -2700,6 +2700,9 @@ if (Meteor.isClient) {
             return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis]);
           });
         }
+      },
+      patientHistory: function(){
+        return _.reverse(_.sortBy(attr.pasien.currentPasien().rawat, 'tanggal'));
       }
     },
     bayar: {
@@ -3389,7 +3392,7 @@ if (Meteor.isClient) {
                     }
                   })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
                     return m('th', _.startCase(i));
-                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', pagins((ref$ = attr.pasien.currentPasien().rawat) != null ? ref$.map(function(i){
+                  }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', pagins(attr.pasien.patientHistory().map(function(i){
                     var that, ref$;
                     return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
                       slice$.call(['billRegis', 'status_bayar'].map(function(it){
@@ -3414,7 +3417,7 @@ if (Meteor.isClient) {
                     ).map(function(j){
                       return m('td', j) || '-';
                     }));
-                  }) : void 8)), elem.pagins()), state.modal ? elem.modal({
+                  }))), elem.pagins()), state.modal ? elem.modal({
                     title: 'Rincian rawat',
                     content: m('div', m('h1', attr.pasien.currentPasien().regis.nama_lengkap), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
                       return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
@@ -3747,9 +3750,15 @@ if (Meteor.isClient) {
     farmasi: function(){
       return {
         view: function(){
-          var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, this$ = this;
+          var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$, this$ = this;
           if (attr.pageAccess(['jalan', 'inap', 'obat', 'farmasi', 'depook'])) {
-            return m('.content', userGroup('farmasi') && userRole('admin') ? elem.report({
+            return m('.content', {
+              oncreate: function(){
+                return state.showForm = {
+                  batch: false
+                };
+              }
+            }, userGroup('farmasi') && userRole('admin') ? elem.report({
               title: 'Laporan Stok Barang',
               action: function(arg$){
                 var start, end, type;
@@ -3904,9 +3913,9 @@ if (Meteor.isClient) {
                 })))))
               }), (ref4$ = roles()) != null && ref4$.farmasi ? m('.button.is-warning', {
                 onclick: function(){
-                  return state.showForm = !state.showForm;
+                  return state.showForm.batch = !state.showForm.batch;
                 }
-              }, m('span', '+Tambahkan Batch')) : void 8, state.showForm ? m(autoForm({
+              }, m('span', '+Tambahkan Batch')) : void 8, (ref5$ = state.showForm) != null && ref5$.batch ? m(autoForm({
                 collection: coll.gudang,
                 schema: new SimpleSchema(schema.farmasi),
                 type: 'update-pushArray',
@@ -3924,14 +3933,14 @@ if (Meteor.isClient) {
                 }
               })) : void 8, m('table.table', m('thead', attr.farmasi.headers.rincian.map(function(i){
                 return m('th', _.startCase(i));
-              })), m('tbody', (ref5$ = attr.farmasi.currentBarang()) != null ? ref5$.batch.map(function(i){
+              })), m('tbody', (ref6$ = attr.farmasi.currentBarang()) != null ? ref6$.batch.map(function(i){
                 return m('tr', {
                   ondblclick: function(){
                     state.modal = i;
                     return m.redraw();
                   }
                 }, tds([i.nobatch, i.digudang, i.diapotik, i.didepook, hari(i.masuk), hari(i.kadaluarsa)]));
-              }) : void 8)), (ref6$ = state.modal) != null && ref6$.idbatch ? elem.modal({
+              }) : void 8)), (ref7$ = state.modal) != null && ref7$.idbatch ? elem.modal({
                 title: 'Rincian Batch',
                 content: m('table', function(){
                   var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$;
@@ -4433,7 +4442,7 @@ if (Meteor.isServer) {
       };
       pasien = coll.pasien.findOne(doc._id);
       stock = opts[doc.source];
-      for (i$ = 0, len$ = (ref$ = slice$.call(doc.obat).concat(slice$.call(doc.bhp))).length; i$ < len$; ++i$) {
+      for (i$ = 0, len$ = (ref$ = slice$.call(doc.obat).concat(slice$.call(doc.bhp || []))).length; i$ < len$; ++i$) {
         i = ref$[i$];
         coll.gudang.update(i.nama, {
           $set: {
