@@ -2703,6 +2703,14 @@ if (Meteor.isClient) {
       },
       patientHistory: function(){
         return _.reverse(_.sortBy(attr.pasien.currentPasien().rawat, 'tanggal'));
+      },
+      continuable: function(it){
+        var arr, this$ = this;
+        return ands(arr = [
+          it.idrawat === function(it){
+            return it.idrawat;
+          }(_.last(attr.pasien.currentPasien().rawat)), currentRoute() === 'jalan', !isDr() ? !it.anamesa_perawat : true, isDr() ? it.anamesa_perawat : true, isDr() ? !it.anamesa_dokter : true, userRole() === _.snakeCase(look('klinik', it.klinik).label)
+        ]);
       }
     },
     bayar: {
@@ -3404,9 +3412,13 @@ if (Meteor.isClient) {
                       })), [
                         userGroup('jalan') ? m('button.button.is-info', {
                           onclick: function(){
-                            return state.modal = i;
+                            if (attr.pasien.continuable(i)) {
+                              return state.docRawat = i.idrawat;
+                            } else {
+                              return state.modal = i;
+                            }
                           }
-                        }, m('span', 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
+                        }, m('span', attr.pasien.continuable(i) ? 'Lanjutkan' : 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
                           ondblclick: function(){
                             return Meteor.call('rmRawat', m.route.param('idpasien'), i.idrawat, function(err, res){
                               return res && m.redraw();
@@ -3434,7 +3446,6 @@ if (Meteor.isClient) {
                       var arr, that, ref$, ref1$;
                       return m('tr', tds(arr = [_.startCase(look2('gudang', i.nama).nama), (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " dosis" : void 8, i.jumlah + " unit", (that = i.puyer) ? "puyer " + that : void 8]));
                     }))) : void 8),
-                    confirm: ands(arr = [currentRoute() === 'jalan', !isDr() ? !state.modal.anamesa_perawat : true, isDr() ? state.modal.anamesa_perawat : true, isDr() ? !state.modal.anamesa_dokter : true, userRole() === _.snakeCase(look('klinik', state.modal.klinik).label)]) ? 'Lanjutkan' : void 8,
                     action: function(){
                       state.docRawat = state.modal.idrawat;
                       state.spm = new Date();
