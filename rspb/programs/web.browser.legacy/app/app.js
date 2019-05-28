@@ -1282,8 +1282,9 @@ this.selects = {
   imunisasi: ['dpt1', 'dpt2', 'dpt3', 'bcg', 'campak', 'polio1', 'polio2', 'polio3', 'hepatitis', 'mmr'],
   penyakit: ['asma', 'diabetes', 'hipertensi', 'cancer', 'anemia', 'jantung', 'lainnya'],
   kb: ['iud', 'susuk', 'suntik', 'pil', 'steril', 'vasectomi'],
+  nyeri: ['ya', 'tidak'],
   frekuensi: ['sering', 'kadang', 'jarang'],
-  nyeri: ['terbakar', 'tertindih', 'menyebar', 'tajam', 'tumpul', 'berdenyut', 'lainnya'],
+  karakteristik_nyeri: ['terbakar', 'tertindih', 'menyebar', 'tajam', 'tumpul', 'berdenyut', 'lainnya'],
   psikologi: ['tenang', 'marah', 'cemas', 'gelisah', 'takut', 'lainnya'],
   bab: ['asma', 'diare', 'konstipasi', 'colostomy'],
   bak: ['normal', 'retensia', 'inkontinesia', 'poliuria', 'disuria', 'lainnya'],
@@ -1993,7 +1994,7 @@ if (Meteor.isClient) {
       optional: true
     },
     'rawat.$.riwayat.kesehatan.imunisasi.$': {
-      type: String,
+      type: Number,
       optional: true,
       autoform: {
         options: selects.imunisasi,
@@ -2053,7 +2054,7 @@ if (Meteor.isClient) {
     'rawat.$.kenyamanan.nyeri': {
       type: Number,
       autoform: {
-        options: selects.yatidak,
+        options: selects.nyeri,
         firstLabel: 'Pilih satu'
       }
     },
@@ -2072,7 +2073,7 @@ if (Meteor.isClient) {
       type: Number,
       optional: true,
       autoform: {
-        options: selects.nyeri,
+        options: selects.karakteristik_nyeri,
         firstLabel: 'Pilih satu'
       }
     },
@@ -2170,6 +2171,7 @@ if (Meteor.isClient) {
     'rawat.$.pindah': {
       type: Number,
       optional: true,
+      label: 'Konsultasi',
       autoform: {
         options: selects.klinik
       }
@@ -2628,7 +2630,7 @@ if (Meteor.isClient) {
         icdFields: ['nama_pasien', 'tanggal', 'klinik', 'dokter', 'diagnosis', 'nama_perawat', 'cek']
       },
       rawatDetails: function(doc){
-        var arr, that, ref$;
+        var arr, that, ref$, ref1$, ref2$, ref3$, ref4$, ref5$;
         return arr = [
           {
             head: 'Tanggal',
@@ -2652,7 +2654,65 @@ if (Meteor.isClient) {
             head: 'Planning',
             cell: doc != null ? doc.planning : void 8
           }
-        ];
+        ].concat(
+          slice$.call([['tekanan_darah', 'mmHg'], ['nadi', 'pulse'], ['suhu', 'Celcius'], ['pernafasan', 'RR'], ['berat', 'Kg'], ['tinggi', 'cm'], ['lila', 'cm']].map(function(it){
+            var that, ref$;
+            return {
+              head: "Fisik " + _.startCase(it[0]),
+              cell: (that = (ref$ = doc.fisik) != null ? ref$[it[0]] : void 8) ? that + " " + ((it != null ? it[1] : void 8) || '') : void 8
+            };
+          })), slice$.call(['penyakit_sebelumnya', 'operasi', 'dirawat', 'pengobatan_dirumah', 'alergi', 'transfusi', 'darah', 'merokok', 'minuman_keras', 'obat_terlarang'].map(function(it){
+            var ref$;
+            return {
+              head: "Riwayat " + _.startCase(it),
+              cell: (ref$ = doc.riwayat) != null ? ref$[it] : void 8
+            };
+          })), slice$.call((((ref1$ = doc.riwayat) != null ? (ref2$ = ref1$.kesehatan) != null ? ref2$.imunisasi : void 8 : void 8) || []).map(function(i, j){
+            var ref$;
+            return {
+              head: "Imunisasi " + (j + 1),
+              cell: (ref$ = look('imunisasi', i)) != null ? ref$.label : void 8
+            };
+          })), slice$.call((((ref3$ = doc.riwayat) != null ? ref3$.keluarga : void 8) || []).map(function(i, j){
+            var ref$;
+            return {
+              head: "Penyakit keluarga/hubungan " + (j + 1),
+              cell: ((ref$ = look('penyakit', i.penyakit)) != null ? ref$.label : void 8) + "/" + i.hubungan
+            };
+          })), slice$.call(['wanita_hamil', 'pria_prostat', 'keikutsertaan_kb'].map(function(it){
+            var that, ref$, ref1$, ref2$;
+            return {
+              head: "Reproduksi " + _.startCase(it),
+              cell: (that = (ref$ = doc.riwayat) != null ? (ref1$ = ref$.reproduksi) != null ? ref1$[it] : void 8 : void 8) ? (ref2$ = look('yatidak', that)) != null ? ref2$.label : void 8 : void 8
+            };
+          })), slice$.call(['nyeri', 'frekuensi', 'karakteristik_nyeri'].map(function(it){
+            var ref$, ref1$;
+            return {
+              head: "Kenyamanan " + _.startCase(it),
+              cell: (ref$ = look(it, (ref1$ = doc.kenyamanan) != null ? ref1$[it] : void 8)) != null ? ref$.label : void 8
+            };
+          })), [
+            {
+              head: 'Kenyamanan Lokasi',
+              cell: (ref4$ = doc.kenyamanan) != null ? ref4$.lokasi : void 8
+            }, {
+              head: 'Status Psikologi',
+              cell: (that = doc.status_psikologi) ? (ref5$ = look('psikologi', that)) != null ? ref5$.label : void 8 : void 8
+            }
+          ], slice$.call(['bab', 'bak'].map(function(it){
+            var that, ref$, ref1$;
+            return {
+              head: "Eliminasi " + _.startCase(it),
+              cell: (that = (ref$ = doc.eliminasi) != null ? ref$[it] : void 8) ? (ref1$ = look(it, that)) != null ? ref1$.label : void 8 : void 8
+            };
+          })), slice$.call(['bicara', 'hambatan', 'potensial'].map(function(it){
+            var that, ref$, ref1$;
+            return {
+              head: "Komunikasi " + _.startCase(it),
+              cell: (that = (ref$ = doc.komunikasi) != null ? ref$[it] : void 8) ? (ref1$ = look(it, that)) != null ? ref1$.label : void 8 : void 8
+            };
+          }))
+        );
       },
       currentPasien: function(){
         return look2('pasien', m.route.param('idpasien'));
@@ -2721,7 +2781,7 @@ if (Meteor.isClient) {
     },
     farmasi: {
       headers: {
-        farmasi: ['jenis_barang', 'nama_barang', 'batas_apotik', 'batas_gudang', 'stok_diapotik', 'stok_didepook', 'stok_gudang'],
+        farmasi: ['jenis_barang', 'nama_barang', 'satuan', 'batas_depook', 'batas_apotik', 'batas_gudang', 'stok_diapotik', 'stok_didepook', 'stok_gudang'],
         rincian: ['nobatch', 'digudang', 'diapotik', 'didepook', 'masuk', 'kadaluarsa']
       },
       currentBarang: function(){
@@ -3433,11 +3493,7 @@ if (Meteor.isClient) {
                     title: 'Rincian rawat',
                     content: m('div', m('h1', attr.pasien.currentPasien().regis.nama_lengkap), m('table.table', attr.pasien.rawatDetails(state.modal).map(function(i){
                       return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
-                    })), (that = state.modal.fisik) ? m('div', m('br'), m('table', m('tr', m('th', 'Fisik'))), m('table.table', m('thead', m('tr', _.map(that, function(v, k){
-                      return m('th', _.startCase(k));
-                    }))), m('tbody', m('tr', _.map(that, function(v, k){
-                      return m('td', v);
-                    }))))) : void 8, (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
+                    })), (that = state.modal.tindakan) ? m('div', m('br'), m('table', m('tr', m('th', 'Tindakan'))), m('table.table', that != null ? that.map(function(i){
                       var arr;
                       return m('tr', tds(arr = [_.startCase(look2('tarif', i.nama).nama), rupiah(i.harga)]));
                     }) : void 8, m('tr', m('th', 'Total'), m('td', rupiah(_.sum(that.map(function(it){
@@ -3761,7 +3817,7 @@ if (Meteor.isClient) {
     farmasi: function(){
       return {
         view: function(){
-          var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$, this$ = this;
+          var ref$, jumlah, arr, that, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$, ref8$, this$ = this;
           if (attr.pageAccess(['jalan', 'inap', 'obat', 'farmasi', 'depook'])) {
             return m('.content', {
               oncreate: function(){
@@ -3810,7 +3866,7 @@ if (Meteor.isClient) {
                 }(coll.gudang.find().fetch().filter(function(i){
                   var arr;
                   if (i.treshold) {
-                    return ors(arr = [i.treshold.apotik > _.sumBy(i.batch, 'diapotik'), i.treshold.gudang > _.sumBy(i.batch, 'digudang')]);
+                    return ors(arr = [i.treshold.depook > _.sumBy(i.batch, 'didepook'), i.treshold.apotik > _.sumBy(i.batch, 'diapotik'), i.treshold.gudang > _.sumBy(i.batch, 'digudang')]);
                   }
                 }));
                 if (sumA > 0) {
@@ -3852,13 +3908,13 @@ if (Meteor.isClient) {
               }, m('thead', m('tr', attr.farmasi.headers.farmasi.map(function(i){
                 return m('th', _.startCase(i));
               }))), m('tbody', attr.farmasi.search(coll.gudang.find().fetch()).map(function(i){
-                var that, ref$, ref1$, ref2$;
+                var that, ref$, ref1$, ref2$, ref3$, ref4$;
                 return m('tr', {
                   'class': (that = i.treshold) ? that.apotik > _.sumBy(i.batch, 'diapotik') ? 'has-text-danger' : void 8 : void 8,
                   ondblclick: function(){
                     return m.route.set("/farmasi/" + i._id);
                   }
-                }, m('td', (ref$ = look('barang', i.jenis)) != null ? ref$.label : void 8), m('td', i.nama), m('td', (ref1$ = i.treshold) != null ? ref1$.apotik : void 8), m('td', (ref2$ = i.treshold) != null ? ref2$.gudang : void 8), ['diapotik', 'didepook', 'digudang'].map(function(j){
+                }, m('td', (ref$ = look('barang', i.jenis)) != null ? ref$.label : void 8), m('td', i.nama), m('td', (ref1$ = look('satuan', i.satuan)) != null ? ref1$.label : void 8), m('td', (ref2$ = i.treshold) != null ? ref2$.depook : void 8), m('td', (ref3$ = i.treshold) != null ? ref3$.apotik : void 8), m('td', (ref4$ = i.treshold) != null ? ref4$.gudang : void 8), ['diapotik', 'didepook', 'digudang'].map(function(j){
                   return m('td', _.sumBy(i.batch, j));
                 }));
               }))))
@@ -3893,11 +3949,11 @@ if (Meteor.isClient) {
               }) : void 8, m('tr', {
                 ondblclick: function(){
                   var ref$;
-                  if ((ref$ = userGroup()) === 'obat' || ref$ === 'farmasi') {
+                  if ((ref$ = userGroup()) === 'obat' || ref$ === 'farmasi' || ref$ === 'depook') {
                     return state.modal = attr.farmasi.currentBarang();
                   }
                 }
-              }, m('th', 'Batas min. Apotik'), m('td', that != null ? (ref1$ = that.treshold) != null ? ref1$.apotik : void 8 : void 8), m('th', 'Batas min. Gudang'), m('td', that != null ? (ref2$ = that.treshold) != null ? ref2$.gudang : void 8 : void 8))), ((ref3$ = state.modal) != null ? ref3$._id : void 8) && elem.modal({
+              }, m('th', 'Batas min. Apotik'), m('td', that != null ? (ref1$ = that.treshold) != null ? ref1$.apotik : void 8 : void 8), m('th', 'Batas min. Depo OK'), m('td', that != null ? (ref2$ = that.treshold) != null ? ref2$.depook : void 8 : void 8), m('th', 'Batas min. Gudang'), m('td', that != null ? (ref3$ = that.treshold) != null ? ref3$.gudang : void 8 : void 8))), ((ref4$ = state.modal) != null ? ref4$._id : void 8) && elem.modal({
                 title: 'Tetapkan Batas min.',
                 content: m('div', m('h4', 'Berapa batas minimum yang seharusnya tersedia?'), m('form', {
                   onsubmit: function(e){
@@ -3905,7 +3961,8 @@ if (Meteor.isClient) {
                     e.preventDefault();
                     opts = {
                       obat: 'apotik',
-                      farmasi: 'gudang'
+                      farmasi: 'gudang',
+                      depook: 'depook'
                     };
                     coll.gudang.update(state.modal._id, {
                       $set: {
@@ -3922,11 +3979,11 @@ if (Meteor.isClient) {
                   type: 'submit',
                   value: 'Tetapkan'
                 })))))
-              }), (ref4$ = roles()) != null && ref4$.farmasi ? m('.button.is-warning', {
+              }), (ref5$ = roles()) != null && ref5$.farmasi ? m('.button.is-warning', {
                 onclick: function(){
                   return state.showForm.batch = !state.showForm.batch;
                 }
-              }, m('span', '+Tambahkan Batch')) : void 8, (ref5$ = state.showForm) != null && ref5$.batch ? m(autoForm({
+              }, m('span', '+Tambahkan Batch')) : void 8, (ref6$ = state.showForm) != null && ref6$.batch ? m(autoForm({
                 collection: coll.gudang,
                 schema: new SimpleSchema(schema.farmasi),
                 type: 'update-pushArray',
@@ -3944,14 +4001,14 @@ if (Meteor.isClient) {
                 }
               })) : void 8, m('table.table', m('thead', attr.farmasi.headers.rincian.map(function(i){
                 return m('th', _.startCase(i));
-              })), m('tbody', (ref6$ = attr.farmasi.currentBarang()) != null ? ref6$.batch.map(function(i){
+              })), m('tbody', (ref7$ = attr.farmasi.currentBarang()) != null ? ref7$.batch.map(function(i){
                 return m('tr', {
                   ondblclick: function(){
                     state.modal = i;
                     return m.redraw();
                   }
                 }, tds([i.nobatch, i.digudang, i.diapotik, i.didepook, hari(i.masuk), hari(i.kadaluarsa)]));
-              }) : void 8)), (ref7$ = state.modal) != null && ref7$.idbatch ? elem.modal({
+              }) : void 8)), (ref8$ = state.modal) != null && ref8$.idbatch ? elem.modal({
                 title: 'Rincian Batch',
                 content: m('table', function(){
                   var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$;
