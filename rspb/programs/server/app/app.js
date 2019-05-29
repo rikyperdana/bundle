@@ -738,6 +738,7 @@ this.ols = function(it){
 if (Meteor.isClient) {
   this.state = {
     regions: {},
+    notify: {},
     pagins: {
       limit: 10,
       page: 0
@@ -2940,11 +2941,23 @@ if (Meteor.isClient) {
               })), m('span', i != null ? i[0] : void 8));
             });
           }())))), m('.columns', Meteor.userId() && m('.column.is-2', m('aside.menu.box', m('p.menu-label', 'Admin Menu'), m('ul.menu-list', attr.layout.rights().map(function(i){
-            return m('li', m('a', {
+            var ref$;
+            return m('li', {
+              oncreate: function(){
+                return Meteor.call.apply(Meteor, ['notify', i.name].concat(
+                  slice$.call(userGroup('jalan') ? [userRole(), isDr()] || [] : void 8), [function(err, res){
+                    if (res) {
+                      state.notify[i.name] = res;
+                    }
+                    return m.redraw();
+                  }]
+                ));
+              }
+            }, m('a', {
               href: "/" + i.name,
               oncreate: m.route.link,
               'class': state.activeMenu === i.name ? 'is-active' : void 8
-            }, m('span.icon.is-small', m("i.fa.fa-" + i.icon)), m('span', "    " + i.full)), attr.pageAccess(['regis', 'jalan']) ? 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
+            }, m('span.icon.is-small', m("i.fa.fa-" + i.icon)), m('span', "    " + i.full + " " + (((ref$ = state.notify) != null ? ref$[i.name] : void 8) || ''))), attr.pageAccess(['regis', 'jalan']) ? 'regis' === currentRoute() ? m('ul', [['lama', 'Cari Pasien'], ['baru', 'Pasien Baru']].map(function(i){
               return m('li', m('a', {
                 href: "/regis/" + i[0],
                 oncreate: m.route.link
@@ -4989,7 +5002,7 @@ if (Meteor.isServer) {
         };
       });
     },
-    notify: function(name){
+    notify: function(name, param1, param2){
       var obj;
       obj = {
         amprah: function(){
@@ -4998,9 +5011,75 @@ if (Meteor.isServer) {
               $exists: false
             }
           }).fetch().length;
+        },
+        obat: function(){
+          var this$ = this;
+          return function(it){
+            return it.length;
+          }(coll.pasien.aggregate([{
+            $match: {
+              rawat: {
+                $elemMatch: {
+                  givenDrug: {
+                    $exists: false
+                  }
+                }
+              }
+            }
+          }]));
+        },
+        depook: function(){
+          var this$ = this;
+          return function(it){
+            return it.length;
+          }(coll.pasien.aggregate([{
+            $match: {
+              rawat: {
+                $elemMatch: {
+                  givenDrug: {
+                    $exists: false
+                  }
+                }
+              }
+            }
+          }]));
+        },
+        jalan: function(){
+          var pipe, a, arr, this$ = this;
+          return function(it){
+            return it.length;
+          }(coll.pasien.aggregate(pipe = a = {
+            $match: {
+              rawat: {
+                $elemMatch: {
+                  $and: arr = [
+                    {
+                      klinik: {
+                        $eq: function(it){
+                          return it.value;
+                        }(selects.klinik.find(function(it){
+                          return param1 === _.snakeCase(it.label);
+                        }))
+                      }
+                    }, param2
+                      ? {
+                        anamesa_dokter: {
+                          $exists: false
+                        }
+                      }
+                      : {
+                        anamesa_perawat: {
+                          $exists: false
+                        }
+                      }
+                  ]
+                }
+              }
+            }
+          }));
         }
       };
-      return typeof obj[name] == 'function' ? obj[name]() : void 8;
+      return typeof obj[name] == 'function' ? obj[name](param1, param2) : void 8;
     },
     nextMR: function(){
       var list, pipe, nums, index;
