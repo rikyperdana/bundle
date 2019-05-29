@@ -2945,7 +2945,9 @@ if (Meteor.isClient) {
             return m('li', {
               oncreate: function(){
                 return Meteor.call.apply(Meteor, ['notify', i.name].concat(
-                  slice$.call(userGroup('jalan') ? [userRole(), isDr()] || [] : void 8), [function(err, res){
+                  userGroup('jalan')
+                    ? [userRole(), isDr()]
+                    : [], [function(err, res){
                     if (res) {
                       state.notify[i.name] = res;
                     }
