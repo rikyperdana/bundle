@@ -247,6 +247,7 @@ if (Meteor.isClient) {
                     }, ref$)
                   }, function(err, res){
                     var ref$;
+                    afState.disable = false;
                     if (res) {
                       return (ref$ = opts.hooks) != null ? ref$.after(doc) : void 8;
                     }
