@@ -3685,7 +3685,7 @@ if (Meteor.isClient) {
     obat: function(){
       return {
         view: function(){
-          var that, ref$;
+          var that;
           if (attr.pageAccess(['obat', 'depook'])) {
             return m('.content', {
               oncreate: function(){
@@ -3747,11 +3747,12 @@ if (Meteor.isClient) {
               return i.rawat.map(function(j){
                 var okay, arr;
                 okay = function(){
-                  if (j.cara_bayar === 1) {
-                    return j.status_bayar && !j.givenDrug;
-                  } else {
-                    return !j.givenDrug;
-                  }
+                  var arr;
+                  return ands(arr = [
+                    j.obat, j.cara_bayar === 1
+                      ? j.status_bayar && !j.givenDrug
+                      : !j.givenDrug
+                  ]);
                 };
                 return okay() && m('tr', tds(arr = [
                   i.no_mr, i.regis.nama_lengkap, hari(j.tanggal), look('cara_bayar', j.cara_bayar).label, look('klinik', j.klinik).label, m('.button.is-success', {
@@ -3765,10 +3766,10 @@ if (Meteor.isClient) {
               title: 'Serahkan Obat?',
               content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
                 return m('th', _.startCase(i));
-              })), (ref$ = that.obat) != null ? ref$.map(function(i){
+              })), that.obat.map(function(i){
                 var arr, that, ref$, ref1$;
                 return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " unit" : void 8]));
-              }) : void 8),
+              })),
               confirm: 'Serahkan',
               action: function(){
                 var doc;
@@ -5115,7 +5116,7 @@ if (Meteor.isServer) {
       start = arg$.start, end = arg$.end;
       return _.flatten(coll.gudang.find().fetch().map(function(i){
         return i.batch.map(function(j){
-          return _.merge(i, j, {
+          return _.merge({}, i, j, {
             amprah: function(){
               return _.flatten(coll.amprah.find().fetch().filter(function(k){
                 return k.nama === i._id;
