@@ -1270,7 +1270,7 @@ this.selects = {
   rujukan: ['datang_sendiri', 'rs_lain', 'puskesmas', 'faskes_lainnya'],
   keluar: ['pulang', 'rujuk'],
   barang: ['generik', 'non_generik', 'obat_narkotika', 'bhp', 'obat_keras_tertentu'],
-  satuan: ['botol', 'vial', 'ampul', 'pcs', 'sachet', 'tube', 'supp', 'tablet', 'minidose', 'pot', 'turbuhaler', 'kaplet', 'kapsul', 'bag', 'pen', 'rectal', 'flash', 'cream', 'nebu', 'galon', 'lembar', 'roll', 'liter', 'cup', 'pasang', 'bungkus', 'box'],
+  satuan: ['botol', 'vial', 'ampul', 'pcs', 'sachet', 'tube', 'supp', 'tablet', 'minidose', 'pot', 'turbuhaler', 'kaplet', 'kapsul', 'bag', 'pen', 'rectal', 'flash', 'cream', 'nebu', 'galon', 'lembar', 'roll', 'liter', 'cup', 'pasang', 'bungkus', 'box', 'syringe'],
   anggaran: ['blud', 'apbd'],
   alias: ['tn', 'ny', 'nn', 'an', 'by'],
   tinggal: ['orang_tua', 'keluarga', 'sendiri', 'panti_asuhan'],
@@ -2260,6 +2260,13 @@ if (Meteor.isClient) {
       label: 'Satuan terkecil',
       autoform: {
         options: selects.satuan
+      }
+    },
+    fornas: {
+      type: Number,
+      optional: true,
+      autoform: {
+        options: selects.yatidak
       }
     },
     batch: {
@@ -5140,9 +5147,11 @@ if (Meteor.isServer) {
             'Harga': rupiah(i.jual),
             'Barang Masuk': start < (ref$ = i.masuk) && ref$ < end ? i.awal : '-',
             'Stok Awal': i.masuk < start ? i.awal : '-',
-            'Keluar': _.sum(i.amprah.map(function(it){
+            'Keluar': (function(it){
+              return it || '-';
+            })(_.sum(i.amprah.map(function(it){
               return it.serah;
-            })),
+            }))),
             'Sisa Stok': i.awal - _.sum(i.amprah.map(function(it){
               return it.serah;
             })),
