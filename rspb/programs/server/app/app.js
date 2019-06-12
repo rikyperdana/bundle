@@ -2257,6 +2257,7 @@ if (Meteor.isClient) {
     },
     satuan: {
       type: Number,
+      label: 'Satuan terkecil',
       autoform: {
         options: selects.satuan
       }
@@ -2333,7 +2334,8 @@ if (Meteor.isClient) {
     },
     'batch.$.beli': {
       type: Number,
-      decimal: true
+      decimal: true,
+      label: 'Harga beli pada satuan terkecil'
     },
     'batch.$.jual': {
       type: Number,
@@ -4039,7 +4041,7 @@ if (Meteor.isClient) {
                     Meteor.call('sortByDate', {
                       idbarang: m.route.param('idbarang')
                     });
-                    state.showForm = null;
+                    state.showForm.batch = null;
                     return m.redraw();
                   }
                 }
