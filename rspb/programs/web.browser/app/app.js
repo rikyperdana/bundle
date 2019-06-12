@@ -3685,7 +3685,7 @@ if (Meteor.isClient) {
     obat: function(){
       return {
         view: function(){
-          var that;
+          var that, ref$;
           if (attr.pageAccess(['obat', 'depook'])) {
             return m('.content', {
               oncreate: function(){
@@ -3765,10 +3765,10 @@ if (Meteor.isClient) {
               title: 'Serahkan Obat?',
               content: m('table.table', m('tr', attr.farmasi.fieldSerah.map(function(i){
                 return m('th', _.startCase(i));
-              })), that.obat.map(function(i){
+              })), (ref$ = that.obat) != null ? ref$.map(function(i){
                 var arr, that, ref$, ref1$;
                 return m('tr', tds(arr = [look2('gudang', i.nama).nama, i.jumlah + " unit", (that = (ref$ = i.aturan) != null ? ref$.kali : void 8) ? that + " kali" : void 8, (that = (ref1$ = i.aturan) != null ? ref1$.dosis : void 8) ? that + " unit" : void 8]));
-              })),
+              }) : void 8),
               confirm: 'Serahkan',
               action: function(){
                 var doc;
@@ -3875,7 +3875,7 @@ if (Meteor.isClient) {
                   }, function(err, res){
                     var that, title, obj;
                     if (that = res) {
-                      title = "Stok Barang " + hari(start) + " - " + hari(end);
+                      title = "Stok Barang Farmasi " + hari(start) + " - " + hari(end);
                       obj = {
                         Excel: csv,
                         Pdf: makePdf.csv
@@ -5111,63 +5111,49 @@ if (Meteor.isServer) {
       });
     },
     stocks: function(arg$){
-      var start, end, a, pipe, b;
+      var start, end;
       start = arg$.start, end = arg$.end;
-      a = coll.amprah.aggregate(pipe = [
-        a = {
-          $match: {
-            tanggal_serah: {
-              $lt: end
-            }
-          }
-        }, b = {
-          $unwind: '$batch'
-        }
-      ]);
-      return b = reduce([], a, function(res, inc){
-        var matched;
-        matched = function(it){
-          var arr;
-          return _.every(arr = [it.nama === inc.nama, it.batch.idbatch === inc.batch.idbatch]);
-        };
-        if (!res.find(function(it){
-          return matched(it);
-        })) {
-          return slice$.call(res).concat([inc]);
-        } else {
-          return res.map(function(it){
-            if (!matched(it)) {
-              return it;
-            } else {
-              return _.assign(it, {
-                batch: _.assign(it.batch, {
-                  serah: it.batch.serah + inc.batch.serah
-                })
-              });
-            }
+      return _.flatten(coll.gudang.find().fetch().map(function(i){
+        return i.batch.map(function(j){
+          return _.merge(i, j, {
+            amprah: function(){
+              return _.flatten(coll.amprah.find().fetch().filter(function(k){
+                return k.nama === i._id;
+              }).map(function(it){
+                return it.batch.filter(function(it){
+                  return it.idbatch === j.idbatch;
+                });
+              }));
+            }()
           });
-        }
-      }).map(function(i){
-        var obat, batch, ref$;
-        obat = coll.gudang.findOne(i.nama);
-        batch = obat.batch.find(function(it){
-          return it.idbatch === i.batch.idbatch;
+        }).map(function(i){
+          var ref$, this$ = this;
+          return {
+            'Nama Obat': i.nama,
+            'Satuan': look('satuan', i.satuan).label,
+            'Jenis': look('barang', i.jenis).label,
+            'No. Batch': i.nobatch,
+            'ED': hari(i.kadaluarsa),
+            'Harga': rupiah(i.jual),
+            'Barang Masuk': start < (ref$ = i.masuk) && ref$ < end ? i.awal : '-',
+            'Stok Awal': i.masuk < start ? i.awal : '-',
+            'Keluar': _.sum(i.amprah.map(function(it){
+              return it.serah;
+            })),
+            'Sisa Stok': i.awal - _.sum(i.amprah.map(function(it){
+              return it.serah;
+            })),
+            'Total Keluar': rupiah(i.jual * _.sum(i.amprah.map(function(it){
+              return it.serah;
+            }))),
+            'Total Persediaan': rupiah((function(it){
+              return it * i.jual;
+            })(i.awal - _.sum(i.amprah.map(function(it){
+              return it.serah;
+            }))))
+          };
         });
-        return {
-          'Nama Obat': obat.nama,
-          'Satuan': look('satuan', obat.satuan).label,
-          'Jenis': look('barang', obat.jenis).label,
-          'No. Batch': batch.nobatch,
-          'ED': hari(batch.kadaluarsa),
-          'Harga': rupiah(batch.jual),
-          'Barang Masuk': start < (ref$ = batch.masuk) && ref$ < end ? batch.awal : '-',
-          'Stok Awal': batch.masuk < start ? batch.awal : '-',
-          'Keluar': i.batch.serah,
-          'Sisa Stok': batch.awal - i.batch.serah,
-          'Total Keluar': rupiah(batch.jual * i.batch.serah),
-          'Total Persediaan': rupiah(batch.jual * (batch.awal - i.batch.serah))
-        };
-      });
+      }));
     },
     notify: function(arg$){
       var name, params, obj;
