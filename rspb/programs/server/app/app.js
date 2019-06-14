@@ -2955,8 +2955,11 @@ if (Meteor.isClient) {
                 return Meteor.call('notify', args, function(err, res){
                   if (res) {
                     state.notify[i.name] = res;
+                    return m.redraw();
+                  } else {
+                    state.notify[i.name] = false;
+                    return m.redraw();
                   }
-                  return m.redraw();
                 });
               }
             }, m('a', {
@@ -5179,20 +5182,28 @@ if (Meteor.isServer) {
           }).fetch().length;
         },
         obat: function(){
-          var this$ = this;
+          var arr, this$ = this;
           return function(it){
             return it.length;
-          }(coll.pasien.aggregate([{
+          }(coll.pasien.aggregate({
             $match: {
               rawat: {
                 $elemMatch: {
-                  givenDrug: {
-                    $exists: false
-                  }
+                  $and: arr = [
+                    {
+                      givenDrug: {
+                        $exists: false
+                      }
+                    }, {
+                      obat: {
+                        $exists: true
+                      }
+                    }
+                  ]
                 }
               }
             }
-          }]));
+          }));
         },
         depook: function(){
           var this$ = this;
