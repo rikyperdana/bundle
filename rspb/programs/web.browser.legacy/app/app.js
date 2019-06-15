@@ -1371,22 +1371,29 @@ selects.gudang = function(){
     });
   }
 };
-selects.obat = function(){
-  var joined, a;
+selects.obat = function(name){
+  var current, form, that, a;
   if (Meteor.isClient) {
-    joined = function(it){
-      return _.join(it, ' ');
-    };
-    a = _.compact(coll.gudang.find().fetch().map(function(i){
-      var ref$;
-      if ((ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3) {
-        return {
-          value: i._id,
-          label: i.nama
-        };
-      }
-    }));
-    return _.sortBy(a, 'label');
+    current = _.initial(name.split('.')).join('.') + ".search";
+    form = (that = afState.form) ? that.formRawat || that.formSerahObat : void 8;
+    a = coll.gudang.find().fetch().filter(function(i){
+      var arr, ref$, list, ref1$;
+      return ands(arr = [
+        (ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3, _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
+          ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
+            return it.diapotik;
+          })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
+            return it.didepook;
+          }))
+        ])
+      ]);
+    });
+    return a.map(function(it){
+      return {
+        value: it._id,
+        label: it.nama
+      };
+    });
   }
 };
 selects.bhp = function(){
@@ -1744,9 +1751,17 @@ if (Meteor.isClient) {
         return randomId();
       }
     },
+    search: {
+      type: String,
+      optional: true,
+      label: 'Pencarian Obat',
+      autoform: {
+        value: undefined
+      }
+    },
     nama: {
       type: String,
-      label: 'Nama Obat',
+      label: 'Pilihan Obat',
       autoform: {
         options: selects.obat
       }
