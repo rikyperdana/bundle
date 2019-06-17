@@ -1374,12 +1374,14 @@ selects.gudang = function(){
 selects.obat = function(name){
   var current, form, that, a;
   if (Meteor.isClient) {
-    current = _.initial(name.split('.')).join('.') + ".search";
+    current = _.includes(name, 'obat.') ? _.initial(name.split('.')).join('.') + ".search" : void 8;
     form = (that = afState.form) ? that.formRawat || that.formSerahObat : void 8;
     a = coll.gudang.find().fetch().filter(function(i){
       var arr, ref$, list, ref1$;
       return ands(arr = [
-        (ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3, _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
+        (ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3, !current
+          ? true
+          : _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
           ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
             return it.diapotik;
           })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
@@ -2538,9 +2540,9 @@ if (Meteor.isClient) {
         }))) {
           barang = coll.gudang.findOne(that);
           return _.join(arr = [
-            "Apotik: " + _.sum(barang.batch.map(function(it){
+            "Apo: " + _.sum(barang.batch.map(function(it){
               return it.diapotik;
-            })), "Gudang: " + _.sum(barang.batch.map(function(it){
+            })), "Gud: " + _.sum(barang.batch.map(function(it){
               return it.digudang;
             })), "OK: " + _.sum(barang.batch.map(function(it){
               return it.didepook;
