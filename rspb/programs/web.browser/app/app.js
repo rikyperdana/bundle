@@ -733,7 +733,7 @@ this.hari = function(it){
   return moment(it).format('D MMM YYYY');
 };
 this.rupiah = function(it){
-  return "Rp " + numeral(+it || 0).format('0,0') + ",-";
+  return "Rp " + numeral(+it || 0).format('0.00') + ",-";
 };
 this.ols = function(it){
   return m('ol', it.map(function(it){
@@ -2508,9 +2508,13 @@ if (Meteor.isClient) {
     'obat.$': {
       type: Object
     },
+    'obat.$.search': {
+      type: String,
+      label: 'Pencarian Obat'
+    },
     'obat.$.nama': {
       type: String,
-      label: 'Nama Obat',
+      label: 'Pilihan Obat',
       autoform: {
         options: selects.obat
       }
@@ -3430,7 +3434,7 @@ if (Meteor.isClient) {
                     return m(".button." + i[1], _.merge({
                       style: 'margin-right: 10px'
                     }, i[2]), i[0]);
-                  })) : void 8, state.showAddRawat && m(autoForm({
+                  })) : void 8, m('button.button.is-warning', 'Rekap Rawat'), state.showAddRawat && m(autoForm({
                     collection: coll.pasien,
                     schema: new SimpleSchema(schema.rawatRegis),
                     type: 'update-pushArray',
