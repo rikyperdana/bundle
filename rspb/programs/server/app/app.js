@@ -1377,17 +1377,19 @@ selects.obat = function(name){
     current = _.includes(name, 'obat.') ? _.initial(name.split('.')).join('.') + ".search" : void 8;
     form = (that = afState.form) ? that.formRawat || that.formSerahObat : void 8;
     a = coll.gudang.find().fetch().filter(function(i){
-      var arr, ref$, list, ref1$;
+      var arr, ref$, x, list, ref1$;
       return ands(arr = [
         (ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3, !current
           ? true
-          : _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
-          ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
-            return it.diapotik;
-          })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
-            return it.didepook;
-          }))
-        ])
+          : ands(x = [
+            _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
+              ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
+                return it.diapotik;
+              })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
+                return it.didepook;
+              }))
+            ])
+          ])
       ]);
     });
     return a.map(function(it){
