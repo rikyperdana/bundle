@@ -1371,64 +1371,49 @@ selects.gudang = function(){
     });
   }
 };
-selects.obat = function(name){
-  var current, form, that, a;
-  if (Meteor.isClient) {
-    current = _.includes(name, 'obat.') ? _.initial(name.split('.')).join('.') + ".search" : void 8;
-    form = (that = afState.form) ? that.formRawat || that.formSerahObat : void 8;
-    a = coll.gudang.find().fetch().filter(function(i){
-      var arr, ref$, x, list, ref1$;
-      return ands(arr = [
-        (ref$ = i.jenis) === 1 || ref$ === 2 || ref$ === 3, !current
-          ? true
-          : ands(x = [
-            _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
-              ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
-                return it.diapotik;
-              })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
-                return it.didepook;
-              }))
-            ])
-          ])
-      ]);
-    });
-    return a.map(function(it){
-      return {
-        value: it._id,
-        label: it.nama
-      };
-    });
+[
+  {
+    name: 'obat',
+    jenis: [1, 2, 3]
+  }, {
+    name: 'bhp',
+    jenis: [4]
   }
-};
-selects.bhp = function(name){
-  var current, form, that, a;
-  if (Meteor.isClient) {
-    current = _.includes(name, 'bhp.') ? _.initial(name.split('.')).join('.') + ".search" : void 8;
-    form = (that = afState.form) ? that.formRawat || that.formSerahObat : void 8;
-    a = coll.gudang.find().fetch().filter(function(i){
-      var arr, x, list, ref$, ref1$;
-      return ands(arr = [
-        i.jenis === 4, !current
-          ? true
-          : ands(x = [
-            _.includes(_.lowerCase(i.nama), form[current]), ors(list = [
-              ((ref$ = i.treshold) != null ? ref$.apotik : void 8) < _.sum(i.batch.map(function(it){
-                return it.diapotik;
-              })), ((ref1$ = i.treshold) != null ? ref1$.depook : void 8) < _.sum(i.batch.map(function(it){
-                return it.didepook;
-              }))
+].map(function(i){
+  return selects[i.name] = function(name){
+    var term, form, that, a;
+    if (Meteor.isClient) {
+      term = _.includes(name, i.name + ".")
+        ? _.initial(name.split('.')).join('.') + ".search"
+        : name === 'nama' ? 'search' : void 8;
+      form = (that = afState.form) ? ors(['formRawat', 'formSerahObat', 'formAmprahobat', 'formAmprahbhp'].map(function(it){
+        return that[it];
+      })) : void 8;
+      a = coll.gudang.find().fetch().filter(function(j){
+        var arr, x, list, ref$, ref1$;
+        return ands(arr = [
+          in$(j.jenis, i.jenis), !term
+            ? true
+            : ands(x = [
+              _.includes(_.lowerCase(j.nama), form[term]), ors(list = [
+                ((ref$ = j.treshold) != null ? ref$.apotik : void 8) < _.sum(j.batch.map(function(it){
+                  return it.diapotik;
+                })), ((ref1$ = j.treshold) != null ? ref1$.depook : void 8) < _.sum(j.batch.map(function(it){
+                  return it.didepook;
+                }))
+              ])
             ])
-          ])
-      ]);
-    });
-    return a.map(function(it){
-      return {
-        value: it._id,
-        label: it.nama
-      };
-    });
-  }
-};
+        ]);
+      });
+      return a.map(function(it){
+        return {
+          value: it._id,
+          label: it.nama
+        };
+      });
+    }
+  };
+});
 selects.dokter = function(){
   var selPoli, a;
   if (Meteor.isClient) {
@@ -1508,6 +1493,11 @@ selects.kelurahan = function(){
     }
   }
 };
+function in$(x, xs){
+  var i = -1, l = xs.length >>> 0;
+  while (++i < l) if (x === xs[i]) return true;
+  return false;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"both.ls.js":function(){
@@ -2417,8 +2407,13 @@ if (Meteor.isClient) {
   });
   schema.amprah = function(type){
     return {
+      search: {
+        type: String,
+        label: 'Pencarian Barang'
+      },
       nama: {
         type: String,
+        label: 'Pilihan Barang',
         autoform: {
           type: 'select',
           options: selects[type]
@@ -3761,10 +3756,13 @@ if (Meteor.isClient) {
                   }));
                 },
                 after: function(doc){
-                  coll.rekap.insert(doc[0]);
+                  coll.rekap.insert(_.merge(doc[0], {
+                    source: userGroup()
+                  }));
                   makePdf.ebiling(doc[0]);
                   afState.form = {};
                   afState.arrLen = {};
+                  state.showForm = false;
                   return m.redraw();
                 }
               }
@@ -3847,7 +3845,8 @@ if (Meteor.isClient) {
                     res.map(function(it){
                       coll.rekap.insert(_.merge(it, {
                         idrawat: state.modal.idrawat,
-                        tanggal: new Date()
+                        tanggal: new Date(),
+                        source: userGroup()
                       }));
                       return makePdf.ebiling(it);
                     });
@@ -5038,7 +5037,7 @@ if (Meteor.isServer) {
       if (start < end) {
         a = coll.rekap.find().fetch().filter(function(it){
           var ref$;
-          return start < (ref$ = it.printed) && ref$ < end;
+          return ands([start < (ref$ = it.printed) && ref$ < end, it.source === source]);
         });
         b = _.flattenDeep(a.map(function(i){
           return i.obat.map(function(j){
@@ -5046,7 +5045,8 @@ if (Meteor.isServer) {
               return {
                 nama_obat: j.nama_obat,
                 idbatch: k.idbatch,
-                jumlah: k.jumlah
+                jumlah: k.jumlah,
+                source: i.source
               };
             });
           });
@@ -5073,33 +5073,22 @@ if (Meteor.isServer) {
             });
           }
         });
-        stokAwal = function(i, source){
-          var pipe, a, b, this$ = this;
-          return _.sum(function(it){
-            return it.map(function(it){
-              return it.batch.serah;
+        stokAwal = function(doc){
+          return _.sum(function(){
+            return _.flatten(coll.amprah.find().fetch().map(function(i){
+              return i.batch.map(function(j){
+                return _.merge({}, i, j);
+              });
+            })).filter(function(it){
+              return ands([it.ruangan === source, it.nama === doc.nama_obat, it.idbatch === doc.idbatch]);
+            }).map(function(it){
+              return it.serah;
             });
-          }(coll.amprah.aggregate(pipe = [
-            a = {
-              $unwind: '$batch'
-            }, b = {
-              $match: {
-                $and: [
-                  {
-                    nama: i.nama_obat
-                  }, {
-                    ruangan: source
-                  }, {
-                    'batch.idbatch': i.idbatch
-                  }
-                ]
-              }
-            }
-          ])));
+          }());
         };
         d = c.map(function(i){
           return _.merge(i, {
-            awal: stokAwal(i, source)
+            awal: stokAwal(i)
           });
         });
         return d.map(function(i){
