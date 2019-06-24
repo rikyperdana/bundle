@@ -125,7 +125,7 @@ if (Meteor.isClient) {
             label: _.startCase(i)
           };
         }) : void 8 : void 8, _.isFunction((ref2$ = theSchema(normed(name))) != null ? (ref3$ = ref2$.autoform) != null ? ref3$.options : void 8 : void 8)
-          ? (ref4$ = theSchema(normed(name))) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options(name) : void 8 : void 8
+          ? (ref4$ = theSchema(normed(name))) != null ? (ref5$ = ref4$.autoform) != null ? ref5$.options(name, opts.id) : void 8 : void 8
           : (ref6$ = theSchema(normed(name))) != null ? (ref7$ = ref6$.autoform) != null ? ref7$.options : void 8 : void 8, ['true', 'false'].map(function(i){
           return {
             value: JSON.parse(i),
@@ -1007,10 +1007,12 @@ if (Meteor.isClient) {
       });
       return pdf.download(zeros(doc.no_mr) + "_payRegCard.pdf");
     },
-    rekap: function(){
-      var fields, source, rows, headers;
+    rekap: function(source){
+      var fields, rows, headers;
       fields = ['no_mr_nama_pasien', 'nama_obat', 'nobatch', 'jumlah', 'satuan', 'harga'];
-      source = coll.rekap.find().fetch().map(function(i){
+      source = coll.rekap.find().fetch().filter(function(it){
+        return it.source === source;
+      }).map(function(i){
         return i.obat.map(function(j){
           return j.batches.map(function(k){
             var arr;
@@ -1380,28 +1382,24 @@ selects.gudang = function(){
     jenis: [4]
   }
 ].map(function(i){
-  return selects[i.name] = function(name){
-    var term, list, form, that, a;
+  return selects[i.name] = function(fieldName, formName){
+    var list, term, a;
     if (Meteor.isClient) {
-      term = _.includes(name, i.name + ".")
-        ? _.initial(name.split('.')).join('.') + ".search"
-        : name === 'nama' ? 'search' : void 8;
       list = ['formRawat', 'formSerahObat', 'formAmprahobat', 'formAmprahbhp'];
-      form = (that = afState.form) ? ors(list.map(function(it){
-        return that[it];
-      })) : void 8;
+      term = formName === list[2] || formName === list[3]
+        ? 'search'
+        : _.initial(fieldName.split('.')).join('.') + ".search";
       a = coll.gudang.find().fetch().filter(function(j){
-        var arr, ref$, ref1$;
+        var arr, ref$;
         return ands(arr = [
-          in$(j.jenis, i.jenis), _.includes(_.lowerCase(j.nama), form[term]), name === 'nama'
+          in$(j.jenis, i.jenis), _.includes(_.lowerCase(j.nama), (ref$ = afState.form[formName]) != null ? ref$[term] : void 8), formName === list[2] || formName === list[3]
             ? true
-            : ors(arr = [
-              ((ref$ = j.treshold) != null ? ref$.apotik : void 8) < _.sum(j.batch.map(function(it){
-                return it.diapotik;
-              })), ((ref1$ = j.treshold) != null ? ref1$.depook : void 8) < _.sum(j.batch.map(function(it){
-                return it.didepook;
-              }))
-            ])
+            : ors(['apotik', 'depook'].map(function(k){
+              var ref$;
+              return ((ref$ = j.treshold) != null ? ref$[k] : void 8) < _.sum(j.batch.map(function(it){
+                return it["di" + k];
+              }));
+            }))
         ]);
       });
       return a.map(function(it){
@@ -2814,7 +2812,7 @@ if (Meteor.isClient) {
           }(_.last(attr.pasien.currentPasien().rawat)), currentRoute() === 'jalan', !isDr() ? !it.anamesa_perawat : true, isDr() ? it.anamesa_perawat : true, isDr() ? !it.anamesa_dokter : true, userRole() === _.snakeCase(look('klinik', it.klinik).label)
         ]);
       },
-      cobain: function(doc){
+      rawatDetails2: function(doc){
         var that;
         return m('div', m('h1', attr.pasien.currentPasien().regis.nama_lengkap), m('table.table', attr.pasien.rawatDetails(doc).map(function(i){
           return i.cell && m('tr', [m('th', i.head), m('td', i.cell)]);
@@ -3471,7 +3469,7 @@ if (Meteor.isClient) {
                   }, 'Rekap Rawat') : void 8, state.rekapRawat && elem.modal({
                     title: 'Rekap Riwayat Rawat Pasien',
                     content: m('div', state.rekapRawat.map(function(it){
-                      return attr.pasien.cobain(it);
+                      return attr.pasien.rawatDetails2(it);
                     }))
                   }), state.showAddRawat && m(autoForm({
                     collection: coll.pasien,
@@ -3588,7 +3586,7 @@ if (Meteor.isClient) {
                     }));
                   }))), elem.pagins()), state.modal ? elem.modal({
                     title: 'Rincian rawat',
-                    content: attr.pasien.cobain(state.modal),
+                    content: attr.pasien.rawatDetails2(state.modal),
                     action: function(){
                       state.docRawat = state.modal.idrawat;
                       state.spm = new Date();
@@ -3879,7 +3877,7 @@ if (Meteor.isClient) {
                   }
                 }, {
                   onReady: function(){
-                    return makePdf.rekap();
+                    return makePdf.rekap(userGroup());
                   }
                 });
               }
@@ -4434,7 +4432,7 @@ if (Meteor.isClient) {
                 schema: new SimpleSchema(schema.amprah(type)),
                 type: 'insert',
                 id: "formAmprah" + type,
-                columns: 2,
+                columns: 3,
                 hooks: {
                   after: function(){
                     state.showForm = {
