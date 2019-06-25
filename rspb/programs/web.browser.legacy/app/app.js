@@ -794,12 +794,12 @@ if (Meteor.isClient) {
   this.elem = {
     modal: function(obj){
       var that;
-      return m('.modal.is-active', m('.modal-background'), m('.modal-card', m('header.modal-card-head', m('p.modal-card-title', obj.title), m('button.delete', {
+      return m('.modal.is-active', m('.modal-background'), m('.modal-card', m('header.modal-card-head', m('p.modal-card-title', obj.title), !obj.noClose ? m('button.delete', {
         'aria-label': 'close',
         onclick: function(){
           return state.modal = null;
         }
-      })), (that = obj.content) ? m('section.modal-card-body', m('.content', that)) : void 8, m('footer.modal-card-foot', (that = obj.confirm) ? m('button.button.is-success', {
+      }) : void 8), (that = obj.content) ? m('section.modal-card-body', m('.content', that)) : void 8, m('footer.modal-card-foot', (that = obj.confirm) ? m('button.button.is-success', {
         onclick: function(){
           return typeof obj.action == 'function' ? obj.action() : void 8;
         }
@@ -3470,7 +3470,12 @@ if (Meteor.isClient) {
                     title: 'Rekap Riwayat Rawat Pasien',
                     content: m('div', state.rekapRawat.map(function(it){
                       return attr.pasien.rawatDetails2(it);
-                    }))
+                    })),
+                    noClose: true,
+                    danger: 'Tutup',
+                    dangerAction: function(){
+                      return state.rekapRawat = null;
+                    }
                   }), state.showAddRawat && m(autoForm({
                     collection: coll.pasien,
                     schema: new SimpleSchema(schema.rawatRegis),
