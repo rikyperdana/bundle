@@ -1150,7 +1150,7 @@ if (Meteor.isClient) {
         harga = barang.batch[0].jual;
         satuan = look('satuan', barang.satuan).label;
         jumlah = _.sumBy(i.batches, 'jumlah');
-        return [look2('gudang', i.nama_obat).nama, jumlah, harga, Math.ceil(jumlah * harga), satuan];
+        return [look2('gudang', i.nama_obat).nama, jumlah, harga, jumlah * harga, satuan];
       });
       obats = {
         table: {
