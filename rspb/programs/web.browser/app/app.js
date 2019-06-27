@@ -3450,7 +3450,7 @@ if (Meteor.isClient) {
                         _id: m.route.param('idpasien')
                       }, {
                         onReady: function(){
-                          Meteor.call('regions', attr.pasien.currentPasien().regis, function(err, res){
+                          m.redraw() && Meteor.call('regions', attr.pasien.currentPasien().regis, function(err, res){
                             state.regions = res;
                             return m.redraw();
                           });
@@ -3648,7 +3648,7 @@ if (Meteor.isClient) {
                   })), m('table.table', m('thead', m('tr', attr.pasien.headers.rawatFields.map(function(i){
                     return m('th', _.startCase(i));
                   }), userGroup('jalan') ? m('th', 'Rincian') : void 8, userRole('admin') ? m('th', 'Hapus') : void 8)), m('tbody', pagins(attr.pasien.patientHistory().map(function(i){
-                    var that, ref$, obj;
+                    var that, ref$;
                     return m('tr', [hari(i.tanggal), look('klinik', i.klinik).label, look('cara_bayar', i.cara_bayar).label, (that = i.dokter) ? _.startCase((ref$ = Meteor.users.findOne(that)) != null ? ref$.username : void 8) : void 8].concat(
                       slice$.call(['billRegis', 'status_bayar'].map(function(it){
                         if (i[it]) {
@@ -3666,13 +3666,16 @@ if (Meteor.isClient) {
                             }
                           }
                         }, m('span', attr.pasien.continuable(i) ? 'Lanjutkan' : 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
-                          ondblclick: function(){}
-                        }, obj = {
-                          idpasien: m.route.param('idpasien'),
-                          idrawat: i.idrawat
-                        }, Meteor.call('rmRawat', obj, function(err, res){
-                          return res && m.redraw();
-                        }), m('span', 'Hapus')) : void 8
+                          ondblclick: function(){
+                            return Meteor.call('rmRawat', {
+                              idpasien: m.route.param('idpasien', {
+                                idrawat: i.idrawat
+                              })
+                            }, function(err, res){
+                              return res && m.redraw();
+                            });
+                          }
+                        }, m('span', 'Hapus')) : void 8
                       ]
                     ).map(function(j){
                       return m('td', j) || '-';
@@ -4494,109 +4497,107 @@ if (Meteor.isClient) {
       return {
         view: function(){
           var arr;
-          if (attr.pageAccess(['jalan', 'inap', 'obat', 'farmasi', 'depook'])) {
-            return m('.content', {
-              oncreate: function(){
-                Meteor.subscribe('users', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-                Meteor.subscribe('coll', 'gudang', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-                return state.showForm = {
-                  obat: false,
-                  bhp: false
-                };
+          return m('.content', {
+            oncreate: function(){
+              Meteor.subscribe('users', {
+                onReady: function(){
+                  return m.redraw();
+                }
+              });
+              Meteor.subscribe('coll', 'gudang', {
+                onReady: function(){
+                  return m.redraw();
+                }
+              });
+              return state.showForm = {
+                obat: false,
+                bhp: false
+              };
+            }
+          }, _.compact(attr.amprah.reqForm()).map(function(type){
+            var ref$;
+            return m('div', [0].map(function(i){
+              return m('br');
+            }), m('.button.is-primary', {
+              onclick: function(){
+                return typeof state != 'undefined' && state !== null ? state.showForm[type] = !((typeof state != 'undefined' && state !== null) && state.showForm[type]) : void 8;
               }
-            }, _.compact(attr.amprah.reqForm()).map(function(type){
-              var ref$;
-              return m('div', [0].map(function(i){
-                return m('br');
-              }), m('.button.is-primary', {
+            }, m('span', m('i.fa.fa-shopping-basket')), m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h4', 'Form Amprah'), m(autoForm({
+              collection: coll.amprah,
+              schema: new SimpleSchema(schema.amprah(type)),
+              type: 'insert',
+              id: "formAmprah" + type,
+              columns: 3,
+              hooks: {
+                after: function(){
+                  state.showForm = {
+                    obat: false,
+                    bhp: false
+                  };
+                  return m.redraw();
+                }
+              }
+            }))) : void 8);
+          }), m('br'), m('h4', 'Daftar Amprah'), m('table.table', {
+            oncreate: function(){
+              Meteor.subscribe('users', {
+                onReady: function(){
+                  return m.redraw();
+                }
+              });
+              return Meteor.subscribe('coll', 'amprah', {
+                onReady: function(){
+                  return m.redraw();
+                }
+              });
+            }
+          }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
+            return m('th', _.startCase(i));
+          }))), m('tbody', pagins(attr.amprah.amprahList()).map(function(i){
+            var arr, ref$, that;
+            return m('tr', tds(arr = [
+              hari(i.tanggal_minta), function(it){
+                return (it != null ? it.full : void 8) || _.startCase(i.ruangan);
+              }(modules.find(function(it){
+                return it.name === i.ruangan;
+              })), _.startCase(function(it){
+                return it != null ? it.username : void 8;
+              }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
+                return it != null ? it.username : void 8;
+              }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
                 onclick: function(){
-                  return typeof state != 'undefined' && state !== null ? state.showForm[type] = !((typeof state != 'undefined' && state !== null) && state.showForm[type]) : void 8;
+                  return state.modal = i;
                 }
-              }, m('span', m('i.fa.fa-shopping-basket')), m('span', "Request " + _.upperCase(type))), ((ref$ = state.showForm) != null && ref$[type]) && !userGroup('farmasi') ? (m('h4', 'Form Amprah'), m(autoForm({
-                collection: coll.amprah,
-                schema: new SimpleSchema(schema.amprah(type)),
-                type: 'insert',
-                id: "formAmprah" + type,
-                columns: 3,
+              }, m('span', 'Serah')) : void 8
+            ]));
+          })), m('br'), elem.pagins()), state.modal ? elem.modal({
+            title: 'Respon Amprah',
+            content: state.modal.nama
+              ? m('div', m('table.table', m('thead', m('tr', ['nama_barang', 'diminta', 'sedia'].map(function(i){
+                return m('th', _.startCase(i));
+              }))), m('tbody', m('tr', tds(arr = [look2('gudang', state.modal.nama).nama, state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
+                schema: new SimpleSchema(schema.responAmprah),
+                id: 'formResponAmprah',
+                type: 'method',
+                meteormethod: 'serahAmprah',
                 hooks: {
-                  after: function(){
-                    state.showForm = {
-                      obat: false,
-                      bhp: false
-                    };
+                  before: function(doc, cb){
+                    if (doc.diserah <= attr.amprah.available()) {
+                      return cb(_.merge(doc, state.modal));
+                    }
+                  },
+                  after: function(doc){
+                    state.modal = doc;
                     return m.redraw();
                   }
                 }
-              }))) : void 8);
-            }), m('br'), m('h4', 'Daftar Amprah'), m('table.table', {
-              oncreate: function(){
-                Meteor.subscribe('users', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-                return Meteor.subscribe('coll', 'amprah', {
-                  onReady: function(){
-                    return m.redraw();
-                  }
-                });
-              }
-            }, m('thead', m('tr', attr.amprah.headers.requests.map(function(i){
-              return m('th', _.startCase(i));
-            }))), m('tbody', pagins(attr.amprah.amprahList()).map(function(i){
-              var arr, ref$, that;
-              return m('tr', tds(arr = [
-                hari(i.tanggal_minta), function(it){
-                  return (it != null ? it.full : void 8) || _.startCase(i.ruangan);
-                }(modules.find(function(it){
-                  return it.name === i.ruangan;
-                })), _.startCase(function(it){
-                  return it != null ? it.username : void 8;
-                }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
-                  return it != null ? it.username : void 8;
-                }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
-                  onclick: function(){
-                    return state.modal = i;
-                  }
-                }, m('span', 'Serah')) : void 8
-              ]));
-            })), m('br'), elem.pagins()), state.modal ? elem.modal({
-              title: 'Respon Amprah',
-              content: state.modal.nama
-                ? m('div', m('table.table', m('thead', m('tr', ['nama_barang', 'diminta', 'sedia'].map(function(i){
-                  return m('th', _.startCase(i));
-                }))), m('tbody', m('tr', tds(arr = [look2('gudang', state.modal.nama).nama, state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
-                  schema: new SimpleSchema(schema.responAmprah),
-                  id: 'formResponAmprah',
-                  type: 'method',
-                  meteormethod: 'serahAmprah',
-                  hooks: {
-                    before: function(doc, cb){
-                      if (doc.diserah <= attr.amprah.available()) {
-                        return cb(_.merge(doc, state.modal));
-                      }
-                    },
-                    after: function(doc){
-                      state.modal = doc;
-                      return m.redraw();
-                    }
-                  }
-                })))
-                : m('table.table', m('thead', m('tr', ['nama_obat', 'no_batch', 'serahkan'].map(function(i){
-                  return m('th', _.startCase(i));
-                }))), m('tbody', state.modal.map(function(i){
-                  return m('tr', tds([i.nama_obat, i.no_batch, i.serah]));
-                })))
-            }) : void 8);
-          }
+              })))
+              : m('table.table', m('thead', m('tr', ['nama_obat', 'no_batch', 'serahkan'].map(function(i){
+                return m('th', _.startCase(i));
+              }))), m('tbody', state.modal.map(function(i){
+                return m('tr', tds([i.nama_obat, i.no_batch, i.serah]));
+              })))
+          }) : void 8);
         }
       };
     }
