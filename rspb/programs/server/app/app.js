@@ -166,89 +166,107 @@ if (Meteor.isClient) {
         },
         onsubmit: function(e){
           var temp, formValues, obj, context, after, formTypes, that, ref$;
-          return e.preventDefault() && (!afState.disable ? (afState.disable = true, temp = state.temp[opts.id].map(function(it){
-            var ref$;
-            return ref$ = {}, ref$[it.name + ""] = it.value, ref$;
-          }), formValues = _.filter(e.target, function(i){
-            var a, arr, b;
-            a = function(){
-              return i.value !== 'on' && i.name;
-            };
-            arr = ['radio', 'checkbox', 'select'];
-            b = function(){
-              var ref$, ref1$;
-              return in$((ref$ = theSchema(i)) != null ? (ref1$ = ref$.autoform) != null ? ref1$.type : void 8 : void 8, arr);
-            };
-            return a() && !b();
-          }).map(function(arg$){
-            var name, value;
-            name = arg$.name, value = arg$.value;
-            if (name && value) {
-              return _.reduceRight(name.split('.'), function(res, inc){
-                var ref$;
-                return ref$ = {}, ref$[inc + ""] = res, ref$;
-              }, value ? (function(){
-                switch (theSchema(normed(name)).type) {
-                case String:
-                  return value;
-                case Number:
-                  return +value;
-                case Date:
-                  return new Date(value);
-                }
-              }()) : void 8);
-            }
-          }), obj = normalize(_.merge.apply(_, temp.concat(formValues))), context = usedSchema.newContext(), context.validate(_.merge({}, obj, !opts.scope ? opts.doc || {} : void 8)), state.errors[opts.id] = _.merge.apply(_, [{}].concat(slice$.call(function(){
-            var a;
-            a = context._invalidKeys.filter(function(i){
-              var arr, ref$;
-              return ands(arr = [i.type !== 'keyNotInSchema', !((ref$ = theSchema(normed(i.name))) != null && ref$.autoValue)]);
-            });
-            return a.map(function(it){
+          if (!afState.disable) {
+            afState.disable = true;
+            e.preventDefault();
+            temp = state.temp[opts.id].map(function(it){
               var ref$;
-              return ref$ = {}, ref$[it.name + ""] = it.type, ref$;
+              return ref$ = {}, ref$[it.name + ""] = it.value, ref$;
             });
-          }()))), after = function(err, res){
-            var ref$;
-            if (res) {
-              afState.disable = false;
-              return (ref$ = opts.hooks) != null ? ref$.after(res) : void 8;
-            }
-          }, formTypes = function(doc){
-            return {
-              insert: function(){
-                return opts.collection.insert(doc || obj, after);
-              },
-              update: function(){
-                return opts.collection.update(usedDoc._id, {
-                  $set: doc || obj
-                }, after);
-              },
-              method: function(){
-                return Meteor.call(opts.meteormethod, doc || obj, after);
-              },
-              'update-pushArray': function(){
-                var ref$;
-                return opts.collection.update({
-                  _id: usedDoc._id
-                }, {
-                  $push: (ref$ = {}, ref$[opts.scope + ""] = {
-                    $each: _.values(obj[opts.scope])
-                  }, ref$)
-                }, function(err, res){
+            formValues = _.filter(e.target, function(i){
+              var a, arr, b;
+              a = function(){
+                return i.value !== 'on' && i.name;
+              };
+              arr = ['radio', 'checkbox', 'select'];
+              b = function(){
+                var ref$, ref1$;
+                return in$((ref$ = theSchema(i)) != null ? (ref1$ = ref$.autoform) != null ? ref1$.type : void 8 : void 8, arr);
+              };
+              return a() && !b();
+            }).map(function(arg$){
+              var name, value;
+              name = arg$.name, value = arg$.value;
+              if (name && value) {
+                return _.reduceRight(name.split('.'), function(res, inc){
                   var ref$;
-                  afState.disable = false;
-                  if (res) {
-                    return (ref$ = opts.hooks) != null ? ref$.after(doc) : void 8;
+                  return ref$ = {}, ref$[inc + ""] = res, ref$;
+                }, value ? (function(){
+                  switch (theSchema(normed(name)).type) {
+                  case String:
+                    return value;
+                  case Number:
+                    return +value;
+                  case Date:
+                    return new Date(value);
                   }
-                });
+                }()) : void 8);
+              }
+            });
+            obj = normalize(_.merge.apply(_, temp.concat(formValues)));
+            context = usedSchema.newContext();
+            context.validate(_.merge({}, obj, !opts.scope ? opts.doc || {} : void 8));
+            state.errors[opts.id] = _.merge.apply(_, [{}].concat(slice$.call(function(){
+              var a;
+              a = context._invalidKeys.filter(function(i){
+                var arr, ref$;
+                return ands(arr = [i.type !== 'keyNotInSchema', !((ref$ = theSchema(normed(i.name))) != null && ref$.autoValue)]);
+              });
+              return a.map(function(it){
+                var ref$;
+                return ref$ = {}, ref$[it.name + ""] = it.type, ref$;
+              });
+            }())));
+            after = function(err, res){
+              var ref$;
+              if (res) {
+                afState.disable = false;
+                return (ref$ = opts.hooks) != null ? ref$.after(res) : void 8;
               }
             };
-          }, _.values(state.errors[opts.id]).length === 0 ? ((that = (ref$ = opts.hooks) != null ? ref$.before : void 8)
-            ? that(obj, function(moded){
-              return formTypes(moded)[opts.type]();
-            })
-            : formTypes()[opts.type](), afState.form = null, afState.temp = null) : void 8) : void 8);
+            formTypes = function(doc){
+              return {
+                insert: function(){
+                  return opts.collection.insert(doc || obj, after);
+                },
+                update: function(){
+                  return opts.collection.update(usedDoc._id, {
+                    $set: doc || obj
+                  }, after);
+                },
+                method: function(){
+                  return Meteor.call(opts.meteormethod, doc || obj, after);
+                },
+                'update-pushArray': function(){
+                  var ref$;
+                  return opts.collection.update({
+                    _id: usedDoc._id
+                  }, {
+                    $push: (ref$ = {}, ref$[opts.scope + ""] = {
+                      $each: _.values(obj[opts.scope])
+                    }, ref$)
+                  }, function(err, res){
+                    var ref$;
+                    afState.disable = false;
+                    if (res) {
+                      return (ref$ = opts.hooks) != null ? ref$.after(doc) : void 8;
+                    }
+                  });
+                }
+              };
+            };
+            if (_.values(state.errors[opts.id]).length === 0) {
+              if (that = (ref$ = opts.hooks) != null ? ref$.before : void 8) {
+                that(obj, function(moded){
+                  return formTypes(moded)[opts.type]();
+                });
+              } else {
+                formTypes()[opts.type]();
+              }
+              afState.form = null;
+              return afState.temp = null;
+            }
+          }
         }
       },
       radio: function(name, value){
