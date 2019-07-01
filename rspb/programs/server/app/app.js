@@ -2504,6 +2504,29 @@ if (Meteor.isClient) {
           options: selects[type]
         }
       },
+      stok: {
+        type: String,
+        label: 'Info Stok',
+        optional: true,
+        autoform: {
+          type: 'disabled'
+        },
+        autoValue: function(name, doc){
+          var barang, ref$, arr;
+          barang = coll.gudang.findOne((ref$ = afState.temp["formAmprah" + type][0]) != null ? ref$.value : void 8);
+          if (barang) {
+            return _.join(arr = [
+              "Apo: " + _.sum(barang.batch.map(function(it){
+                return it.diapotik;
+              })), "Gud: " + _.sum(barang.batch.map(function(it){
+                return it.digudang;
+              })), "OK: " + _.sum(barang.batch.map(function(it){
+                return it.didepook;
+              }))
+            ]);
+          }
+        }
+      },
       jumlah: {
         type: Number
       },
@@ -4527,7 +4550,7 @@ if (Meteor.isClient) {
               schema: new SimpleSchema(schema.amprah(type)),
               type: 'insert',
               id: "formAmprah" + type,
-              columns: 3,
+              columns: 4,
               hooks: {
                 after: function(){
                   state.showForm = {
