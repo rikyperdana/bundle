@@ -1021,7 +1021,7 @@ if (Meteor.isClient) {
         content: arr = [
           kop, "\n", {
             columns: [
-              ['NO. MR', 'NAMA PASIEN', 'JENIS KELAMIN', 'TANGGAL LAHIR', 'UMUR', 'KLINIK'], [zeros(pasien.no_mr), _.startCase(pasien.regis.nama_lengkap), ((ref$ = look('kelamin', pasien.regis.kelamin)) != null ? ref$.label : void 8) || '-', moment().format('D/MM/YYYY'), moment().diff(pasien.regis.tgl_lahir, 'years') + " tahun", ((ref1$ = look('klinik', rawat.klinik)) != null ? ref1$.label : void 8) || '-'].map(function(it){
+              ['NO. MR', 'NAMA PASIEN', 'JENIS KELAMIN', 'TANGGAL LAHIR', 'UMUR', 'KLINIK'], [zeros(pasien.no_mr), _.startCase(pasien.regis.nama_lengkap), ((ref$ = look('kelamin', pasien.regis.kelamin)) != null ? ref$.label : void 8) || '-', moment(pasien.regis.tgl_lahir).format('D/MM/YYYY'), moment().diff(pasien.regis.tgl_lahir, 'years') + " tahun", ((ref1$ = look('klinik', rawat.klinik)) != null ? ref1$.label : void 8) || '-'].map(function(it){
                 return ": " + it;
               })
             ]
@@ -1180,12 +1180,13 @@ if (Meteor.isClient) {
       }
     },
     ebiling: function(doc){
-      var pasien, that, rawat, dokter, ref$, title, sumber, profile, x, list, obats, petugas;
+      var pasien, that, rawat, dokter, ref$, ref1$, title, sumber, profile, x, list, obats, petugas;
+      console.log(doc);
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
       }
-      dokter = (ref$ = Meteor.users.findOne(rawat != null ? rawat.dokter : void 8)) != null ? ref$.username : void 8;
+      dokter = (ref$ = Meteor.users.findOne((rawat != null ? rawat.dokter : void 8) || (rawat != null ? (ref1$ = rawat.petugas) != null ? ref1$.dokter : void 8 : void 8))) != null ? ref$.username : void 8;
       title = "Billing Obat - " + ((pasien != null ? pasien.no_mr : void 8) || doc.no_mr) + " - " + ((pasien != null ? pasien.regis.nama_lengkap : void 8) || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
       sumber = (that = (rawat != null ? rawat.klinik : void 8) || doc.poli)
         ? ['Poliklinik', ": " + (look('klinik', that).label || '-')]
@@ -2785,7 +2786,7 @@ if (Meteor.isClient) {
         return arr = [
           {
             head: 'Tanggal',
-            cell: (that = doc.tanggal) ? hari(that) : void 8
+            cell: (that = doc != null ? doc.tanggal : void 8) ? hari(that) : void 8
           }, {
             head: 'Klinik',
             cell: look('klinik', doc.klinik).label
@@ -4587,7 +4588,7 @@ if (Meteor.isClient) {
                 return it != null ? it.username : void 8;
               }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
                 return it != null ? it.username : void 8;
-              }(Meteor.users.findOne(that))) : void 8, (that = i.diserah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
+              }(Meteor.users.findOne(that))) : void 8, (that = i.penyerah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
                 onclick: function(){
                   return state.modal = i;
                 }
