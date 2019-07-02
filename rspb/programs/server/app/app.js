@@ -1181,7 +1181,6 @@ if (Meteor.isClient) {
     },
     ebiling: function(doc){
       var pasien, that, rawat, dokter, ref$, ref1$, title, sumber, profile, x, list, obats, petugas;
-      console.log(doc);
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
@@ -2986,7 +2985,8 @@ if (Meteor.isClient) {
         requests: ['tanggal_minta', 'ruangan', 'peminta', 'jumlah', 'nama_barang', 'penyerah', 'diserah', 'tanggal_serah']
       },
       amprahList: function(){
-        return reverse(coll.amprah.find().fetch().filter(function(i){
+        var a;
+        a = coll.amprah.find().fetch().filter(function(i){
           if (userGroup('jalan')) {
             return i.ruangan === userRole();
           } else if (!userGroup('farmasi')) {
@@ -2994,7 +2994,8 @@ if (Meteor.isClient) {
           } else {
             return i;
           }
-        }));
+        });
+        return _.sortBy(a, 'tanggal_minta');
       },
       buttonConds: function(obj){
         var arr;
