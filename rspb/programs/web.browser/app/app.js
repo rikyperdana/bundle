@@ -2277,7 +2277,7 @@ if (Meteor.isClient) {
     'rawat.$.pindah': {
       type: Number,
       optional: true,
-      label: 'Konsultasi',
+      label: 'Konsultasikan ke',
       autoform: {
         options: selects.klinik
       }
@@ -5283,16 +5283,19 @@ if (Meteor.isServer) {
           }
         }
       ]);
-      return docs.map(function(i){
+      return docs.map(function(i, j){
         var ref$, ref1$, ref2$;
         return {
-          hari: moment(i.rawat.tanggal).format('D MMM YYYY'),
-          klinik: look('klinik', i.rawat.klinik).label,
-          cara_bayar: look('cara_bayar', i.rawat.cara_bayar).label,
-          baru_lama: 'Lama',
-          pendaftar: _.startCase((ref$ = Meteor.users.findOne(i.rawat.petugas.regis)) != null ? ref$.username : void 8),
-          perawat: _.startCase((ref1$ = Meteor.users.findOne(i.rawat.petugas.perawat)) != null ? ref1$.username : void 8),
-          dokter: _.startCase((ref2$ = Meteor.users.findOne(i.rawat.petugas.dokter)) != null ? ref2$.username : void 8)
+          'No.': j + 1,
+          'No MR': zeros(i.no_mr),
+          'Nama Lengkap': i.regis.nama_lengkap,
+          'Tanggal': moment(i.rawat.tanggal).format('D MMM YYYY'),
+          'Poliklinik': look('klinik', i.rawat.klinik).label,
+          'Cara bayar': look('cara_bayar', i.rawat.cara_bayar).label,
+          'Baru/Lama': i.rawat.first ? 'Baru' : 'Lama',
+          'Pendaftar': _.startCase((ref$ = Meteor.users.findOne(i.rawat.petugas.regis)) != null ? ref$.username : void 8),
+          'Perawat': _.startCase((ref1$ = Meteor.users.findOne(i.rawat.petugas.perawat)) != null ? ref1$.username : void 8),
+          'Dokter': _.startCase((ref2$ = Meteor.users.findOne(i.rawat.petugas.dokter)) != null ? ref2$.username : void 8)
         };
       });
     },
