@@ -889,7 +889,7 @@ if (Meteor.isClient) {
               return e.target[it].value;
             }), action({
               start: (that = vals[0]) ? new Date(that) : void 8,
-              end: (that = vals[1]) ? new Date(moment(that).add(1, 'days')) : void 8,
+              end: (that = vals[1]) ? new Date(moment(that).add(23, 'hours')) : void 8,
               type: vals[2]
             })
           ];
@@ -1180,12 +1180,12 @@ if (Meteor.isClient) {
       }
     },
     ebiling: function(doc){
-      var pasien, that, rawat, dokter, ref$, ref1$, title, sumber, profile, x, list, obats, petugas;
+      var pasien, that, rawat, dokter, ref$, title, sumber, profile, x, list, obats, petugas;
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
       }
-      dokter = (ref$ = Meteor.users.findOne((rawat != null ? rawat.dokter : void 8) || (rawat != null ? (ref1$ = rawat.petugas) != null ? ref1$.dokter : void 8 : void 8))) != null ? ref$.username : void 8;
+      dokter = (ref$ = Meteor.users.findOne(rawat != null ? rawat.dokter : void 8)) != null ? ref$.username : void 8;
       title = "Billing Obat - " + ((pasien != null ? pasien.no_mr : void 8) || doc.no_mr) + " - " + ((pasien != null ? pasien.regis.nama_lengkap : void 8) || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
       sumber = (that = (rawat != null ? rawat.klinik : void 8) || doc.poli)
         ? ['Poliklinik', ": " + (look('klinik', that).label || '-')]
@@ -1975,15 +1975,6 @@ if (Meteor.isClient) {
         } else {
           return 1;
         }
-      }
-    },
-    'rawat.$.nobill': {
-      type: Number,
-      autoform: {
-        type: 'hidden'
-      },
-      autoValue: function(){
-        return +_.toString(Date.now()).substr(7, 13);
       }
     },
     'rawat.$.status_bayar': {
@@ -3110,10 +3101,10 @@ if (Meteor.isClient) {
             var ref$;
             return m('li', {
               oncreate: function(){
-                var args, arr;
+                var args;
                 args = {
                   name: i.name,
-                  params: arr = [userGroup('jalan') ? userRole() : void 8, userGroup('jalan') ? isDr() : void 8]
+                  params: userGroup('jalan') ? [userRole(), isDr()] : void 8
                 };
                 return Meteor.call('notify', args, function(err, res){
                   if (res) {
@@ -5114,7 +5105,7 @@ if (Meteor.isServer) {
             nama_pasien: i.regis.nama_lengkap,
             tanggal: hari(i.rawat.tanggal),
             klinik: look('klinik', i.rawat.klinik).label,
-            no_karcis: i.rawat.nobill.toString(),
+            no_karcis: _.toString(Date.now()).substr(7, 13),
             tp_kartu: i.rawat.first ? 10000 : '-',
             tp_karcis: look('karcis', i.rawat.klinik).label * 1000,
             tp_tindakan: (that = i.rawat.tindakan) ? _.sum(that.map(function(it){
@@ -5293,7 +5284,7 @@ if (Meteor.isServer) {
           'Poliklinik': look('klinik', i.rawat.klinik).label,
           'Cara bayar': look('cara_bayar', i.rawat.cara_bayar).label,
           'Baru/Lama': i.rawat.first ? 'Baru' : 'Lama',
-          'Pendaftar': _.startCase((ref$ = Meteor.users.findOne(i.rawat.petugas.regis)) != null ? ref$.username : void 8),
+          'Petugas pendaftaran': _.startCase((ref$ = Meteor.users.findOne(i.rawat.petugas.regis)) != null ? ref$.username : void 8),
           'Perawat': _.startCase((ref1$ = Meteor.users.findOne(i.rawat.petugas.perawat)) != null ? ref1$.username : void 8),
           'Dokter': _.startCase((ref2$ = Meteor.users.findOne(i.rawat.petugas.dokter)) != null ? ref2$.username : void 8)
         };
@@ -5402,6 +5393,9 @@ if (Meteor.isServer) {
                       ? {
                         anamesa_dokter: {
                           $exists: false
+                        },
+                        anamesa_perawat: {
+                          $exists: true
                         }
                       }
                       : {
@@ -5416,7 +5410,7 @@ if (Meteor.isServer) {
           }));
         }
       };
-      return typeof obj[name] == 'function' ? obj[name].apply(obj, params) : void 8;
+      return typeof obj[name] == 'function' ? obj[name]() : void 8;
     },
     nextMR: function(){
       var list, pipe, nums, index;
