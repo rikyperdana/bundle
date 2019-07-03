@@ -2997,12 +2997,8 @@ if (Meteor.isClient) {
         return arr = [!userGroup('farmasi') ? 'bhp' : void 8, (ref$ = userGroup()) === 'obat' || ref$ === 'inap' || ref$ === 'depook' ? 'obat' : void 8];
       },
       available: function(){
-        return _.sum(look2('gudang', state.modal.nama).batch.map(function(i){
-          if (userGroup('farmasi')) {
-            return i.digudang;
-          } else {
-            return i.diapotik;
-          }
+        return _.sum(look2('gudang', state.modal.nama).batch.map(function(it){
+          return it.digudang;
         }));
       }
     }
@@ -4589,7 +4585,7 @@ if (Meteor.isClient) {
           })), m('br'), elem.pagins()), state.modal ? elem.modal({
             title: 'Respon Amprah',
             content: state.modal.nama
-              ? m('div', m('table.table', m('thead', m('tr', ['nama_barang', 'diminta', 'sedia'].map(function(i){
+              ? m('div', m('table.table', m('thead', m('tr', ['nama_barang', 'diminta', 'stok_di_gudang'].map(function(i){
                 return m('th', _.startCase(i));
               }))), m('tbody', m('tr', tds(arr = [look2('gudang', state.modal.nama).nama, state.modal.jumlah, attr.amprah.available()])))), m(autoForm({
                 schema: new SimpleSchema(schema.responAmprah),
