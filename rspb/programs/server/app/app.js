@@ -4580,7 +4580,7 @@ if (Meteor.isClient) {
                 return it != null ? it.username : void 8;
               }(Meteor.users.findOne(i.peminta))), i.jumlah + " unit", (ref$ = look2('gudang', i.nama)) != null ? ref$.nama : void 8, (that = i.penyerah) ? _.startCase(function(it){
                 return it != null ? it.username : void 8;
-              }(Meteor.users.findOne(that))) : void 8, (that = i.penyerah) ? that + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
+              }(Meteor.users.findOne(that))) : void 8, i.penyerah ? i.diserah + " unit" : void 8, (that = i.tanggal_serah) ? hari(that) : void 8, attr.amprah.buttonConds(i) ? m('.button.is-primary', {
                 onclick: function(){
                   return state.modal = i;
                 }
@@ -5391,12 +5391,17 @@ if (Meteor.isServer) {
                       }
                     }, params[1]
                       ? {
-                        anamesa_dokter: {
-                          $exists: false
-                        },
-                        anamesa_perawat: {
-                          $exists: true
-                        }
+                        $and: arr = [
+                          {
+                            anamesa_dokter: {
+                              $exists: false
+                            }
+                          }, {
+                            anamesa_perawat: {
+                              $exists: true
+                            }
+                          }
+                        ]
                       }
                       : {
                         anamesa_perawat: {
