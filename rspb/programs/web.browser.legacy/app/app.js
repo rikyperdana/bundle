@@ -1106,7 +1106,10 @@ if (Meteor.isClient) {
             table: {
               body: slice$.call(headers).concat(slice$.call(rows))
             }
-          }]
+          }],
+          defaultStyle: {
+            fontSize: 10
+          }
         }).download('cetak_rekap.pdf');
       }
     },
@@ -1133,6 +1136,9 @@ if (Meteor.isClient) {
       }));
       columns = [['NO. MR', 'NAMA LENGKAP', 'TANGGAL LAHIR', 'JENIS KELAMIN'], arr = [pasien.no_mr.toString(), pasien.regis.nama_lengkap, hari(pasien.regis.tgl_lahir), ((ref$ = look('kelamin', pasien.regis.kelamin)) != null ? ref$.label : void 8) || '-']];
       return pdfMake.createPdf({
+        defaultStyle: {
+          fontSize: 10
+        },
         content: arr = [
           kop, {
             text: 'FORM RESUME RAWAT JALAN',
@@ -1166,6 +1172,9 @@ if (Meteor.isClient) {
       if (rows.length > 0) {
         return pdfMake.createPdf({
           pageOrientation: 'landscape',
+          defaultStyle: {
+            fontSize: 10
+          },
           content: arr = [
             kop, {
               text: name,
@@ -5231,7 +5240,7 @@ if (Meteor.isServer) {
       }
     },
     visits: function(arg$){
-      var start, end, docs, pipe, a, list, b, c, x;
+      var start, end, docs, pipe, a, list, b, c, d, x;
       start = arg$.start, end = arg$.end;
       docs = coll.pasien.aggregate(pipe = [
         a = {
@@ -5255,6 +5264,10 @@ if (Meteor.isServer) {
         }, b = {
           $unwind: '$rawat'
         }, c = {
+          $sort: {
+            'rawat.tanggal': 1
+          }
+        }, d = {
           $match: {
             $and: x = [
               {
