@@ -1189,12 +1189,12 @@ if (Meteor.isClient) {
       }
     },
     ebiling: function(doc){
-      var pasien, that, rawat, dokter, ref$, title, sumber, profile, x, list, obats, petugas;
+      var pasien, that, rawat, dokter, ref$, ref1$, title, sumber, profile, x, list, obats, petugas;
       pasien = coll.pasien.findOne(doc.idpasien);
       if (that = pasien) {
         rawat = _.last(that.rawat);
       }
-      dokter = (ref$ = Meteor.users.findOne(rawat != null ? rawat.dokter : void 8)) != null ? ref$.username : void 8;
+      dokter = (ref$ = Meteor.users.findOne((rawat != null ? rawat.dokter : void 8) || (rawat != null ? (ref1$ = rawat.petugas) != null ? ref1$.dokter : void 8 : void 8))) != null ? ref$.username : void 8;
       title = "Billing Obat - " + ((pasien != null ? pasien.no_mr : void 8) || doc.no_mr) + " - " + ((pasien != null ? pasien.regis.nama_lengkap : void 8) || doc.nama_pasien) + " - " + hari(new Date()) + ".pdf";
       sumber = (that = (rawat != null ? rawat.klinik : void 8) || doc.poli)
         ? ['Poliklinik', ": " + (look('klinik', that).label || '-')]
@@ -2914,12 +2914,12 @@ if (Meteor.isClient) {
         } else if (isDr()) {
           return arr.filter(function(it){
             var list, that;
-            return ands(list = [(that = _.last(it.rawat).dokter) ? that === Meteor.userId() : true, _.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter, myKlinik(it.klinik)]);
+            return ands(list = [(that = _.last(it.rawat).dokter) ? that === Meteor.userId() : true, _.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter, myKlinik(_.last(it.rawat).klinik)]);
           });
         } else {
           return arr.filter(function(it){
             var list;
-            return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis, myKlinik(it.klinik)]);
+            return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis, myKlinik(_.last(it.rawat).klinik)]);
           });
         }
       },
