@@ -2995,7 +2995,7 @@ if (Meteor.isClient) {
             return i;
           }
         });
-        return _.sortBy(a, 'tanggal_minta');
+        return _.reverse(_.sortBy(a, 'tanggal_minta'));
       },
       buttonConds: function(obj){
         var arr;
@@ -3688,13 +3688,14 @@ if (Meteor.isClient) {
                           }
                         }, m('span', attr.pasien.continuable(i) ? 'Lanjutkan' : 'Lihat')) : void 8, userRole('admin') ? m('.button.is-danger', {
                           ondblclick: function(){
-                            return Meteor.call('rmRawat', {
-                              idpasien: m.route.param('idpasien', {
-                                idrawat: i.idrawat
-                              })
-                            }, function(err, res){
-                              return res && m.redraw();
-                            });
+                            if (!i.diagnosa) {
+                              return Meteor.call('rmRawat', {
+                                idrawat: i.idrawat,
+                                idpasien: m.route.param('idpasien')
+                              }, function(err, res){
+                                return res && m.redraw();
+                              });
+                            }
                           }
                         }, m('span', 'Hapus')) : void 8
                       ]
@@ -4477,9 +4478,7 @@ if (Meteor.isClient) {
                         });
                       }
                       if (data.password) {
-                        ['newUser', 'importRoles'].map(function(i){
-                          return Meteor.call(i, data);
-                        });
+                        Meteor.call('newUser', data);
                       }
                       if (data.daerah) {
                         return coll.daerah.insert({
@@ -4699,6 +4698,14 @@ if (Meteor.isServer) {
             },
             password: {
               type: String
+            },
+            group: {
+              type: String,
+              optional: true
+            },
+            role: {
+              type: String,
+              optional: true
             }
           })
         ]);
@@ -4765,8 +4772,8 @@ if (Meteor.isServer) {
   };
   Meteor.methods({
     newUser: function(doc){
-      var username, password, that, i$, ref$, len$, i, results$ = [];
-      username = doc.username, password = doc.password;
+      var username, password, group, role, that, i$, ref$, len$, i, one;
+      username = doc.username, password = doc.password, group = doc.group, role = doc.role;
       if (secureMethods({
         name: 'newUser',
         userId: this.userId,
@@ -4775,12 +4782,15 @@ if (Meteor.isServer) {
         if (that = Accounts.findUserByUsername(username)) {
           for (i$ = 0, len$ = (ref$ = ['username', 'password']).length; i$ < len$; ++i$) {
             i = ref$[i$];
-            results$.push(Accounts["set" + _.startCase(i)](that._id, doc[i]));
+            Accounts["set" + _.startCase(i)](that._id, doc[i]);
           }
-          return results$;
         } else {
-          return Accounts.createUser(doc);
+          Accounts.createUser(doc);
         }
+        one = Meteor.users.findOne({
+          username: username
+        });
+        return Roles.addUsersToRoles(one._id, [role], group);
       }
     },
     addRole: function(doc){
