@@ -2897,18 +2897,29 @@ if (Meteor.isClient) {
         }));
       },
       lastKlinik: function(arr){
-        var ref$;
+        var myKlinik, ref$;
+        myKlinik = function(it){
+          var ref$, ref1$;
+          return in$(it, (ref$ = roles()) != null ? (ref1$ = ref$.jalan) != null ? ref1$.map(function(i){
+            var this$ = this;
+            return function(it){
+              return it.value;
+            }(selects.klinik.find(function(j){
+              return i === _.snakeCase(j.label);
+            }));
+          }) : void 8 : void 8);
+        };
         if (!((ref$ = roles()) != null && ref$.jalan)) {
           return arr;
         } else if (isDr()) {
           return arr.filter(function(it){
             var list, that;
-            return ands(list = [(that = _.last(it.rawat).dokter) ? that === Meteor.userId() : true, _.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter]);
+            return ands(list = [(that = _.last(it.rawat).dokter) ? that === Meteor.userId() : true, _.last(it.rawat).anamesa_perawat, !_.last(it.rawat).anamesa_dokter, myKlinik(it.klinik)]);
           });
         } else {
           return arr.filter(function(it){
             var list;
-            return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis]);
+            return ands(list = [!_.last(it.rawat).anamesa_perawat, _.last(it.rawat).billRegis, myKlinik(it.klinik)]);
           });
         }
       },
@@ -3107,10 +3118,17 @@ if (Meteor.isClient) {
             return m('li', {
               oncreate: function(){
                 var args;
-                args = {
-                  name: i.name,
-                  params: userGroup('jalan') ? [userRole(), isDr()] : void 8
-                };
+                args = [
+                  {
+                    name: i.name
+                  }, userGroup('jalan')
+                    ? {
+                      params: [userRole(), isDr()]
+                    }
+                    : userGroup('farmasi') ? {
+                      params: ['farmasi']
+                    } : void 8
+                ];
                 return Meteor.call('notify', args, function(err, res){
                   if (res) {
                     state.notify[i.name] = res;
@@ -5361,11 +5379,18 @@ if (Meteor.isServer) {
       name = arg$.name, params = arg$.params;
       obj = {
         amprah: function(){
-          return coll.amprah.find({
-            diserah: {
-              $exists: false
+          var this$ = this;
+          return function(it){
+            return it.fetch().length;
+          }(coll.amprah.find(function(){
+            if (params[0] === 'farmasi') {
+              return {
+                diserah: {
+                  $exists: false
+                }
+              };
             }
-          }).fetch().length;
+          }()));
         },
         obat: function(){
           var arr, this$ = this;
