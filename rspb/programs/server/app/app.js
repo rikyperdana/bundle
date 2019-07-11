@@ -3100,17 +3100,12 @@ if (Meteor.isClient) {
             return m('li', {
               oncreate: function(){
                 var args;
-                args = [
-                  {
-                    name: i.name
-                  }, userGroup('jalan')
-                    ? {
-                      params: [userRole(), isDr()]
-                    }
-                    : userGroup('farmasi') ? {
-                      params: ['farmasi']
-                    } : void 8
-                ];
+                args = {
+                  name: i.name,
+                  params: userGroup('jalan')
+                    ? [userRole(), isDr()]
+                    : userGroup('farmasi') ? ['farmasi'] : void 8
+                };
                 return Meteor.call('notify', args, function(err, res){
                   if (res) {
                     state.notify[i.name] = res;
@@ -4794,7 +4789,9 @@ if (Meteor.isServer) {
         one = Meteor.users.findOne({
           username: username
         });
-        return Roles.addUsersToRoles(one._id, [role], group);
+        if (role) {
+          return Roles.addUsersToRoles(one._id, [role], group);
+        }
       }
     },
     addRole: function(doc){
@@ -5243,8 +5240,8 @@ if (Meteor.isServer) {
             'No. Batch': batch.nobatch,
             'ED': hari(batch.kadaluarsa),
             'Harga': rupiah(batch.jual),
-            'Barang Masuk': start < (ref$ = batch.masuk) && ref$ < end ? i.awal : '-',
-            'Qty Awal': batch.masuk < start ? i.awal : '-',
+            'Barang Masuk': start <= (ref$ = batch.masuk) && ref$ <= end ? i.awal : '-',
+            'Qty Awal': batch.masuk <= start ? i.awal : '-',
             'Keluar': i.jumlah,
             'Sisa Stok': i.awal - i.jumlah,
             'Total Keluar': rupiah(batch.jual * i.jumlah),
@@ -5338,8 +5335,8 @@ if (Meteor.isServer) {
             'No. Batch': i.nobatch,
             'ED': hari(i.kadaluarsa),
             'Harga': rupiah(i.jual),
-            'Barang Masuk': start < (ref$ = i.masuk) && ref$ < end ? i.awal : '-',
-            'Stok Awal': i.masuk < start ? i.awal : '-',
+            'Barang Masuk': start <= (ref$ = i.masuk) && ref$ <= end ? i.awal : '-',
+            'Stok Awal': i.masuk <= start ? i.awal : '-',
             'Keluar': (function(it){
               return it || '-';
             })(_.sum(i.amprah.map(function(it){
