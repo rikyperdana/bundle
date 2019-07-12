@@ -1664,6 +1664,23 @@ if (Meteor.isClient) {
       type: String,
       optional: true
     },
+    'regis.kelurahan': {
+      type: String,
+      optional: true
+    },
+    'regis.kecamatan': {
+      type: String,
+      optional: true
+    },
+    'regis.kabupaten': {
+      type: String,
+      optional: true,
+      label: 'Kabupaten/Kota'
+    },
+    'regis.provinsi': {
+      type: String,
+      optional: true
+    },
     'regis.kontak': {
       type: String,
       optional: true
@@ -3423,6 +3440,18 @@ if (Meteor.isClient) {
                       name: 'Tempat Tinggal',
                       data: doc.regis.alamat
                     }, {
+                      name: 'Kelurahan',
+                      data: doc.regis.kelurahan
+                    }, {
+                      name: 'Kecamatan',
+                      data: doc.regis.kecamatan
+                    }, {
+                      name: 'Kabupaten/Kota',
+                      data: doc.regis.kabupaten
+                    }, {
+                      name: 'Provinsi',
+                      data: doc.regis.provinsi
+                    }, {
                       name: 'Umur',
                       data: moment().diff(doc.regis.tgl_lahir, 'years') + ' tahun'
                     }, {
@@ -4969,7 +4998,7 @@ if (Meteor.isServer) {
       });
     },
     incomes: function(arg$){
-      var start, end, a, pipe, b;
+      var start, end, a, pipe, b, jumlah, last;
       start = arg$.start, end = arg$.end;
       if (start < end) {
         a = coll.pasien.aggregate(pipe = [
@@ -5013,33 +5042,35 @@ if (Meteor.isServer) {
             }
           }
         ]);
-        return b = a.map(function(i){
+        b = a.map(function(i){
           var that, ref$;
           return {
             'No. MR': zeros(i.no_mr),
             'Nama Pasien': i.regis.nama_lengkap,
             Tanggal: hari(i.rawat.tanggal),
             Poliklinik: look('klinik', i.rawat.klinik).label,
-            'No. Karcis': i.rawat.tanggal || _.toString(Date.now()).substr(7, 13),
-            Kartu: i.rawat.first ? 10000 : void 8,
-            Karcis: look('karcis', i.rawat.klinik).label * 1000,
+            'No. Karcis': _.toString(i.rawat.tanggal.getTime()).substr(7, 13),
+            Kartu: i.rawat.first ? 10000 : 0,
+            Karcis: look('karcis', i.rawat.klinik).label * 1000 || 0,
             Tindakan: (that = i.rawat.tindakan) ? _.sum(that.map(function(it){
               return it.harga;
-            })) : void 8,
-            Obat: i.rawat.obat ? _.sum((ref$ = coll.rekap.findOne({
-              idrawat: i.rawat.idrawat
-            })) != null ? ref$.obat.map(function(j){
-              var obat;
-              obat = coll.gudang.findOne(j.nama_obat);
-              return _.sum(j.batches.map(function(k){
-                var this$ = this;
-                return function(it){
-                  return it.jual * k.jumlah;
-                }(obat.batch.find(function(l){
-                  return l.idbatch === k.idbatch;
+            })) : 0,
+            Obat: !i.rawat.obat
+              ? 0
+              : _.sum((ref$ = coll.rekap.findOne({
+                idrawat: i.rawat.idrawat
+              })) != null ? ref$.obat.map(function(j){
+                var obat;
+                obat = coll.gudang.findOne(j.nama_obat);
+                return _.sum(j.batches.map(function(k){
+                  var this$ = this;
+                  return function(it){
+                    return it.jual * k.jumlah;
+                  }(obat.batch.find(function(l){
+                    return l.idbatch === k.idbatch;
+                  }));
                 }));
-              }));
-            }) : void 8) : void 8
+              }) : void 8)
           };
         }).map(function(j){
           return _.assign(j, {
@@ -5047,6 +5078,28 @@ if (Meteor.isServer) {
               return j[it];
             }))
           });
+        });
+        jumlah = function(type){
+          return _.sum(b.map(function(it){
+            return it[type];
+          }));
+        };
+        last = _.merge.apply(_, [{}].concat(
+          slice$.call(['No. MR', 'Nama Pasien', 'Tanggal', 'Poliklinik', 'No. Karcis'].map(function(it){
+            var ref$;
+            return ref$ = {}, ref$[it + ""] = '', ref$;
+          })), slice$.call(['Kartu', 'Karcis', 'Tindakan', 'Obat'].map(function(it){
+            var ref$;
+            return ref$ = {}, ref$[it + ""] = jumlah(it), ref$;
+          })), [{
+            Total: ''
+          }]
+        ));
+        return slice$.call(b).concat([last]).map(function(i){
+          return _.assign.apply(_, [i].concat(slice$.call(['Kartu', 'Karcis', 'Tindakan', 'Obat', 'Total'].map(function(it){
+            var ref$;
+            return ref$ = {}, ref$[it + ""] = i[it] > 0 ? rupiah(i[it]) : '', ref$;
+          }))));
         });
       }
     },
