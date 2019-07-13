@@ -3649,7 +3649,7 @@ if (Meteor.isClient) {
     bayar: function(){
       return {
         view: function(){
-          var that, tindakans, ref$, obats, ref1$, uraian, arr, ref2$, ref3$, params;
+          var that, tindakans, ref$, obats, ref1$, uraian, arr, ref2$, ref3$, arr1, params;
           if (attr.pageAccess(['bayar'])) {
             return m('.content', m('table.table', {
               oncreate: function(){
@@ -3711,7 +3711,7 @@ if (Meteor.isClient) {
               ];
             }) : void 8, uraian = state.modal.givenDrug
               ? obats || []
-              : arr = [ands(arr = [!((ref2$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref3$ = ref2$[0]) != null && ref3$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? ['Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
+              : arr = [ands(arr = [!((ref2$ = coll.pasien.findOne(state.modal.pasienId).rawat) != null && ((ref3$ = ref2$[0]) != null && ref3$.billRegis)), coll.pasien.findOne(state.modal.pasienId).regis.petugas]) ? ['Cetak Kartu', 10000] : void 8, !state.modal.billRegis ? arr1 = [that.klinik === 2 ? 'Konsultasi Umum' : 'Konsultasi Spesialis', look('karcis', that.klinik).label * 1000] : void 8].concat(slice$.call(tindakans || [])), params = ['pasienId', 'idrawat'].map(function(it){
               return state.modal[it];
             }), elem.modal({
               title: 'Sudah bayar?',
@@ -5000,7 +5000,7 @@ if (Meteor.isServer) {
       });
     },
     incomes: function(arg$){
-      var start, end, a, pipe, b, jumlah, last;
+      var start, end, a, pipe, b, c, d, jumlah, last;
       start = arg$.start, end = arg$.end;
       if (start < end) {
         a = coll.pasien.aggregate(pipe = [
@@ -5024,7 +5024,11 @@ if (Meteor.isServer) {
             }
           }, b = {
             $unwind: '$rawat'
-          }, b = {
+          }, c = {
+            $sort: {
+              'rawat.tanggal': 1
+            }
+          }, d = {
             $match: {
               $and: [
                 {
