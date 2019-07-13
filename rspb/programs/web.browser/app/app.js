@@ -3748,7 +3748,9 @@ if (Meteor.isClient) {
                       makePdf.payRegCard.apply(makePdf, slice$.call(params).concat([_.compact(uraian)]));
                     } else {
                       makePdf.payRawat({
-                        pasien: coll.pasien.findOne(state.modal.pasienId),
+                        pasien: coll.pasien.findOne({
+                          _id: state.modal.pasienId
+                        }),
                         rawat: state.modal,
                         rows: _.compact(uraian)
                       });
