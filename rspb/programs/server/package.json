@@ -4,7 +4,7 @@
   "dependencies": {
     "fibers": "3.1.1",
     "meteor-promise": "0.8.7",
-    "node-gyp": "^5.0.2",
+    "node-gyp": "^5.0.3",
     "node-pre-gyp": "0.10.3",
     "promise": "8.0.2",
     "semver": "5.4.1",

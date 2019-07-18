@@ -13,6 +13,7 @@ Roles = Package['alanning:roles'].Roles;
 numeral = Package['numeral:numeral'].numeral;
 exportcsv = Package['lfergon:exportcsv'].exportcsv;
 saveAs = Package['lfergon:exportcsv'].saveAs;
+HTTP = Package.http.HTTP;
 Meteor = Package.meteor.Meteor;
 global = Package.meteor.global;
 meteorEnv = Package.meteor.meteorEnv;

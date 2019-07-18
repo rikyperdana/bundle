@@ -139,6 +139,8 @@ install("lfergon:exportcsv");
 install("sakulstra:aggregate");
 install("izzilab:shelljs");
 install("mrt:cron");
+install("url", "meteor/url/url_server.js");
+install("http", "meteor/http/httpcall_server.js");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");
@@ -246,6 +248,17 @@ module.exports = {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                               //
 // node_modules/mithril/mithril.js                                                               //
+//                                                                                               //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                 //
+module.useNode();
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+}},"crypto-js":{"hmac-sha256.js":function(require,exports,module){
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                               //
+// node_modules/crypto-js/hmac-sha256.js                                                         //
 //                                                                                               //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                  //

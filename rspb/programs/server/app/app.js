@@ -787,7 +787,7 @@ this.modules = [
 ];
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"parent.ls.js":function(){
+},"parent.ls.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -850,6 +850,7 @@ this.ols = function(it){
     return m('li', it);
   }));
 };
+this.hmac = require('crypto-js/hmac-sha256');
 if (Meteor.isClient) {
   this.state = {
     notify: {},
@@ -4186,7 +4187,16 @@ if (Meteor.isClient) {
                   return contents.map(function(i){
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
-                }())
+                }()),
+                danger: ok ? 'Returkan' : void 8,
+                dangerAction: function(){
+                  var that;
+                  return state.modal = _.merge(state.modal, {
+                    diretur: (that = state.modal) ? _.sum(['diapotik', 'didepook', 'digudang'].map(function(it){
+                      return that[it];
+                    })) : void 8
+                  });
+                }
               }) : void 8));
           }
         }
@@ -4382,6 +4392,7 @@ if (Meteor.isClient) {
                           beli: (that = data.beli) ? +that : void 8,
                           jual: (that = data.jual) ? +that : void 8,
                           suplier: (that = data.suplier) ? that : void 8,
+                          fornas: (that = data.fornas) ? that : void 8,
                           returnable: (that = data.returnable) ? !!that : void 8,
                           anggaran: (that = data.anggaran) ? +that : void 8,
                           pengadaan: (that = data.pengadaan) ? that : void 8,
@@ -5103,8 +5114,8 @@ if (Meteor.isServer) {
         ));
         return slice$.call(b).concat([last]).map(function(i){
           return _.assign.apply(_, [i].concat(slice$.call(['Kartu', 'Karcis', 'Tindakan', 'Obat', 'Total'].map(function(it){
-            var ref$;
-            return ref$ = {}, ref$[it + ""] = i[it] > 0 ? rupiah(i[it]) : '', ref$;
+            var ref$, that;
+            return ref$ = {}, ref$[it + ""] = (that = i[it]) ? rupiah(that) : '-', ref$;
           }))));
         });
       }
@@ -5253,9 +5264,9 @@ if (Meteor.isServer) {
       });
     },
     stocks: function(arg$){
-      var start, end;
+      var start, end, docs;
       start = arg$.start, end = arg$.end;
-      return _.flatten(coll.gudang.find().fetch().map(function(i){
+      docs = _.flatten(coll.gudang.find().fetch().map(function(i){
         return i.batch.map(function(j){
           return _.merge({}, i, j, {
             amprah: function(){
@@ -5298,6 +5309,7 @@ if (Meteor.isServer) {
           };
         });
       }));
+      return _.sortBy(docs, ['Jenis', 'Nama Obat']);
     },
     notify: function(arg$){
       var name, params, obj;
@@ -5414,6 +5426,18 @@ if (Meteor.isServer) {
           profile: _.omit(doc, 'id')
         }
       });
+    },
+    bpjs: function(type){
+      var base, kodeppk, service_name, list;
+      base = 'http://api.bpjs-kesehatan.go.id/';
+      kodeppk = '';
+      service_name = '';
+      list = {
+        ref_kelas: function(){
+          return HTTP.get(base + "/aplicaresws/rest/ref/kelas");
+        }
+      };
+      return list[type]();
     }
   });
 }

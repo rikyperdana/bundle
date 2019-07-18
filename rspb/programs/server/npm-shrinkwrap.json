@@ -9,9 +9,9 @@
       "integrity": "sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q=="
     },
     "ajv": {
-      "version": "6.10.1",
-      "resolved": "https://registry.npmjs.org/ajv/-/ajv-6.10.1.tgz",
-      "integrity": "sha512-w1YQaVGNC6t2UCPjEawK/vo/dG8OOrVtUmhBT1uJJYxbl5kU2Tj3v6LGqBcsysN1yhuCStJCCA3GqdvKY8sqXQ==",
+      "version": "6.10.2",
+      "resolved": "https://registry.npmjs.org/ajv/-/ajv-6.10.2.tgz",
+      "integrity": "sha512-TXtUUEYHuaTEbLZWIKUr5pmBuhDLy+8KYtPYdcV8qC+pOZL+NKqYwvWSRrVXHn+ZmRRAu8vJTAznH7Oag6RVRw==",
       "requires": {
         "fast-deep-equal": "^2.0.1",
         "fast-json-stable-stringify": "^2.0.0",
@@ -547,9 +547,9 @@
       }
     },
     "node-gyp": {
-      "version": "5.0.2",
-      "resolved": "https://registry.npmjs.org/node-gyp/-/node-gyp-5.0.2.tgz",
-      "integrity": "sha512-sNcb5O7eJ9XiNAhWZ/UE2bWsBJn3Jb7rayMqMP4wjenlr1DwzZxUmbtmIrl04EU0p5fN2rU9WIDV+u0EbsI8oQ==",
+      "version": "5.0.3",
+      "resolved": "https://registry.npmjs.org/node-gyp/-/node-gyp-5.0.3.tgz",
+      "integrity": "sha512-z/JdtkFGUm0QaQUusvloyYuGDub3nUbOo5de1Fz57cM++osBTvQatBUSTlF1k/w8vFHPxxXW6zxGvkxXSpaBkQ==",
       "requires": {
         "env-paths": "^1.0.0",
         "glob": "^7.0.3",
