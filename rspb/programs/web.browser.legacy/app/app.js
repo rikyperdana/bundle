@@ -5270,13 +5270,15 @@ if (Meteor.isServer) {
         return i.batch.map(function(j){
           return _.merge({}, i, j, {
             amprah: function(){
-              return _.flatten(coll.amprah.find().fetch().filter(function(k){
-                return k.nama === i._id;
-              }).map(function(it){
-                return it.batch.filter(function(it){
-                  return it.idbatch === j.idbatch;
+              return _.flatten(function(){
+                return coll.amprah.find().fetch().filter(function(k){
+                  return k.nama === i._id;
+                }).map(function(it){
+                  return it.batch.filter(function(it){
+                    return it.idbatch === j.idbatch;
+                  });
                 });
-              }));
+              }());
             }()
           });
         }).map(function(i){
