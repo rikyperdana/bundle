@@ -4188,13 +4188,26 @@ if (Meteor.isClient) {
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
                 }()),
-                danger: ok ? 'Returkan' : void 8,
+                danger: 'Returkan',
                 dangerAction: function(){
-                  var that;
-                  return state.modal = _.merge(state.modal, {
-                    diretur: (that = state.modal) ? _.sum(['diapotik', 'didepook', 'digudang'].map(function(it){
-                      return that[it];
-                    })) : void 8
+                  return Meteor.call('updateArrayElm', {
+                    name: 'gudang',
+                    recId: m.route.param('idbarang'),
+                    scope: 'batch',
+                    elmId: state.modal.idbatch,
+                    doc: _.assign.apply(_, [
+                      state.modal, {
+                        diretur: _.sum(['diapotik', 'didepook', 'digudang'].map(function(it){
+                          return state.modal[it];
+                        }))
+                      }
+                    ].concat(slice$.call(['diapotik', 'didepook', 'digudang'].map(function(it){
+                      var ref$;
+                      return ref$ = {}, ref$[it + ""] = 0, ref$;
+                    }))))
+                  }, function(err, res){
+                    state.modal = null;
+                    return m.redraw();
                   });
                 }
               }) : void 8));
@@ -4698,7 +4711,7 @@ if (Meteor.isServer) {
       updateArrayElm: function(){
         var arr;
         return ands(arr = [
-          access('bayar'), check(_.omit(args, 'doc'), _.merge.apply(_, [{}].concat(slice$.call(['name', 'scope', 'recId', 'elmId'].map(function(it){
+          ors(['bayar', 'farmasi'].map(access)), check(_.omit(args, 'doc'), _.merge.apply(_, [{}].concat(slice$.call(['name', 'scope', 'recId', 'elmId'].map(function(it){
             var ref$;
             return ref$ = {}, ref$[it + ""] = {
               type: String
