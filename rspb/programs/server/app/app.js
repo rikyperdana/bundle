@@ -460,8 +460,8 @@ if (Meteor.isClient) {
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         checkbox: function(){
-          return m('div', label, optionList(name).map(function(j){
-            return m('label.checkbox', m('input', attr.checkbox(name, j.value)), m('span', _.startCase(j.label)));
+          return m('.columns', label, optionList(name).map(function(j){
+            return m('.column', m('label.checkbox', m('input', attr.checkbox(name, j.value)), m('span', _.startCase(j.label))));
           }), error ? m('p.help.is-danger', error) : void 8);
         },
         select: function(){
@@ -561,7 +561,7 @@ if (Meteor.isClient) {
     };
     return {
       view: function(){
-        var ref$, ref1$;
+        var that;
         return m('.box', m('form', attr.form, m('.row', columnize(usedFields.map(function(i){
           return _.merge(theSchema(i), {
             name: i,
@@ -571,11 +571,11 @@ if (Meteor.isClient) {
           type: 'submit',
           value: opts != null ? opts.buttonContent : void 8,
           'class': opts != null ? opts.buttonClasses : void 8
-        })), m('.column.is-1', m('input.button.is-warning', {
+        })), (that = opts != null ? opts.reset : void 8) ? m('.column.is-1', m('input.button.is-warning', {
           type: 'reset',
-          value: opts != null ? (ref$ = opts.reset) != null ? ref$.content : void 8 : void 8,
-          'class': opts != null ? (ref1$ = opts.reset) != null ? ref1$.classes : void 8 : void 8
-        }))))));
+          value: that != null ? that.content : void 8,
+          'class': that != null ? that.classes : void 8
+        })) : void 8))));
       }
     };
   };
@@ -934,33 +934,46 @@ if (Meteor.isClient) {
       })));
     },
     report: function(arg$){
-      var title, action;
-      title = arg$.title, action = arg$.action;
-      return m('.box', m('h5', title), m('form.columns', {
-        onsubmit: function(e){
-          var arr, vals, that;
-          return arr = [
-            e.preventDefault(), vals = [0, 1, 2].map(function(it){
-              return e.target[it].value;
-            }), action({
-              start: (that = vals[0]) ? new Date(that) : void 8,
-              end: (that = vals[1]) ? new Date(moment(that).add(23, 'hours')) : void 8,
-              type: vals[2]
-            })
-          ];
+      var title, action, fields;
+      title = arg$.title, action = arg$.action, fields = arg$.fields;
+      return m('.box', m('h5', title), m(autoForm(function(){
+        var schema, that;
+        schema = {
+          start: {
+            type: Date,
+            label: 'Mulai'
+          },
+          end: {
+            type: Date,
+            label: 'Akhir'
+          },
+          type: {
+            type: String,
+            autoform: {
+              options: ['Pdf', 'Excel'].map(function(it){
+                return {
+                  label: it,
+                  value: it
+                };
+              })
+            }
+          }
+        };
+        if (that = fields) {
+          _.assign(schema, {
+            options: that
+          });
         }
-      }, m('.column', m('input.input', {
-        type: 'date',
-        placeholder: 'Mulai'
-      })), m('.column', m('input.input', {
-        type: 'date',
-        placeholder: 'Akhir'
-      })), m('.column.is-2', m('.field', m('.control', m('.select', m('select', ['Pdf', 'Excel'].map(function(i){
-        return m('option', i);
-      })))))), m('.column.is-1', m('input.button.is-info', {
-        type: 'submit',
-        value: 'Unduh'
-      }))));
+        return {
+          schema: new SimpleSchema(schema),
+          columns: 3,
+          type: 'method',
+          meteormethod: 'dummy',
+          hooks: {
+            after: action
+          }
+        };
+      }())));
     }
   };
   this.csv = function(title, docs){
@@ -2454,6 +2467,14 @@ if (Meteor.isClient) {
     'batch.$.pengadaan': {
       type: Number,
       optional: true
+    },
+    'batch.$.no_spk': {
+      type: Number,
+      optional: true
+    },
+    'batch.$.tanggal_spk': {
+      type: Date,
+      optional: true
     }
   });
   schema.amprah = function(type){
@@ -3763,13 +3784,21 @@ if (Meteor.isClient) {
               }
             })) : void 8, userRole('admin') ? elem.report({
               title: 'Laporan Pemasukan',
+              fields: {
+                type: [Number],
+                autoform: {
+                  type: 'checkbox',
+                  options: selects.cara_bayar
+                }
+              },
               action: function(arg$){
-                var start, end, type;
-                start = arg$.start, end = arg$.end, type = arg$.type;
+                var start, end, type, options;
+                start = arg$.start, end = arg$.end, type = arg$.type, options = arg$.options;
                 if (start && end) {
                   return Meteor.call('incomes', {
                     start: start,
-                    end: end
+                    end: end,
+                    bayars: options
                   }, function(err, res){
                     var that, title, header, obj;
                     if (that = res) {
@@ -3979,13 +4008,28 @@ if (Meteor.isClient) {
               }
             }, userGroup('farmasi') && userRole('admin') ? elem.report({
               title: 'Laporan Stok Barang',
+              fields: {
+                type: [String],
+                autoform: {
+                  type: 'checkbox',
+                  options: function(){
+                    return ['Nama Obat', 'Satuan', 'Jenis', 'No. Batch', 'ED', 'Harga', 'Barang Masuk', 'Stok Awal', 'Keluar', 'Sisa Stok', 'Total Keluar', 'Total Persediaan'].map(function(it){
+                      return {
+                        value: it,
+                        label: it
+                      };
+                    });
+                  }()
+                }
+              },
               action: function(arg$){
-                var start, end, type;
-                start = arg$.start, end = arg$.end, type = arg$.type;
+                var start, end, type, options;
+                start = arg$.start, end = arg$.end, type = arg$.type, options = arg$.options;
                 if (start && end) {
                   return Meteor.call('stocks', {
                     start: start,
-                    end: end
+                    end: end,
+                    fields: options
                   }, function(err, res){
                     var that, title, obj;
                     if (that = res) {
@@ -4182,8 +4226,8 @@ if (Meteor.isClient) {
               }) : void 8)), (ref8$ = state.modal) != null && ref8$.idbatch ? elem.modal({
                 title: 'Rincian Batch',
                 content: m('table', function(){
-                  var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$;
-                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Beli', rupiah((ref1$ = state.modal) != null ? ref1$.beli : void 8)], ['Harga Jual', rupiah((ref2$ = state.modal) != null ? ref2$.jual : void 8)], ['Nama Supplier', (ref3$ = state.modal) != null ? ref3$.suplier : void 8], ['Bisa diretur', (ref4$ = state.modal) != null && ref4$.returnable ? 'Bisa' : 'Tidak'], ['Sumber Anggaran', look('anggaran', (ref5$ = state.modal) != null ? ref5$.anggaran : void 8).label], ['Tahun Pengadaan', (ref6$ = state.modal) != null ? ref6$.pengadaan : void 8]];
+                  var contents, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$, ref8$;
+                  contents = [['No. Batch', state.modal.nobatch], ['Merek', (ref$ = state.modal) != null ? ref$.merek : void 8], ['Tanggal Masuk', hari(state.modal.masuk)], ['Tanggal Kadaluarsa', hari(state.modal.kadaluarsa)], ['Stok di Gudang', state.modal.digudang + " unit"], ['Harga Beli', rupiah((ref1$ = state.modal) != null ? ref1$.beli : void 8)], ['Harga Jual', rupiah((ref2$ = state.modal) != null ? ref2$.jual : void 8)], ['Nama Supplier', (ref3$ = state.modal) != null ? ref3$.suplier : void 8], ['Bisa diretur', (ref4$ = state.modal) != null && ref4$.returnable ? 'Bisa' : 'Tidak'], ['Sumber Anggaran', look('anggaran', (ref5$ = state.modal) != null ? ref5$.anggaran : void 8).label], ['Tahun Pengadaan', (ref6$ = state.modal) != null ? ref6$.pengadaan : void 8], ['No. SPK', (ref7$ = state.modal) != null ? ref7$.no_spk : void 8], ['Tanggal SPK', (ref8$ = state.modal) != null ? ref8$.tanggal_spk : void 8]];
                   return contents.map(function(i){
                     return m('tr', m('td', m('b', i[0])), m('td', i != null ? i[1] : void 8));
                   });
@@ -5024,8 +5068,8 @@ if (Meteor.isServer) {
       });
     },
     incomes: function(arg$){
-      var start, end, a, pipe, b, c, d, jumlah, last;
-      start = arg$.start, end = arg$.end;
+      var start, end, bayars, a, pipe, b, c, d, jumlah, last;
+      start = arg$.start, end = arg$.end, bayars = arg$.bayars;
       if (start < end) {
         a = coll.pasien.aggregate(pipe = [
           a = {
@@ -5065,7 +5109,7 @@ if (Meteor.isServer) {
                   }
                 }, {
                   'rawat.cara_bayar': {
-                    $eq: 1
+                    $in: bayars
                   }
                 }
               ]
@@ -5080,6 +5124,7 @@ if (Meteor.isServer) {
             Tanggal: hari(i.rawat.tanggal),
             Poliklinik: look('klinik', i.rawat.klinik).label,
             'No. Karcis': _.toString(i.rawat.tanggal.getTime()).substr(7, 13),
+            'Cara Bayar': look('cara_bayar', i.rawat.cara_bayar).label,
             Kartu: i.rawat.first ? 10000 : 0,
             Karcis: look('karcis', i.rawat.klinik).label * 1000 || 0,
             Tindakan: (that = i.rawat.tindakan) ? _.sum(that.map(function(it){
@@ -5115,7 +5160,7 @@ if (Meteor.isServer) {
           }));
         };
         last = _.merge.apply(_, [{}].concat(
-          slice$.call(['No. MR', 'Nama Pasien', 'Tanggal', 'Poliklinik', 'No. Karcis'].map(function(it){
+          slice$.call(['No. MR', 'Nama Pasien', 'Tanggal', 'Poliklinik', 'No. Karcis', 'Cara Bayar'].map(function(it){
             var ref$;
             return ref$ = {}, ref$[it + ""] = '', ref$;
           })), slice$.call(['Kartu', 'Karcis', 'Tindakan', 'Obat'].map(function(it){
@@ -5277,8 +5322,8 @@ if (Meteor.isServer) {
       });
     },
     stocks: function(arg$){
-      var start, end, docs;
-      start = arg$.start, end = arg$.end;
+      var start, end, fields, docs;
+      start = arg$.start, end = arg$.end, fields = arg$.fields;
       docs = _.flatten(coll.gudang.find().fetch().map(function(i){
         return i.batch.map(function(j){
           return _.merge({}, i, j, {
@@ -5322,6 +5367,8 @@ if (Meteor.isServer) {
               return it.serah;
             }))))
           };
+        }).map(function(it){
+          return _.pick(it, fields);
         });
       }));
       return _.sortBy(docs, ['Jenis', 'Nama Obat']);
@@ -5453,6 +5500,9 @@ if (Meteor.isServer) {
         }
       };
       return list[type]();
+    },
+    dummy: function(it){
+      return it;
     }
   });
 }
