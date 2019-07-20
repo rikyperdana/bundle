@@ -60,8 +60,9 @@ if (Meteor.isClient) {
       var isNum, res, ref$;
       if (_.isObject(value)) {
         isNum = _.size(_.filter(value, function(val, key){
-          return +key;
+          return +key + 1;
         }));
+        console.log(value, name, isNum);
         res = (ref$ = {}, ref$[name + ""] = isNum > 0
           ? _.map(value, recurse)
           : value.getMonth
@@ -966,6 +967,7 @@ if (Meteor.isClient) {
         }
         return {
           schema: new SimpleSchema(schema),
+          id: 'formReport',
           columns: 3,
           type: 'method',
           meteormethod: 'dummy',

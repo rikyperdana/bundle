@@ -904,10 +904,10 @@
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/app/app.js?hash=1e264bdaf276100c347a9e0797eabab93e80dbac",
-      "size": 205871,
-      "hash": "1e264bdaf276100c347a9e0797eabab93e80dbac",
-      "sri": "08q0NazXsyiWAR1aARJQdvrtJCyOnytj2aV5+CG1Y1U1Wq0fNP+EyC+IqNfTAl1ubX/s7tWBw3C/f0O347hOWg=="
+      "url": "/app/app.js?hash=41fecf03947a3546242ccbdcd7221e4963285f01",
+      "size": 205944,
+      "hash": "41fecf03947a3546242ccbdcd7221e4963285f01",
+      "sri": "sUJsfUezkvtSViMdXMbE1z4zGhjhORbifwqFJRq2qRkhRMgeOsYE3Dlu8pNdfadRwUv+u2KKQ5dMks3yvJMfmQ=="
     },
     {
       "path": "packages/service-configuration.js",
