@@ -115,7 +115,11 @@ if (Meteor.isClient) {
     omitFields = opts.omitFields ? _.pull.apply(_, [_.values(usedSchema._firstLevelSchemaKeys)].concat(slice$.call(opts.omitFields))) : void 8;
     usedFields = ors(arr = [omitFields, opts.fields, usedSchema._firstLevelSchemaKeys]);
     alphabetically = function(it){
-      return _.sortBy(it, 'label');
+      if (opts.nonAlphabetic) {
+        return it;
+      } else {
+        return _.sortBy(it, 'label');
+      }
     };
     optionList = function(name){
       var arr, ref$, ref1$, ref2$, ref3$, ref4$, ref5$, ref6$, ref7$;
@@ -971,6 +975,7 @@ if (Meteor.isClient) {
           columns: 3,
           type: 'method',
           meteormethod: 'dummy',
+          nonAlphabetic: true,
           hooks: {
             after: action
           }
