@@ -1227,8 +1227,9 @@ if (Meteor.isClient) {
         ]
       }).download("icdX_" + pasien.no_mr + ".pdf");
     },
-    csv: function(name, docs, head){
-      var rows, headers, arr;
+    csv: function(arg$){
+      var name, docs, head, foot, rows, headers, arr;
+      name = arg$.name, docs = arg$.docs, head = arg$.head, foot = arg$.foot;
       rows = docs.map(function(it){
         return _.map(it, function(it){
           return it.toString();
@@ -3187,7 +3188,10 @@ if (Meteor.isClient) {
                         Excel: csv,
                         Pdf: makePdf.csv
                       };
-                      return obj[type](title, that);
+                      return obj[type]({
+                        name: title,
+                        docs: that
+                      });
                     }
                   });
                 }
@@ -3815,7 +3819,11 @@ if (Meteor.isClient) {
                         Excel: csv,
                         Pdf: makePdf.csv
                       };
-                      return obj[type](title, that, [header]);
+                      return obj[type]({
+                        name: title,
+                        docs: that,
+                        head: [header]
+                      });
                     }
                   });
                 }
@@ -3989,7 +3997,10 @@ if (Meteor.isClient) {
                         depook: 'Depo OK'
                       };
                       title = "Pengeluaran Obat " + opts[userGroup()] + " " + hari(start) + "-" + hari(end);
-                      return makePdf.csv(title, res);
+                      return makePdf.csv({
+                        name: title,
+                        docs: res
+                      });
                     }
                   });
                 }
@@ -4045,7 +4056,10 @@ if (Meteor.isClient) {
                         Excel: csv,
                         Pdf: makePdf.csv
                       };
-                      return obj[type](title, that);
+                      return obj[type]({
+                        name: title,
+                        docs: that
+                      });
                     }
                   });
                 }
@@ -4557,7 +4571,32 @@ if (Meteor.isClient) {
                 }
               }
             }))) : void 8);
-          }), m('br'), m('h4', 'Daftar Amprah'), m('table.table', {
+          }), m('br'), userGroup('farmasi') ? elem.report({
+            title: 'Riwayat Amprah',
+            action: function(arg$){
+              var start, end, type;
+              start = arg$.start, end = arg$.end, type = arg$.type;
+              if (start && end) {
+                return Meteor.call('amprahs', {
+                  start: start,
+                  end: end
+                }, function(err, res){
+                  var that, title, obj;
+                  if (that = res) {
+                    title = "Riwayat Amprah " + hari(start) + " - " + hari(end);
+                    obj = {
+                      Excel: csv,
+                      Pdf: makePdf.csv
+                    };
+                    return obj[type]({
+                      name: title,
+                      docs: that
+                    });
+                  }
+                });
+              }
+            }
+          }) : void 8, m('h4', 'Daftar Amprah'), m('table.table', {
             oncreate: function(){
               Meteor.subscribe('users', {
                 onReady: function(){
@@ -5380,6 +5419,33 @@ if (Meteor.isServer) {
       }));
       return _.sortBy(docs, ['Jenis', 'Nama Obat']);
     },
+    amprahs: function(arg$){
+      var start, end;
+      start = arg$.start, end = arg$.end;
+      return coll.amprah.find().map(function(i){
+        var this$ = this;
+        return {
+          'Tanggal Minta': hari(i.tanggal_minta),
+          'Nama Peminta': Meteor.users.findOne({
+            username: i.peminta
+          }),
+          'Ruangan Peminta': function(it){
+            return it.full;
+          }(modules.find(function(it){
+            return it.name === i.ruangan;
+          })),
+          'Nama Barang': coll.gudang.findOne({
+            _id: i.nama
+          }).nama,
+          'Jumlah Diminta': i.jumlah,
+          'Tanggal Serah': hari(i.tanggal_serah),
+          'Jumlah Diserah': i.diserah,
+          'Nama Penyerah': Meteor.users.findOne({
+            username: i.penyerah
+          })
+        };
+      });
+    },
     notify: function(arg$){
       var name, params, obj;
       name = arg$.name, params = arg$.params;
@@ -5389,7 +5455,7 @@ if (Meteor.isServer) {
           return function(it){
             return it.fetch().length;
           }(coll.amprah.find(function(){
-            if (params[0] === 'farmasi') {
+            if ((params != null ? params[0] : void 8) === 'farmasi') {
               return {
                 diserah: {
                   $exists: false
